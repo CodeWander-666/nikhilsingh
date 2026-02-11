@@ -2,353 +2,436 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>COMMANDER SINGH | STRATEGIC OVERVIEW</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>NIKHIL SINGH | HYPER_REALITY_V8</title>
     <style>
-        /* --- MILITARY OS STYLING --- */
-        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+        /* --- 6D VISUAL INTERFACE (CSS) --- */
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;500;700&display=swap');
 
         :root {
-            --hud-bg: rgba(10, 15, 20, 0.95);
-            --hud-border: rgba(0, 243, 255, 0.3);
-            --neon: #00f3ff;
-            --alert: #ff003c;
-            --success: #0aff00;
+            --glass: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --neon-pink: rgba(255, 0, 110, 1);
+            --neon-blue: rgba(0, 243, 255, 1);
+            --dark-bg: #0a0a12;
         }
 
-        body { margin: 0; overflow: hidden; background: #000; font-family: 'Share Tech Mono', monospace; color: var(--neon); }
-        canvas { display: block; }
+        body {
+            margin: 0; overflow: hidden; background: var(--dark-bg);
+            font-family: 'Fredoka', sans-serif;
+            cursor: crosshair;
+        }
 
-        /* --- TACTICAL HUD --- */
-        #hud-layer {
+        /* The 3D UI Overlay */
+        #ui-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; perspective: 1000px;
+            display: flex; flex-direction: column; justify-content: space-between;
+            padding: 30px; box-sizing: border-box;
+            z-index: 10;
+        }
+
+        .hud-panel {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 2px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 20px;
+            color: #fff;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3), inset 0 0 20px rgba(255,255,255,0.1);
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease-out;
+            pointer-events: auto;
+        }
+
+        /* Header Styling */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            width: 100%; max-width: 1200px; margin: 0 auto;
+        }
+        h1 {
+            margin: 0; font-size: 2.5rem; font-weight: 700;
+            background: linear-gradient(to right, #fff, var(--neon-blue));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px var(--neon-blue);
+        }
+        .badge {
+            background: var(--neon-pink); color: #fff; padding: 5px 15px;
+            border-radius: 50px; font-size: 0.9rem; font-weight: bold;
+            box-shadow: 0 0 20px var(--neon-pink);
+        }
+
+        /* Project Cards Modal */
+        #modal-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            display: grid;
-            grid-template-columns: 300px 1fr 300px;
-            grid-template-rows: 60px 1fr 200px;
-            padding: 10px; box-sizing: border-box;
-            background: radial-gradient(circle at center, transparent 60%, #000 150%);
+            background: rgba(0,0,0,0.8); z-index: 20;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: 0.5s;
         }
-
-        /* Top Bar */
-        .top-bar {
-            grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid var(--hud-border); background: linear-gradient(90deg, var(--hud-bg), transparent);
-            padding: 0 20px; pointer-events: auto;
+        #modal-overlay.active { opacity: 1; pointer-events: auto; }
+        
+        .modal-card {
+            background: linear-gradient(135deg, rgba(20,20,30,0.9), rgba(40,40,60,0.9));
+            border: 2px solid var(--neon-blue);
+            width: 500px; padding: 40px; border-radius: 30px;
+            text-align: center; color: #fff;
+            box-shadow: 0 0 100px rgba(0, 243, 255, 0.3);
+            transform: scale(0.8); transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        h1 { font-size: 1.5rem; letter-spacing: 3px; text-transform: uppercase; margin: 0; }
-        .status-light { width: 10px; height: 10px; background: var(--success); border-radius: 50%; box-shadow: 0 0 10px var(--success); }
+        #modal-overlay.active .modal-card { transform: scale(1); }
 
-        /* Left Panel: Mission Brief */
-        .side-panel {
-            grid-row: 2 / 3; background: var(--hud-bg); border: 1px solid var(--hud-border);
-            padding: 20px; pointer-events: auto; overflow-y: auto;
-            backdrop-filter: blur(10px); opacity: 0.9;
-            transform: translateX(-20px); transition: 0.3s;
+        .btn-action {
+            background: var(--neon-blue); color: #000; border: none;
+            padding: 15px 40px; border-radius: 50px; font-size: 1.2rem; font-weight: bold;
+            margin-top: 20px; cursor: pointer; transition: 0.3s;
+            box-shadow: 0 0 30px var(--neon-blue);
         }
-        .side-panel:hover { transform: translateX(0); opacity: 1; border-color: var(--neon); }
+        .btn-action:hover { transform: scale(1.1); background: #fff; }
 
-        h2 { font-size: 1rem; border-bottom: 1px solid var(--alert); padding-bottom: 5px; color: var(--alert); }
-        p { font-size: 0.8rem; color: #ccc; line-height: 1.6; }
-
-        .mission-btn {
-            display: block; width: 100%; padding: 10px; margin-top: 10px;
-            background: rgba(0, 243, 255, 0.1); border: 1px solid var(--hud-border);
-            color: var(--neon); font-family: inherit; cursor: pointer; text-align: left;
-            transition: 0.2s;
+        /* Tutorial / Controls */
+        .tutorial {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            text-align: center; color: rgba(255,255,255,0.7);
         }
-        .mission-btn:hover { background: var(--neon); color: #000; }
-        .mission-btn.active { border-left: 4px solid var(--alert); background: rgba(255,0,60,0.1); }
-
-        /* Bottom Panel: Console */
-        .bottom-panel {
-            grid-column: 2 / 3; grid-row: 3 / 4;
-            background: rgba(0,0,0,0.8); border-top: 2px solid var(--hud-border);
-            padding: 10px; font-size: 0.8rem; pointer-events: none;
-            display: flex; flex-direction: column-reverse; /* Newest logs at bottom */
-            mask-image: linear-gradient(to bottom, transparent, black 20%);
+        .key {
+            display: inline-block; border: 1px solid #fff; padding: 5px 10px;
+            border-radius: 8px; margin: 0 5px; font-weight: bold;
         }
-        .log-entry { margin-bottom: 5px; }
-        .log-time { color: #666; margin-right: 10px; }
 
         /* Loading Screen */
         #loader {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 999;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
-        .loader-bar { width: 300px; height: 2px; background: #333; margin-top: 20px; position: relative; }
-        .loader-fill { width: 0%; height: 100%; background: var(--neon); transition: width 0.5s; box-shadow: 0 0 20px var(--neon); }
-        
-        /* Scanline Overlay */
-        .scanlines {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
-            background-size: 100% 4px; pointer-events: none; z-index: 50;
+            background: #000; z-index: 100;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: var(--neon-blue); font-size: 2rem; font-weight: bold;
         }
+        .spinner {
+            width: 50px; height: 50px; border: 5px solid var(--neon-blue);
+            border-top: 5px solid transparent; border-radius: 50%;
+            animation: spin 1s linear infinite; margin-bottom: 20px;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
     </style>
 </head>
 <body>
 
-    <div class="scanlines"></div>
-
     <div id="loader">
-        <div style="font-size: 1.5rem; letter-spacing: 5px;">ESTABLISHING SATELLITE UPLINK</div>
-        <div class="loader-bar"><div class="loader-fill" id="load-bar"></div></div>
-        <div style="margin-top: 10px; font-size: 0.8rem; color: #555;">ENCRYPTING CONNECTION...</div>
+        <div class="spinner"></div>
+        <div>INITIALIZING 4D WORLD...</div>
     </div>
 
-    <div id="hud-layer">
-        
-        <div class="top-bar">
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <div class="status-light"></div>
-                <h1>NIKHIL SINGH</h1>
-                <span style="font-size: 0.8rem; color: #aaa;">// COMMANDER [AI_DIVISION]</span>
+    <div id="ui-layer">
+        <header class="hud-panel" id="hud-header">
+            <div>
+                <h1>Nikhil Singh</h1>
+                <div style="opacity: 0.8;">Full Stack AI Architect // Data Scientist</div>
             </div>
-            <div id="clock">00:00:00 ZULU</div>
-        </div>
+            <div class="badge">LVL 99</div>
+        </header>
 
-        <div class="side-panel" style="grid-column: 1 / 2;">
-            <h2>ACTIVE OPERATIONS</h2>
-            <div id="mission-list">
-                </div>
+        <div class="tutorial">
+            <p>USE <span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> TO FLY // <span class="key">MOUSE</span> TO LOOK</p>
+            <p>COLLECT ORBS TO VIEW PROJECTS</p>
         </div>
+    </div>
 
-        <div class="side-panel" style="grid-column: 3 / 4; text-align: right; transform: translateX(20px);">
-            <h2>TARGET INTEL</h2>
-            <div id="intel-display">
-                <p>SELECT A MISSION TO VIEW INTEL.</p>
-                <div style="margin-top: 20px; border: 1px solid #333; height: 150px; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
-                    [NO SIGNAL]
-                </div>
-            </div>
-            <button class="mission-btn" style="text-align: center; margin-top: 20px;" onclick="deployUnit()">DEPLOY UNIT</button>
+    <div id="modal-overlay">
+        <div class="modal-card">
+            <h2 id="m-title" style="font-size: 2.5rem; margin-bottom: 10px; color: var(--neon-blue);">PROJECT</h2>
+            <p id="m-desc" style="font-size: 1.1rem; line-height: 1.6; color: #ddd;">Description goes here.</p>
+            <button class="btn-action" onclick="closeModal()">RESUME FLIGHT</button>
         </div>
-
-        <div class="bottom-panel" id="console-log">
-            <div class="log-entry"><span class="log-time">SYSTEM</span> Ready for command.</div>
-        </div>
-
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://unpkg.com/three@0.128.0/examples/js/controls/MapControls.js"></script>
-    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
-    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
-    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
 
     <script>
-        // --- 1. STRATEGY ENGINE CONFIG ---
-        const GameState = {
-            selectedMission: null,
-            cameraTarget: new THREE.Vector3(0, 0, 0),
-            missions: [
-                { id: 1, code: "OP_NOVUS", name: "NovusFace AI", loc: { x: -10, z: -10 }, desc: "Deploy DeepFake countermeasures. High priority target.", status: "ACTIVE" },
-                { id: 2, code: "OP_TUBE", name: "TubeMan Protocol", loc: { x: 10, z: -10 }, desc: "Secure video extraction pipeline.", status: "STABLE" },
-                { id: 3, code: "OP_SEO", name: "RankMaster", loc: { x: 0, z: 10 }, desc: "Automated ranking warfare bot.", status: "DEPLOYED" }
-            ]
+        /**
+         * --- AUDIO ENGINE (SYNTHESIZER) ---
+         * Generates high-end UI sounds without external files.
+         */
+        const AudioSys = {
+            ctx: new (window.AudioContext || window.webkitAudioContext)(),
+            
+            playTone: function(freq, type, duration, vol) {
+                if(this.ctx.state === 'suspended') this.ctx.resume();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(freq * 0.5, this.ctx.currentTime + duration);
+                
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+                
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + duration);
+            },
+
+            playHover: function() { this.playTone(800, 'sine', 0.1, 0.1); },
+            playClick: function() { this.playTone(1200, 'triangle', 0.1, 0.2); },
+            playCollect: function() { 
+                this.playTone(440, 'sine', 0.1, 0.2); 
+                setTimeout(() => this.playTone(880, 'sine', 0.2, 0.2), 100);
+                setTimeout(() => this.playTone(1760, 'sine', 0.4, 0.2), 200);
+            }
         };
 
-        // --- 2. SCENE SETUP (The Holotable) ---
+        /**
+         * --- 3D ENGINE SETUP ---
+         */
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x050505);
-        scene.fog = new THREE.FogExp2(0x050505, 0.02);
+        scene.fog = new THREE.FogExp2(0x0a0a12, 0.015);
 
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
-        camera.position.set(0, 20, 30); // RTS View angle
-
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.shadowMap.enabled = true;
         document.body.appendChild(renderer.domElement);
 
-        // Map Controls (RTS Style Pan/Zoom)
-        const controls = new THREE.MapControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-        controls.screenSpacePanning = false;
-        controls.minDistance = 10;
-        controls.maxDistance = 50;
-        controls.maxPolarAngle = Math.PI / 2 - 0.1;
+        // Lights
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
 
-        // --- 3. TERRAIN GENERATION (The 4D Grid) ---
-        const gridHelper = new THREE.GridHelper(100, 100, 0x00f3ff, 0x111111);
-        scene.add(gridHelper);
+        const pointLight = new THREE.PointLight(0x00f3ff, 1, 100);
+        pointLight.position.set(0, 20, 0);
+        pointLight.castShadow = true;
+        scene.add(pointLight);
 
-        // Animated Terrain Mesh
-        const geometry = new THREE.PlaneGeometry(100, 100, 50, 50);
-        const material = new THREE.MeshBasicMaterial({ 
-            color: 0x00f3ff, 
-            wireframe: true, 
-            transparent: true, 
-            opacity: 0.1 
+        const pinkLight = new THREE.PointLight(0xff006e, 1, 100);
+        pinkLight.position.set(20, 10, 20);
+        scene.add(pinkLight);
+
+        /**
+         * --- GAME WORLD ---
+         */
+        
+        // 1. Terrain (Moving Grid)
+        const planeGeo = new THREE.PlaneGeometry(200, 200, 60, 60);
+        const planeMat = new THREE.MeshStandardMaterial({ 
+            color: 0x0a0a12, 
+            emissive: 0x000000,
+            roughness: 0.2,
+            metalness: 0.8,
+            wireframe: true 
         });
-        const terrain = new THREE.Mesh(geometry, material);
+        const terrain = new THREE.Mesh(planeGeo, planeMat);
         terrain.rotation.x = -Math.PI / 2;
+        terrain.receiveShadow = true;
         scene.add(terrain);
 
-        // --- 4. MISSION MARKERS (Bases) ---
-        const markers = [];
-        
-        GameState.missions.forEach(mission => {
-            // The Base
-            const baseGeo = new THREE.CylinderGeometry(0, 1.5, 3, 4, 1);
-            const baseMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff, wireframe: true });
-            const base = new THREE.Mesh(baseGeo, baseMat);
-            base.position.set(mission.loc.x, 1.5, mission.loc.z);
-            scene.add(base);
+        // 2. Player (The Drone)
+        const playerGeo = new THREE.OctahedronGeometry(0.5, 0);
+        const playerMat = new THREE.MeshPhongMaterial({ 
+            color: 0x00f3ff, 
+            emissive: 0x001133, 
+            shininess: 100,
+            flatShading: true
+        });
+        const player = new THREE.Mesh(playerGeo, playerMat);
+        player.position.y = 2;
+        player.castShadow = true;
+        scene.add(player);
 
-            // The "Shield" (Pulsing Sphere)
-            const shieldGeo = new THREE.SphereGeometry(2, 16, 16);
-            const shieldMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.2, wireframe: true });
-            const shield = new THREE.Mesh(shieldGeo, shieldMat);
-            shield.position.copy(base.position);
-            scene.add(shield);
+        // Add a "Glow" to player
+        const glowGeo = new THREE.SphereGeometry(1, 16, 16);
+        const glowMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.2, wireframe: true });
+        const glow = new THREE.Mesh(glowGeo, glowMat);
+        player.add(glow);
 
-            markers.push({ mesh: base, shield: shield, data: mission });
+        // 3. Projects (Collectibles)
+        const projects = [
+            { name: "NOVUSFACE AI", desc: "DeepFake Engine vX6. High fidelity face swapping.", color: 0xff006e, x: 0, z: -20 },
+            { name: "TUBEMAN", desc: "Automated Video Pipeline. Python & FFmpeg.", color: 0x00f3ff, x: -15, z: -10 },
+            { name: "SEO BOT", desc: "RankMaster 3000. Dominate search results.", color: 0xffd000, x: 15, z: -10 },
+            { name: "GULLYLINK", desc: "Hyperlocal Tracking App. React Native.", color: 0xaa00ff, x: 0, z: 10 }
+        ];
+
+        const orbs = [];
+        const orbGeo = new THREE.IcosahedronGeometry(1, 1);
+
+        projects.forEach(p => {
+            const mat = new THREE.MeshPhongMaterial({ 
+                color: p.color, 
+                emissive: p.color, 
+                emissiveIntensity: 0.5,
+                shininess: 100 
+            });
+            const mesh = new THREE.Mesh(orbGeo, mat);
+            mesh.position.set(p.x, 2, p.z);
+            mesh.userData = p; // Store data
+            mesh.castShadow = true;
             
-            // Add Beacon Beam
+            // Floating animation offset
+            mesh.userData.yBase = 2;
+            mesh.userData.offset = Math.random() * 100;
+            
+            scene.add(mesh);
+            orbs.push(mesh);
+
+            // Beacon beam
             const beamGeo = new THREE.CylinderGeometry(0.1, 0.1, 50, 8);
-            const beamMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.5 });
+            const beamMat = new THREE.MeshBasicMaterial({ color: p.color, transparent: true, opacity: 0.2 });
             const beam = new THREE.Mesh(beamGeo, beamMat);
-            beam.position.set(mission.loc.x, 25, mission.loc.z);
+            beam.position.set(p.x, 25, p.z);
             scene.add(beam);
         });
 
-        // --- 5. POST PROCESSING (The Hologram Look) ---
-        const composer = new THREE.EffectComposer(renderer);
-        const renderPass = new THREE.RenderPass(scene, camera);
-        composer.addPass(renderPass);
-        const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-        bloomPass.threshold = 0.1;
-        bloomPass.strength = 1.2;
-        bloomPass.radius = 0.5;
-        composer.addPass(bloomPass);
-
-        // --- 6. GAME LOGIC & UI INTERACTION ---
-        
-        // Raycaster for clicking bases
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
-
-        window.addEventListener('click', onMouseClick, false);
-
-        function onMouseClick(event) {
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
-
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(markers.map(m => m.shield));
-
-            if (intersects.length > 0) {
-                // Find which mission was clicked based on position match
-                const target = markers.find(m => m.shield === intersects[0].object);
-                if (target) selectMission(target.data);
-            }
+        // 4. Floating Particles (Starfield)
+        const starsGeo = new THREE.BufferGeometry();
+        const starsCount = 1000;
+        const posArray = new Float32Array(starsCount * 3);
+        for(let i=0; i<starsCount*3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 100;
         }
+        starsGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const starsMat = new THREE.PointsMaterial({ size: 0.1, color: 0xffffff, transparent: true, opacity: 0.8 });
+        const starField = new THREE.Points(starsGeo, starsMat);
+        scene.add(starField);
 
-        function selectMission(mission) {
-            GameState.selectedMission = mission;
-            GameState.cameraTarget.set(mission.loc.x, 0, mission.loc.z);
-            
-            // Update Intel UI
-            const intelHTML = `
-                <h3 style="color:#fff">${mission.name}</h3>
-                <div style="color:var(--neon); font-size:0.8rem; margin-bottom:10px;">${mission.code} // ${mission.status}</div>
-                <p>${mission.desc}</p>
-                <div style="margin-top:20px; border:1px solid var(--neon); padding:5px; text-align:center;">
-                    <div style="font-size:2rem;">98%</div>
-                    <div style="font-size:0.6rem;">SUCCESS PROBABILITY</div>
-                </div>
-            `;
-            document.getElementById('intel-display').innerHTML = intelHTML;
-            logToConsole(`TARGET ACQUIRED: ${mission.code}`);
-        }
 
-        function logToConsole(text) {
-            const consoleDiv = document.getElementById('console-log');
-            const time = new Date().toISOString().split('T')[1].split('.')[0];
-            const entry = document.createElement('div');
-            entry.className = 'log-entry';
-            entry.innerHTML = `<span class="log-time">${time}</span> ${text}`;
-            consoleDiv.prepend(entry);
-        }
+        /**
+         * --- CONTROLS & LOGIC ---
+         */
+        const input = { w: false, a: false, s: false, d: false };
+        const velocity = new THREE.Vector3();
+        let isModalOpen = false;
 
-        // Initialize UI List
-        const missionList = document.getElementById('mission-list');
-        GameState.missions.forEach(m => {
-            const btn = document.createElement('button');
-            btn.className = 'mission-btn';
-            btn.innerText = `[${m.code}] ${m.name}`;
-            btn.onclick = () => selectMission(m);
-            missionList.appendChild(btn);
+        window.addEventListener('keydown', (e) => {
+            if(e.key.toLowerCase() === 'w') input.w = true;
+            if(e.key.toLowerCase() === 'a') input.a = true;
+            if(e.key.toLowerCase() === 's') input.s = true;
+            if(e.key.toLowerCase() === 'd') input.d = true;
         });
 
-        // --- 7. ANIMATION LOOP ---
+        window.addEventListener('keyup', (e) => {
+            if(e.key.toLowerCase() === 'w') input.w = false;
+            if(e.key.toLowerCase() === 'a') input.a = false;
+            if(e.key.toLowerCase() === 's') input.s = false;
+            if(e.key.toLowerCase() === 'd') input.d = false;
+        });
+
+        // Mouse Parallax for UI
+        window.addEventListener('mousemove', (e) => {
+            if(isModalOpen) return;
+            const x = (e.clientX / window.innerWidth - 0.5) * 20;
+            const y = (e.clientY / window.innerHeight - 0.5) * 20;
+            document.getElementById('hud-header').style.transform = `rotateX(${-y}deg) rotateY(${x}deg)`;
+            
+            // Rotate Player slightly
+            player.rotation.y = -x * 0.1;
+            player.rotation.z = -x * 0.05;
+        });
+
+        // Collision Check
+        function checkCollisions() {
+            if(isModalOpen) return;
+            orbs.forEach(orb => {
+                const dist = player.position.distanceTo(orb.position);
+                if(dist < 2) {
+                    openModal(orb.userData);
+                }
+            });
+        }
+
+        function openModal(data) {
+            isModalOpen = true;
+            document.getElementById('m-title').innerText = data.name;
+            document.getElementById('m-desc').innerText = data.desc;
+            document.getElementById('m-title').style.color = '#' + data.color.toString(16);
+            document.getElementById('modal-overlay').classList.add('active');
+            AudioSys.playCollect();
+        }
+
+        window.closeModal = function() {
+            document.getElementById('modal-overlay').classList.remove('active');
+            isModalOpen = false;
+            // Teleport player back slightly to avoid infinite loop
+            player.position.z += 2;
+            AudioSys.playClick();
+        }
+
+        /**
+         * --- MAIN GAME LOOP ---
+         */
+        const simplex = new SimplexNoise();
         let time = 0;
-        
+
         function animate() {
             requestAnimationFrame(animate);
             time += 0.01;
 
-            // Animate Terrain (The Living Map)
+            if(!isModalOpen) {
+                // Movement Physics
+                if(input.w) velocity.z -= 0.02;
+                if(input.s) velocity.z += 0.02;
+                if(input.a) velocity.x -= 0.02;
+                if(input.d) velocity.x += 0.02;
+
+                // Friction
+                velocity.multiplyScalar(0.9);
+                
+                // Apply Velocity
+                player.position.add(velocity);
+                
+                // Camera Follow
+                camera.position.x += (player.position.x - camera.position.x) * 0.1;
+                camera.position.z += (player.position.z + 10 - camera.position.z) * 0.1;
+                camera.position.y = 8;
+                camera.lookAt(player.position);
+            }
+
+            // Animate Player
+            player.rotation.x += 0.05;
+            player.rotation.y += 0.05;
+            glow.scale.setScalar(1 + Math.sin(time * 5) * 0.2);
+
+            // Animate Terrain (Waves)
             const positions = terrain.geometry.attributes.position.array;
-            for(let i = 0; i < positions.length; i += 3) {
-                // Perlin-like noise simulation
-                positions[i+2] = Math.sin((positions[i] / 10) + time) * 2 + Math.cos((positions[i+1] / 10) + time) * 2;
+            for (let i = 0; i < positions.length; i += 3) {
+                const x = positions[i];
+                const y = positions[i+1];
+                // Update Z (which is Up because plane is rotated)
+                // Actually in BufferGeometry plane is Z up, but we rotated X. 
+                // Let's just modulate Z attribute based on X/Y
+                const noise = simplex.noise2D(x * 0.1 + time * 0.1, y * 0.1) * 2;
+                positions[i+2] = noise;
             }
             terrain.geometry.attributes.position.needsUpdate = true;
+            terrain.position.x = player.position.x; // Endless Runner effect (ground follows)
+            terrain.position.z = player.position.z;
 
-            // Animate Markers
-            markers.forEach(m => {
-                m.mesh.rotation.y += 0.01;
-                m.shield.scale.setScalar(1 + Math.sin(time * 2) * 0.1); // Pulse
+            // Animate Orbs
+            orbs.forEach(orb => {
+                orb.rotation.y += 0.02;
+                orb.rotation.z += 0.02;
+                orb.position.y = orb.userData.yBase + Math.sin(time * 2 + orb.userData.offset) * 0.5;
             });
 
-            // Smooth Camera Pan to Target
-            controls.target.lerp(GameState.cameraTarget, 0.05);
-            controls.update();
-
-            composer.render();
+            checkCollisions();
+            renderer.render(scene, camera);
         }
 
-        // --- BOOT UP ---
-        setTimeout(() => {
-            document.getElementById('load-bar').style.width = '100%';
-            setTimeout(() => {
-                document.getElementById('loader').style.display = 'none';
-                logToConsole("SYSTEM ONLINE. AWAITING ORDERS.");
-                animate();
-            }, 500);
-        }, 1000);
-
-        // Clock
-        setInterval(() => {
-            document.getElementById('clock').innerText = new Date().toISOString().split('T')[1].split('.')[0] + " ZULU";
-        }, 1000);
-
-        window.deployUnit = function() {
-            if(!GameState.selectedMission) {
-                logToConsole("ERROR: NO TARGET SELECTED.");
-                return;
-            }
-            logToConsole(`DEPLOYING ASSETS TO ${GameState.selectedMission.code}...`);
-            // Here you could trigger a particle effect or redirect to the project link
-            setTimeout(() => {
-                logToConsole("UNIT DEPLOYED. ESTABLISHING LINK...");
-                // window.open('your-project-link', '_blank');
-            }, 1000);
-        };
-
-        // Resize
+        // --- INIT ---
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
-            composer.setSize(window.innerWidth, window.innerHeight);
         });
+
+        // Hide loader after assets "load"
+        setTimeout(() => {
+            document.getElementById('loader').style.opacity = 0;
+            setTimeout(() => document.getElementById('loader').style.display = 'none', 1000);
+            animate();
+        }, 1500);
 
     </script>
 </body>
