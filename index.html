@@ -2,392 +2,324 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NIKHIL SINGH | VIRTUAL TOURMAN</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>NIKHIL SINGH | THE CYBER-MUSEUM</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;900&family=Rajdhani:wght@500;700&display=swap');
-
-        :root {
-            --neon-cyan: #00f3ff;
-            --neon-purple: #bc13fe;
-            --dark-bg: #050510;
-            --glass: rgba(20, 30, 40, 0.6);
-        }
-
-        body {
-            margin: 0; overflow: hidden; background: var(--dark-bg);
-            font-family: 'Rajdhani', sans-serif;
-            user-select: none; touch-action: none;
-        }
-
-        /* --- 6D HUD LAYER --- */
-        #hud {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 10;
-            perspective: 1000px;
-        }
-
-        .hud-panel {
-            position: absolute;
-            transform-style: preserve-3d;
-            transition: transform 0.1s ease-out;
-        }
-
-        /* Header Stats */
-        #stats-bar {
-            top: 20px; left: 20px;
-            background: var(--glass);
-            border: 1px solid var(--neon-cyan);
-            padding: 15px 30px; border-radius: 10px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
-            display: flex; gap: 20px;
-            transform: translateZ(20px);
-        }
-        .stat-item { text-align: center; }
-        .stat-val { font-family: 'Orbitron'; font-size: 1.5rem; color: #fff; }
-        .stat-label { font-size: 0.8rem; color: var(--neon-cyan); letter-spacing: 2px; }
-
-        /* Start Screen */
-        #start-screen {
+        body { margin: 0; overflow: hidden; background: #000; user-select: none; }
+        
+        /* Loading / Start Screen */
+        #start-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 100;
+            background: #000; z-index: 9999;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            backdrop-filter: blur(20px);
+            transition: opacity 1s ease-out;
         }
-        h1 {
-            font-family: 'Orbitron'; font-size: 3rem; color: #fff;
-            text-shadow: 0 0 30px var(--neon-cyan); text-align: center;
-            margin-bottom: 10px;
-        }
-        .subtitle { color: var(--neon-purple); letter-spacing: 5px; margin-bottom: 40px; font-size: 1.2rem; }
         
-        #start-btn {
-            padding: 20px 60px; font-size: 1.5rem; font-family: 'Orbitron';
-            background: transparent; color: var(--neon-cyan);
-            border: 2px solid var(--neon-cyan); border-radius: 50px;
-            cursor: pointer; transition: 0.3s;
-            box-shadow: 0 0 30px rgba(0, 243, 255, 0.3);
+        .start-btn {
+            background: transparent;
+            color: #00f3ff;
+            font-family: 'Courier New', monospace;
+            font-size: 1.5rem;
+            border: 2px solid #00f3ff;
+            padding: 20px 40px;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            cursor: pointer;
+            box-shadow: 0 0 20px #00f3ff;
+            transition: 0.3s;
+            animation: pulse 1.5s infinite;
         }
-        #start-btn:hover { background: var(--neon-cyan); color: #000; transform: scale(1.1); }
+        .start-btn:hover { background: #00f3ff; color: #000; box-shadow: 0 0 50px #00f3ff; }
 
-        /* Info Modal (Hologram) */
-        #holo-modal {
-            position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            width: 80%; max-width: 500px;
-            background: rgba(10, 15, 20, 0.95);
-            border: 2px solid var(--neon-purple);
-            padding: 40px; border-radius: 20px;
-            text-align: center; color: #fff;
-            box-shadow: 0 0 100px rgba(188, 19, 254, 0.4);
-            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            pointer-events: auto;
-        }
-        #holo-modal.active { transform: translate(-50%, -50%) scale(1); }
-        
-        .holo-title { color: var(--neon-cyan); font-family: 'Orbitron'; margin-bottom: 15px; font-size: 1.8rem; }
-        .holo-text { line-height: 1.6; font-size: 1.1rem; color: #ddd; margin-bottom: 25px; }
-        .holo-btn {
-            background: var(--neon-purple); border: none; padding: 10px 30px;
-            color: #fff; font-weight: bold; cursor: pointer; border-radius: 5px;
-            box-shadow: 0 0 20px var(--neon-purple);
-        }
+        @keyframes pulse { 0% { opacity: 0.8; box-shadow: 0 0 20px #00f3ff; } 50% { opacity: 1; box-shadow: 0 0 40px #00f3ff; } 100% { opacity: 0.8; box-shadow: 0 0 20px #00f3ff; } }
 
-        /* Mobile Controls Hint */
-        #tap-hint {
+        /* The "HUD" is actually just a canvas overlay for interactions, visually invisible */
+        #interaction-layer {
             position: absolute; bottom: 50px; width: 100%; text-align: center;
-            color: rgba(255,255,255,0.5); font-size: 1.2rem; animation: pulse 1s infinite;
-            pointer-events: none; display: none;
+            color: rgba(255, 255, 255, 0.5); font-family: monospace; letter-spacing: 3px;
+            pointer-events: none; opacity: 0; transition: opacity 2s;
         }
-        @keyframes pulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
-
     </style>
 </head>
 <body>
 
-    <div id="start-screen">
-        <h1>NIKHIL SINGH</h1>
-        <div class="subtitle">DATA ANALYST // AI ARCHITECT</div>
-        <button id="start-btn" onclick="startGame()">INITIATE RUN</button>
+    <div id="start-overlay">
+        <h1 style="color:white; font-family:sans-serif; letter-spacing:10px; font-weight:100; margin-bottom:50px;">NIKHIL SINGH</h1>
+        <button class="start-btn" onclick="initExperience()">INITIALIZE SYSTEM</button>
+        <p style="color:#555; margin-top:20px; font-family:monospace;">AUDIO REQUIRED // HIGH PERFORMANCE MODE</p>
     </div>
 
-    <div id="hud">
-        <div id="stats-bar" class="hud-panel">
-            <div class="stat-item">
-                <div class="stat-val" id="score">0</div>
-                <div class="stat-label">DATA BYTES</div>
-            </div>
-            <div class="stat-item" style="margin-left: 20px;">
-                <div class="stat-val" id="distance">0m</div>
-                <div class="stat-label">DISTANCE</div>
-            </div>
-        </div>
-        <div id="tap-hint">TAP TO JUMP</div>
-    </div>
-
-    <div id="holo-modal">
-        <h2 class="holo-title" id="m-title">DATA UNLOCKED</h2>
-        <p class="holo-text" id="m-desc">Description...</p>
-        <button class="holo-btn" onclick="resumeGame()">CONTINUE</button>
-    </div>
+    <div id="interaction-layer">SCROLL TO TRAVEL TIME</div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
 
     <script>
-        // --- DATA STORE (From Images) ---
-        const profileData = [
-            { type: "ROLE", title: "Data Analyst Trainee", desc: "Currently mastering Full Stack Data Science & AI at AlmaBetter (Aug 2025 - Present). Specializing in Python, SQL, and GenAI." },
-            { type: "PROJECT", title: "NovusFace AI", desc: "Built a Full-Stack Generative AI Engine for Face Swapping using Python, FastAPI, Docker, and PyTorch." },
-            { type: "PROJECT", title: "SEOMAN AI", desc: "Developed a 360-degree AI-powered SEO Analyzer to solve real-world business ranking problems." },
-            { type: "EXP", title: "Sales & Marketing", desc: "Former Intern at SG Gurukul. Experienced in Telesales and Education Counseling." },
-            { type: "EDU", title: "Education", desc: "BBA (Finance) from Prestige Institute (2021-2023). Shifted focus to solving problems with Data & AI." },
-            { type: "CERT", title: "ChatGPT Expert", desc: "Certified by be10x.in in ChatGPT & AI Tools. Focused on staying at the cutting edge of AI." }
-        ];
+        // --- 1. AUDIO ENGINE (THX STYLE DEEP BASS) ---
+        const AudioSys = {
+            ctx: null,
+            init: function() {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            },
+            playDrone: function() {
+                if(!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                // Super Saw effect for "Cyber" sound
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(50, this.ctx.currentTime); // Deep Bass
+                osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 5);
+                
+                gain.gain.setValueAtTime(0, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.3, this.ctx.currentTime + 2); // Fade in
+                
+                // Lowpass Filter to make it muffled/cinematic
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.value = 200;
 
-        // --- GAME ENGINE SETUP ---
-        const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x050510, 0.04); // Cyber fog
-
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 3, 6);
-        camera.lookAt(0, 1, 0);
-
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        renderer.shadowMap.enabled = true;
-        document.body.appendChild(renderer.domElement);
-
-        // Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-        scene.add(ambientLight);
-        
-        const dirLight = new THREE.DirectionalLight(0x00f3ff, 1);
-        dirLight.position.set(5, 10, 5);
-        dirLight.castShadow = true;
-        scene.add(dirLight);
-
-        // --- GAME OBJECTS ---
-
-        // 1. Infinite Floor (Grid)
-        const gridHelper = new THREE.GridHelper(200, 100, 0xbc13fe, 0x111111);
-        gridHelper.position.y = 0;
-        scene.add(gridHelper);
-
-        const floorGeo = new THREE.PlaneGeometry(200, 200);
-        const floorMat = new THREE.MeshBasicMaterial({ color: 0x050510 });
-        const floor = new THREE.Mesh(floorGeo, floorMat);
-        floor.rotation.x = -Math.PI / 2;
-        floor.position.y = -0.1;
-        scene.add(floor);
-
-        // 2. The Runner (Cyber Cube)
-        const runnerGeo = new THREE.BoxGeometry(0.8, 0.8, 0.8);
-        const runnerMat = new THREE.MeshStandardMaterial({ 
-            color: 0x00f3ff, emissive: 0x001133, roughness: 0.1, metalness: 0.8 
-        });
-        const runner = new THREE.Mesh(runnerGeo, runnerMat);
-        runner.position.y = 0.4;
-        runner.castShadow = true;
-        scene.add(runner);
-
-        // Glow Trail
-        const trailGeo = new THREE.TrailGeometry(runner.position, 20); // Pseudo-trail logic handled in animate
-
-        // 3. Object Pools
-        const obstacles = [];
-        const collectibles = [];
-        
-        function createObstacle(z) {
-            const geo = new THREE.ConeGeometry(0.5, 1.5, 4);
-            const mat = new THREE.MeshStandardMaterial({ color: 0xff0055, emissive: 0x440000 });
-            const mesh = new THREE.Mesh(geo, mat);
-            mesh.position.set(0, 0.75, z);
-            mesh.castShadow = true;
-            scene.add(mesh);
-            obstacles.push(mesh);
-        }
-
-        function createCollectible(z) {
-            const geo = new THREE.IcosahedronGeometry(0.4, 0);
-            const mat = new THREE.MeshStandardMaterial({ color: 0xbc13fe, emissive: 0x4400aa, wireframe: true });
-            const mesh = new THREE.Mesh(geo, mat);
-            mesh.position.set(0, 1.5, z);
-            scene.add(mesh);
-            collectibles.push(mesh);
-            
-            // Beacon
-            const lineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,10,0)]);
-            const lineMat = new THREE.LineBasicMaterial({ color: 0xbc13fe, transparent: true, opacity: 0.3 });
-            const line = new THREE.Line(lineGeo, lineMat);
-            line.position.copy(mesh.position);
-            scene.add(line);
-            mesh.userData.line = line; // link to remove later
-        }
-
-        // --- GAME LOGIC ---
-        let isPlaying = false;
-        let isPaused = false;
-        let speed = 0.3;
-        let score = 0;
-        let dist = 0;
-        let jumpVelocity = 0;
-        let isJumping = false;
-        const gravity = -0.015;
-        const jumpForce = 0.35;
-        
-        let spawnTimer = 0;
-
-        function startGame() {
-            document.getElementById('start-screen').style.display = 'none';
-            document.getElementById('tap-hint').style.display = 'block';
-            isPlaying = true;
-            animate();
-        }
-
-        function jump() {
-            if(isJumping || isPaused || !isPlaying) return;
-            isJumping = true;
-            jumpVelocity = jumpForce;
-            
-            // Flip Animation
-            const flip = setInterval(() => {
-                runner.rotation.x -= 0.2;
-                if(!isJumping) clearInterval(flip);
-            }, 16);
-        }
-
-        function unlockData() {
-            isPaused = true;
-            const data = profileData[Math.floor(Math.random() * profileData.length)];
-            document.getElementById('m-title').innerText = data.title;
-            document.getElementById('m-desc').innerText = data.desc;
-            document.getElementById('holo-modal').classList.add('active');
-        }
-
-        window.resumeGame = function() {
-            document.getElementById('holo-modal').classList.remove('active');
-            isPaused = false;
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+                
+                osc.start();
+                // Infinite drone
+            },
+            playSwoosh: function() {
+                if(!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.frequency.setValueAtTime(200, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 1);
+                gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 1);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 1);
+            }
         };
 
-        // Inputs
-        window.addEventListener('keydown', (e) => {
-            if(e.code === 'Space') jump();
-        });
-        window.addEventListener('touchstart', (e) => {
-            e.preventDefault(); jump();
-        });
-        window.addEventListener('mousedown', () => jump());
+        // --- 2. DATA (STORY) ---
+        const timeline = [
+            { id: 0, title: "THE BEGINNING", sub: "SCROLL TO START", z: 0, color: 0xffffff },
+            { id: 1, title: "ALMABETTER", sub: "Full Stack Data Science (2025-Present)", z: -50, color: 0x00f3ff },
+            { id: 2, title: "NOVUSFACE AI", sub: "DeepFake Engine // Python // PyTorch", z: -100, color: 0xff0055 },
+            { id: 3, title: "SEOMAN AI", sub: "360 SEO Analyzer // Automation", z: -150, color: 0x00ff00 },
+            { id: 4, title: "CERTIFIED", sub: "ChatGPT Expert // Be10x", z: -200, color: 0xffff00 },
+            { id: 5, title: "CONTACT", sub: "LINKEDIN: Nikhil Singh", z: -250, color: 0xbc13fe }
+        ];
 
-        // --- 6D PARALLAX ---
-        window.addEventListener('mousemove', (e) => {
-            if(isPaused) return;
-            const x = (e.clientX / window.innerWidth - 0.5) * 30;
-            const y = (e.clientY / window.innerHeight - 0.5) * 30;
-            document.getElementById('stats-bar').style.transform = `translateZ(20px) rotateX(${-y}deg) rotateY(${x}deg)`;
-        });
+        // --- 3. 3D ENGINE ---
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x000000, 0.015);
 
-        // --- MAIN LOOP ---
-        function animate() {
-            requestAnimationFrame(animate);
-            if(!isPlaying || isPaused) return;
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.toneMapping = THREE.ReinhardToneMapping;
+        document.body.appendChild(renderer.domElement);
 
-            // 1. Move Environment (Illusion of running)
-            dist += speed;
-            document.getElementById('distance').innerText = Math.floor(dist) + 'm';
+        // --- 4. ASSETS GENERATION (Procedural 3D Text) ---
+        // Since we can't load external fonts easily without CORS, we use Canvas textures for text sprites
+        function createTextSprite(text, color, size) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 1024; 
+            canvas.height = 256;
+            ctx.fillStyle = color;
+            ctx.font = 'bold 80px Courier New';
+            ctx.textAlign = 'center';
+            ctx.fillText(text, 512, 128);
             
-            gridHelper.position.z += speed;
-            if(gridHelper.position.z > 10) gridHelper.position.z = 0; // Reset grid
-
-            // 2. Physics
-            if(isJumping) {
-                runner.position.y += jumpVelocity;
-                jumpVelocity += gravity;
-                if(runner.position.y <= 0.4) {
-                    runner.position.y = 0.4;
-                    isJumping = false;
-                    runner.rotation.x = 0; // Reset rotation
-                }
-            }
-
-            // 3. Spawning
-            spawnTimer += speed;
-            if(spawnTimer > 15) {
-                spawnTimer = 0;
-                // Randomly spawn obstacle or collectible
-                if(Math.random() > 0.4) createObstacle(-50);
-                else createCollectible(-50);
-            }
-
-            // 4. Update Objects & Collision
-            
-            // Obstacles
-            for(let i = obstacles.length - 1; i >= 0; i--) {
-                const obs = obstacles[i];
-                obs.position.z += speed;
-                
-                // Collision
-                if(obs.position.z > -1 && obs.position.z < 1) {
-                    if(runner.position.y < 1.0) {
-                        // HIT! Reset stats for now
-                        score = Math.max(0, score - 50);
-                        document.getElementById('score').innerText = score;
-                        // Flash red
-                        document.body.style.background = '#300';
-                        setTimeout(() => document.body.style.background = '#050510', 100);
-                        
-                        scene.remove(obs);
-                        obstacles.splice(i, 1);
-                        continue;
-                    }
-                }
-
-                // Cleanup
-                if(obs.position.z > 10) {
-                    scene.remove(obs);
-                    obstacles.splice(i, 1);
-                }
-            }
-
-            // Collectibles
-            for(let i = collectibles.length - 1; i >= 0; i--) {
-                const col = collectibles[i];
-                col.position.z += speed;
-                col.rotation.y += 0.05;
-                col.userData.line.position.z = col.position.z;
-
-                // Collision
-                if(col.position.z > -1 && col.position.z < 1) {
-                    if(runner.position.y > 0.8 || Math.abs(runner.position.x - col.position.x) < 0.5) {
-                        // COLLECTED!
-                        score += 100;
-                        document.getElementById('score').innerText = score;
-                        
-                        scene.remove(col);
-                        scene.remove(col.userData.line);
-                        collectibles.splice(i, 1);
-                        
-                        unlockData(); // Trigger Modal
-                        continue;
-                    }
-                }
-
-                if(col.position.z > 10) {
-                    scene.remove(col);
-                    scene.remove(col.userData.line);
-                    collectibles.splice(i, 1);
-                }
-            }
-
-            renderer.render(scene, camera);
+            const tex = new THREE.CanvasTexture(canvas);
+            const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+            const sprite = new THREE.Sprite(mat);
+            sprite.scale.set(size, size * 0.25, 1);
+            return sprite;
         }
 
-        // Resize
+        // --- 5. BUILD THE WORLD ---
+        
+        // A. Infinite Tunnel
+        const tunnelGeo = new THREE.CylinderGeometry(10, 10, 1000, 32, 100, true);
+        const tunnelMat = new THREE.MeshBasicMaterial({ 
+            color: 0x111111, 
+            wireframe: true, 
+            transparent: true, 
+            opacity: 0.1 
+        });
+        const tunnel = new THREE.Mesh(tunnelGeo, tunnelMat);
+        tunnel.rotation.x = -Math.PI / 2;
+        tunnel.position.z = -250;
+        scene.add(tunnel);
+
+        // B. Timeline Markers
+        const markers = [];
+        timeline.forEach(item => {
+            const group = new THREE.Group();
+            group.position.set(0, 0, item.z);
+
+            // Title
+            const title = createTextSprite(item.title, '#' + item.color.toString(16), 20);
+            title.position.y = 2;
+            group.add(title);
+
+            // Subtitle
+            const sub = createTextSprite(item.sub, '#ffffff', 10);
+            sub.position.y = 1;
+            group.add(sub);
+
+            // The "Artifact" (Visual Representation)
+            const geo = new THREE.IcosahedronGeometry(1.5, 0);
+            const mat = new THREE.MeshStandardMaterial({ 
+                color: item.color, 
+                emissive: item.color,
+                emissiveIntensity: 0.5,
+                roughness: 0.2,
+                metalness: 0.8,
+                wireframe: true
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+            group.add(mesh);
+            
+            // Rotating Rings
+            const ringGeo = new THREE.TorusGeometry(3, 0.05, 16, 100);
+            const ringMat = new THREE.MeshBasicMaterial({ color: item.color });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            group.add(ring);
+
+            scene.add(group);
+            markers.push({ group: group, mesh: mesh, ring: ring, z: item.z });
+        });
+
+        // C. Particle Starfield (Speed Lines)
+        const starsGeo = new THREE.BufferGeometry();
+        const starsCount = 5000;
+        const posArray = new Float32Array(starsCount * 3);
+        for(let i=0; i<starsCount*3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 200; // Spread wide
+        }
+        starsGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const starsMat = new THREE.PointsMaterial({ size: 0.2, color: 0xffffff });
+        const starField = new THREE.Points(starsGeo, starsMat);
+        scene.add(starField);
+
+        // --- 6. POST PROCESSING (GLOW) ---
+        const composer = new THREE.EffectComposer(renderer);
+        const renderPass = new THREE.RenderPass(scene, camera);
+        composer.addPass(renderPass);
+
+        const bloomPass = new THREE.UnrealBloomPass(
+            new THREE.Vector2(window.innerWidth, window.innerHeight),
+            1.5, 0.4, 0.85
+        );
+        bloomPass.threshold = 0;
+        bloomPass.strength = 1.2; // High intensity
+        bloomPass.radius = 0;
+        composer.addPass(bloomPass);
+
+        // --- 7. INTERACTION LOGIC (SCROLL TO FLY) ---
+        let targetZ = 0;
+        let currentZ = 0;
+        let maxZ = (timeline.length - 1) * -50;
+        
+        window.addEventListener('wheel', (e) => {
+            targetZ += e.deltaY * -0.1;
+            // Clamp
+            if(targetZ > 0) targetZ = 0;
+            if(targetZ < maxZ) targetZ = maxZ;
+        });
+
+        // Touch support for mobile
+        let touchStartY = 0;
+        window.addEventListener('touchstart', e => touchStartY = e.touches[0].clientY);
+        window.addEventListener('touchmove', e => {
+            const deltaY = e.touches[0].clientY - touchStartY;
+            targetZ += deltaY * 0.2;
+            if(targetZ > 0) targetZ = 0;
+            if(targetZ < maxZ) targetZ = maxZ;
+            touchStartY = e.touches[0].clientY;
+        });
+
+        // --- 8. INITIALIZATION SEQUENCE ---
+        window.initExperience = function() {
+            const overlay = document.getElementById('start-overlay');
+            overlay.style.opacity = 0;
+            setTimeout(() => overlay.remove(), 1000);
+            
+            AudioSys.init();
+            AudioSys.playDrone();
+            
+            // Camera Intro Animation
+            camera.position.z = 100;
+            gsap.to(camera.position, { z: 5, duration: 3, ease: "power2.out", onComplete: () => {
+                document.getElementById('interaction-layer').style.opacity = 1;
+            }});
+        };
+
+        // --- 9. ANIMATION LOOP ---
+        let time = 0;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.01;
+
+            // Smooth Camera Movement
+            currentZ += (targetZ - currentZ) * 0.05; // Lerp
+            camera.position.z = currentZ + 10; // Camera trails slightly behind
+
+            // Animate Markers
+            markers.forEach((m, index) => {
+                // Rotate Artifacts
+                m.mesh.rotation.x += 0.01;
+                m.mesh.rotation.y += 0.02;
+                m.ring.rotation.x = Math.sin(time) * 0.5;
+                m.ring.rotation.y = time * 0.5;
+
+                // Scale effect based on proximity to camera
+                const dist = Math.abs(currentZ - m.z);
+                const scale = Math.max(0.5, 2 - (dist / 20)); // Grow when close
+                m.group.scale.setScalar(scale);
+                
+                // Sound effect when passing a marker
+                if(dist < 5 && !m.playedSound) {
+                    AudioSys.playSwoosh();
+                    m.playedSound = true; // Play once
+                } else if (dist > 20) {
+                    m.playedSound = false; // Reset
+                }
+            });
+
+            // Warp Speed Effect on Stars
+            const positions = starField.geometry.attributes.position.array;
+            for(let i=2; i<positions.length; i+=3) {
+                positions[i] += (currentZ - targetZ) * 0.5; // Stars move opposite to camera
+                if(positions[i] > 100) positions[i] -= 400;
+                if(positions[i] < -300) positions[i] += 400;
+            }
+            starField.geometry.attributes.position.needsUpdate = true;
+
+            // Camera Shake based on speed
+            const speed = Math.abs(targetZ - currentZ);
+            camera.position.x = (Math.random() - 0.5) * speed * 0.01;
+            camera.position.y = (Math.random() - 0.5) * speed * 0.01;
+
+            composer.render();
+        }
+        animate();
+
+        // Resize Handling
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
         });
 
     </script>
