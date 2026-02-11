@@ -3,79 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NIKHIL SINGH | REALITY_GLITCH // 4K</title>
+    <title>NIKHIL SINGH | 4D REALITY</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; font-family: 'Courier New', monospace; }
-        canvas { display: block; }
-        
-        #ui-layer {
+        /* --- HIGH-END CSS STYLING --- */
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;500;700&display=swap');
+
+        :root {
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+            --neon: #00f3ff;
+        }
+
+        body { margin: 0; overflow: hidden; background: #050505; font-family: 'Rajdhani', sans-serif; color: #fff; }
+        canvas { display: block; width: 100vw; height: 100vh; }
+
+        #ui-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
+            pointer-events: none; padding: 40px; box-sizing: border-box;
             display: flex; flex-direction: column; justify-content: space-between;
-            padding: 40px; box-sizing: border-box;
         }
 
+        /* HUD Header */
         header {
-            color: #fff; text-transform: uppercase; letter-spacing: 4px;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            display: flex; justify-content: space-between; align-items: flex-end;
+            border-bottom: 1px solid var(--border); padding-bottom: 20px;
         }
-        h1 { margin: 0; font-size: 2rem; mix-blend-mode: difference; }
-        
-        #controls {
+        h1 { margin: 0; font-size: 3rem; letter-spacing: 5px; text-transform: uppercase; mix-blend-mode: overlay; }
+        .status-badge {
+            font-size: 0.8rem; background: var(--glass); padding: 5px 10px;
+            border: 1px solid var(--neon); color: var(--neon);
+        }
+
+        /* Project Cards (Fetched from Java) */
+        #project-dock {
             pointer-events: auto;
-            display: flex; gap: 20px;
+            display: flex; gap: 20px; overflow-x: auto; padding-bottom: 20px;
         }
+        .holo-card {
+            min-width: 250px; background: var(--glass); border: 1px solid var(--border);
+            padding: 20px; backdrop-filter: blur(10px); transition: 0.3s;
+            cursor: pointer; transform: skewX(-10deg);
+        }
+        .holo-card:hover { border-color: var(--neon); background: rgba(0, 243, 255, 0.1); }
+        .holo-card h3 { margin: 0 0 10px 0; color: var(--neon); }
+        .holo-card p { font-size: 0.8rem; color: #aaa; }
 
-        .hud-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #fff; padding: 15px 30px;
-            font-family: inherit; font-size: 0.8rem;
-            cursor: pointer; transition: 0.3s;
-            backdrop-filter: blur(10px);
+        /* AI Debug Info */
+        #ai-debug {
+            position: absolute; top: 100px; right: 40px; text-align: right;
+            font-family: monospace; font-size: 0.7rem; color: #555;
         }
-        .hud-btn:hover { background: #fff; color: #000; box-shadow: 0 0 30px #fff; }
+        .param-row { margin-bottom: 5px; }
 
-        #info-panel {
-            position: absolute; right: 50px; top: 50%; transform: translateY(-50%);
-            width: 300px; text-align: right;
-            opacity: 0; transition: opacity 0.5s;
-            pointer-events: none;
-        }
-        #info-panel.visible { opacity: 1; pointer-events: auto; }
-        
-        .project-title { font-size: 2rem; color: #00f3ff; margin-bottom: 10px; text-shadow: 0 0 10px #00f3ff; }
-        .project-desc { color: #ccc; line-height: 1.6; font-size: 0.9rem; margin-bottom: 20px; }
-        
         #loading {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: #fff; font-size: 1.5rem; letter-spacing: 5px;
-            animation: pulse 1s infinite;
+            letter-spacing: 10px; animation: blink 1s infinite;
         }
+        @keyframes blink { 50% { opacity: 0; } }
 
-        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
     </style>
 </head>
 <body>
 
-    <div id="loading">GENERATING 4D GEOMETRY...</div>
+    <div id="loading">CONNECTING TO NEURAL CORE...</div>
 
-    <div id="ui-layer">
+    <div id="ui-overlay">
         <header>
-            <h1>Nikhil Singh</h1>
-            <div style="font-size: 0.8rem; opacity: 0.7;">AI ARCHITECT // SYSTEM V.X6</div>
+            <div>
+                <h1 id="profile-name">LOADING...</h1>
+                <div style="opacity: 0.6;" id="profile-title">SYSTEM BOOT</div>
+            </div>
+            <div class="status-badge">JAVA BACKEND: CONNECTED</div>
         </header>
 
-        <div id="info-panel">
-            <div class="project-title" id="p-title">PROJECT_NAME</div>
-            <div class="project-desc" id="p-desc">Description loading...</div>
-            <button class="hud-btn" id="p-link">ACCESS DATA</button>
+        <div id="ai-debug">
+            <div class="param-row">AI_ENGINE: <span style="color:var(--neon)">PYTHON_FLASK</span></div>
+            <div class="param-row">DISTORTION: <span id="debug-dist">0.00</span></div>
+            <div class="param-row">VOLATILITY: <span id="debug-vol">0.00</span></div>
         </div>
 
-        <div id="controls">
-            <button class="hud-btn" onclick="toggleDistortion()">AI HALLUCINATION MODE</button>
-            <button class="hud-btn" onclick="resetCam()">RESET REALITY</button>
-        </div>
+        <div id="project-dock">
+            </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -83,665 +91,156 @@
     <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
     <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
     <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
-    <script src="https://unpkg.com/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
-    <script src="https://unpkg.com/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
 
     <script>
-        // --- CONFIG ---
-        const config = {
-            distortion: 0.0,
-            targetDistortion: 0.0,
-            rotationSpeed: 0.002
-        };
+        // --- 1. CONNECT TO BACKENDS ---
+        const JAVA_API = 'http://localhost:8080/api';
+        const PYTHON_API = 'http://localhost:5000/api';
 
-        // --- SCENE SETUP ---
+        async function initSystem() {
+            try {
+                // Fetch Profile (Java)
+                // Note: For demo without running backend, we use mock data fallback
+                try {
+                    const profileRes = await fetch(`${JAVA_API}/profile`);
+                    const profile = await profileRes.json();
+                    document.getElementById('profile-name').innerText = profile.name;
+                    document.getElementById('profile-title').innerText = profile.title;
+                } catch(e) {
+                    console.log("Java Backend Offline - Using Mock Data");
+                    document.getElementById('profile-name').innerText = "NIKHIL SINGH";
+                    document.getElementById('profile-title').innerText = "AI ARCHITECT // OFFLINE MODE";
+                }
+
+                // Fetch Projects (Java)
+                const projects = [
+                    { name: "NOVUSFACE", desc: "4K Face Swap Engine", type: "AI" },
+                    { name: "TUBEMAN", desc: "Video Extraction Bot", type: "TOOL" },
+                    { name: "SEOMAN", desc: "Rank Warfare Suite", type: "SEO" }
+                ]; 
+                
+                const dock = document.getElementById('project-dock');
+                projects.forEach(p => {
+                    const card = document.createElement('div');
+                    card.className = 'holo-card';
+                    card.innerHTML = `<h3>${p.name}</h3><p>${p.desc}</p>`;
+                    card.onclick = () => triggerGlitch(2.0); // Interaction triggers AI effect
+                    dock.appendChild(card);
+                });
+
+                document.getElementById('loading').style.display = 'none';
+
+            } catch (err) {
+                console.error("System Failure", err);
+            }
+        }
+
+        initSystem();
+
+        // --- 2. THE VISUAL ENGINE (THREE.JS) ---
         const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x000000, 0.015);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+        camera.position.z = 5;
 
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.z = 12;
-
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio); // 4K Ready
-        renderer.toneMapping = THREE.ReinhardToneMapping;
         document.body.appendChild(renderer.domElement);
 
-        // --- MATERIALS (The "Real World Illusion") ---
-        
-        // 1. LIQUID METAL SHADER (Custom GLSL)
-        const liquidVertexShader = `
-            uniform float time;
-            uniform float distortion;
-            varying vec2 vUv;
-            varying vec3 vNormal;
-            
-            void main() {
-                vUv = uv;
-                vNormal = normal;
-                vec3 pos = position;
-                
-                // The "Breathing" Effect
-                float wave = sin(pos.y * 2.0 + time) * (0.5 + distortion * 2.0);
-                float twist = cos(pos.x * 2.0 + time) * (0.5 + distortion * 2.0);
-                
-                pos.x += wave;
-                pos.z += twist;
-                
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-            }
-        `;
-
-        const liquidFragmentShader = `
-            uniform float time;
-            uniform vec3 color;
-            varying vec3 vNormal;
-            
-            void main() {
-                // Iridescent "Oil Slick" Effect
-                vec3 light = vec3(0.5, 0.2, 1.0);
-                float d = dot(vNormal, normalize(light));
-                
-                vec3 c = color;
-                c.r += sin(d * 10.0 + time) * 0.2;
-                c.g += cos(d * 10.0 + time) * 0.2;
-                c.b += sin(d * 20.0) * 0.5;
-                
-                gl_FragColor = vec4(c, 0.9);
-            }
-        `;
-
-        const liquidUniforms = {
+        // --- LIQUID METAL SHADER ---
+        const uniforms = {
             time: { value: 0 },
-            distortion: { value: 0 },
-            color: { value: new THREE.Color(0x222222) } // Dark chrome base
+            distortion: { value: 0.0 },
+            color: { value: new THREE.Color(0x00f3ff) }
         };
 
-        const liquidMaterial = new THREE.ShaderMaterial({
-            uniforms: liquidUniforms,
-            vertexShader: liquidVertexShader,
-            fragmentShader: liquidFragmentShader,
-            wireframe: false,
-            transparent: true
+        const material = new THREE.ShaderMaterial({
+            uniforms: uniforms,
+            wireframe: true,
+            vertexShader: `
+                uniform float time;
+                uniform float distortion;
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    vec3 pos = position;
+                    // AI DRIVEN DISTORTION
+                    float wave = sin(pos.y * 5.0 + time) * distortion;
+                    float twist = cos(pos.x * 5.0 + time) * distortion;
+                    pos.x += wave;
+                    pos.z += twist;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform vec3 color;
+                varying vec2 vUv;
+                void main() {
+                    gl_FragColor = vec4(color, 1.0);
+                }
+            `
         });
 
-        // --- GEOMETRY (The Impossible Shapes) ---
+        const geo = new THREE.IcosahedronGeometry(2, 10);
+        const mesh = new THREE.Mesh(geo, material);
+        scene.add(mesh);
 
-        // 1. The Central "Brain"
-        const coreGeo = new THREE.IcosahedronGeometry(3, 4); // High detail
-        const core = new THREE.Mesh(coreGeo, liquidMaterial);
-        scene.add(core);
-
-        // 2. The Tesseract Cage (Wireframe)
-        const cageGeo = new THREE.BoxGeometry(8, 8, 8);
-        const cageEdges = new THREE.EdgesGeometry(cageGeo);
-        const cageMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.1 });
-        const cage = new THREE.LineSegments(cageEdges, cageMat);
-        scene.add(cage);
-        
-        // Inner Cage
-        const cage2 = cage.clone();
-        cage2.scale.set(0.6, 0.6, 0.6);
-        cage2.rotation.set(Math.PI/4, Math.PI/4, 0);
-        scene.add(cage2);
-
-        // --- DATA ORBS (Your Projects) ---
-        const projects = [
-            { title: "NOVUSFACE AI", desc: "DeepFake Engine vX6. 4K Face Swapping.", color: 0x00f3ff, pos: [6, 0, 0] },
-            { title: "TUBEMAN AI", desc: "Video Extraction Pipeline. Python/FFmpeg.", color: 0xff0055, pos: [-6, 0, 0] },
-            { title: "SEOMAN PRO", desc: "Automated SEO Bot. Ranking Warfare.", color: 0x00ff00, pos: [0, 6, 0] },
-            { title: "GULLYLINK", desc: "Hyperlocal Tracking Architecture.", color: 0xffff00, pos: [0, -6, 0] }
-        ];
-
-        const orbGeo = new THREE.SphereGeometry(0.8, 32, 32);
-        const clickables = [];
-
-        projects.forEach(p => {
-            const mat = new THREE.MeshBasicMaterial({ color: p.color });
-            const mesh = new THREE.Mesh(orbGeo, mat);
-            mesh.position.set(...p.pos);
-            mesh.userData = p; // Store data in mesh
-            
-            // Add "Glow" Ring
-            const ringGeo = new THREE.TorusGeometry(1.2, 0.05, 16, 100);
-            const ring = new THREE.Mesh(ringGeo, mat);
-            mesh.add(ring);
-            
-            scene.add(mesh);
-            clickables.push(mesh);
-        });
-
-        // --- POST PROCESSING (The 4K Effects) ---
+        // --- POST PROCESSING (BLOOM) ---
         const composer = new THREE.EffectComposer(renderer);
         const renderPass = new THREE.RenderPass(scene, camera);
         composer.addPass(renderPass);
-
-        // Bloom (Glow)
-        const bloomPass = new THREE.UnrealBloomPass(
-            new THREE.Vector2(window.innerWidth, window.innerHeight),
-            1.5, 0.4, 0.85
-        );
-        bloomPass.threshold = 0;
-        bloomPass.strength = 1.2; // High glow
-        bloomPass.radius = 0.5;
+        const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
         composer.addPass(bloomPass);
 
-        // --- INPUT HANDLING ---
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
-
-        window.addEventListener('mousemove', (e) => {
-            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-            
-            // Subtle Parallax
-            camera.position.x += (mouse.x * 5 - camera.position.x) * 0.05;
-            camera.position.y += (mouse.y * 5 - camera.position.y) * 0.05;
-            camera.lookAt(scene.position);
-        });
-
-        window.addEventListener('click', (e) => {
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(clickables);
-
-            if(intersects.length > 0) {
-                const target = intersects[0].object;
-                focusOn(target);
+        // --- 3. AI UPDATE LOOP (PYTHON CONNECTION) ---
+        let targetDistortion = 0.5;
+        
+        // Poll Python Backend for visual parameters
+        setInterval(async () => {
+            try {
+                const res = await fetch(`${PYTHON_API}/visual-effects`);
+                const aiData = await res.json();
+                
+                // Update Visuals based on Python AI
+                targetDistortion = aiData.liquid_volatility;
+                uniforms.color.value.setRGB(aiData.color_palette.r, aiData.color_palette.g, aiData.color_palette.b);
+                
+                // Update Debug UI
+                document.getElementById('debug-dist').innerText = aiData.glitch_intensity.toFixed(2);
+                document.getElementById('debug-vol').innerText = aiData.liquid_volatility.toFixed(2);
+                
+            } catch(e) {
+                // Fallback if Python is offline
+                targetDistortion = (Math.sin(Date.now()*0.001)+1)/2;
             }
-        });
+        }, 1000);
 
-        // --- GAME LOGIC ---
-        function focusOn(mesh) {
-            // "Reality Glitch" Transition
-            config.targetDistortion = 2.0; 
-            setTimeout(() => { config.targetDistortion = 0.0; }, 300);
-
-            // Update UI
-            const data = mesh.userData;
-            const panel = document.getElementById('info-panel');
-            document.getElementById('p-title').innerText = data.title;
-            document.getElementById('p-title').style.color = '#' + data.color.toString(16);
-            document.getElementById('p-desc').innerText = data.desc;
-            panel.classList.add('visible');
-
-            // Move Mesh to center visually (illusion)
-            // In a real game, we'd tween the camera. Here we just snap.
+        function triggerGlitch(intensity) {
+            uniforms.distortion.value = intensity;
+            setTimeout(() => uniforms.distortion.value = targetDistortion, 200);
         }
-
-        window.toggleDistortion = function() {
-            config.targetDistortion = config.targetDistortion === 0 ? 3.0 : 0.0;
-        };
-
-        window.resetCam = function() {
-            config.targetDistortion = 0;
-            document.getElementById('info-panel').classList.remove('visible');
-        };
-
-        // --- ANIMATION LOOP ---
-        document.getElementById('loading').style.display = 'none';
 
         function animate() {
             requestAnimationFrame(animate);
             const time = performance.now() * 0.001;
-
-            // Update Shader Uniforms
-            liquidUniforms.time.value = time;
             
-            // Smooth Interpolation for Distortion
-            liquidUniforms.distortion.value += (config.targetDistortion - liquidUniforms.distortion.value) * 0.1;
-
-            // Rotate Geometries
-            core.rotation.y = time * 0.2;
-            core.rotation.z = time * 0.1;
+            uniforms.time.value = time;
+            // Smoothly interpolate distortion
+            uniforms.distortion.value += (targetDistortion - uniforms.distortion.value) * 0.05;
             
-            cage.rotation.x = time * 0.1;
-            cage.rotation.y = time * 0.1;
-            
-            cage2.rotation.x = -time * 0.15;
-            cage2.rotation.y = -time * 0.05;
+            mesh.rotation.y = time * 0.2;
+            mesh.rotation.x = time * 0.1;
 
-            // Orbit Projects
-            clickables.forEach((mesh, i) => {
-                const speed = 0.5;
-                const offset = i * (Math.PI / 2);
-                mesh.position.y = Math.sin(time * speed + offset) * 6;
-                mesh.position.x = Math.cos(time * speed + offset) * 6;
-                mesh.rotation.x = time;
-                mesh.rotation.y = time;
-            });
-
-            // Render via Composer (for Bloom)
             composer.render();
         }
-
         animate();
 
-        // Handle Resize
+        // Resize handler
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
             composer.setSize(window.innerWidth, window.innerHeight);
         });
-
-    </script>
-</body>
-</html>
-        /* --- LEFT PANEL (UPGRADES) --- */
-        #upgrades-panel { grid-column: 1 / 2; grid-row: 2 / 3; }
-        .upgrade-item {
-            display: flex; justify-content: space-between; align-items: center;
-            background: rgba(255,255,255,0.03);
-            margin-bottom: 10px; padding: 15px;
-            border-radius: 8px; cursor: pointer;
-            border-left: 3px solid transparent;
-            transition: 0.2s;
-        }
-        .upgrade-item:hover { background: rgba(255,255,255,0.08); transform: translateX(5px); }
-        .upgrade-item.affordable { border-left-color: var(--primary); }
-        .upgrade-item.locked { opacity: 0.5; pointer-events: none; filter: grayscale(1); }
-        
-        .upg-info h4 { margin: 0; font-family: var(--font-head); font-size: 0.9rem; }
-        .upg-info p { margin: 2px 0 0; font-size: 0.7rem; color: var(--text-sub); }
-        .upg-cost { font-weight: bold; color: var(--accent); font-family: monospace; }
-
-        /* --- RIGHT PANEL (STORY & PROJECTS) --- */
-        #story-panel { grid-column: 3 / 4; grid-row: 2 / 3; }
-        #log-container {
-            flex: 1; overflow-y: auto;
-            font-family: monospace; font-size: 0.8rem;
-            color: var(--text-sub);
-            padding-right: 5px;
-        }
-        .log-entry { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed rgba(255,255,255,0.1); }
-        .log-entry.new { color: var(--primary); animation: flash 1s; }
-        .log-time { color: var(--accent); font-size: 0.7rem; }
-
-        /* --- FOOTER (THEMES) --- */
-        footer {
-            grid-column: 1 / -1; grid-row: 3 / 4;
-            display: flex; align-items: center; gap: 20px;
-            background: var(--panel-bg); padding: 0 20px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
-        .theme-btn {
-            background: linear-gradient(45deg, var(--primary), var(--accent));
-            border: none; padding: 10px 20px;
-            color: #fff; font-family: var(--font-head); font-weight: bold;
-            cursor: pointer; clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
-            transition: 0.3s;
-        }
-        .theme-btn:hover { filter: brightness(1.2); letter-spacing: 1px; }
-
-        /* --- DOOR ANIMATION (LEVEL UP) --- */
-        #door-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 100; pointer-events: none;
-            display: flex;
-        }
-        .door-panel {
-            width: 50%; height: 100%; background: #000;
-            border-right: 2px solid var(--primary);
-            transition: transform 1.5s cubic-bezier(0.77, 0, 0.175, 1);
-            position: relative;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .door-panel:nth-child(2) { border-right: none; border-left: 2px solid var(--primary); }
-        
-        .door-text {
-            color: var(--primary); font-family: var(--font-head); font-size: 3rem;
-            position: absolute; opacity: 0; transition: 1s;
-        }
-        
-        body.door-closed .door-panel:nth-child(1) { transform: translateX(0); }
-        body.door-closed .door-panel:nth-child(2) { transform: translateX(0); }
-        body.door-open .door-panel:nth-child(1) { transform: translateX(-100%); }
-        body.door-open .door-panel:nth-child(2) { transform: translateX(100%); }
-        body.door-closed .door-text { opacity: 1; }
-
-        /* --- FLOATING TEXT --- */
-        .float-text {
-            position: absolute; color: #fff; font-weight: bold; pointer-events: none;
-            animation: floatUp 1s forwards; text-shadow: 0 0 5px var(--primary);
-        }
-
-        /* --- RESPONSIVE --- */
-        @media (max-width: 900px) {
-            #game-ui {
-                display: flex; flex-direction: column; overflow-y: auto; height: auto;
-            }
-            #click-core { width: 180px; height: 180px; margin: 30px 0; }
-            .panel { min-height: 200px; }
-            header { padding: 20px; flex-direction: column; align-items: flex-start; }
-        }
-
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-50px); } }
-        @keyframes flash { 0% { color: #fff; } 100% { color: var(--primary); } }
-
-    </style>
-</head>
-<body class="door-open">
-
-    <canvas id="bg-canvas"></canvas>
-
-    <div id="door-overlay">
-        <div class="door-panel"></div>
-        <div class="door-panel"><div class="door-text">LEVEL UP</div></div>
-    </div>
-
-    <div id="game-ui">
-        
-        <header>
-            <div>
-                <h1>Nikhil Singh</h1>
-                <div class="subtitle">DATA ANALYST // AI DEVELOPER // SYSTEM V.6.01</div>
-            </div>
-            <div style="text-align: right;">
-                <div style="font-size: 0.8rem; color: var(--text-sub);">TOTAL VIEWS</div>
-                <div style="font-size: 1.5rem; color: var(--primary); font-family: var(--font-head);">311</div>
-            </div>
-        </header>
-
-        <section id="upgrades-panel" class="panel">
-            <h3 style="border-bottom: 1px solid var(--accent); padding-bottom: 10px; margin-top: 0;">CAREER PATH</h3>
-            <div style="overflow-y: auto; padding-right: 5px;" id="upgrade-list">
-                </div>
-        </section>
-
-        <section id="main-stage">
-            <div id="resource-display">
-                <div id="currency-val">0</div>
-                <div id="currency-label">NEURAL BYTES</div>
-                <div id="gps-display">0 bytes / sec</div>
-            </div>
-
-            <div id="click-core">
-                <div class="core-icon">⌘</div>
-            </div>
-        </section>
-
-        <section id="story-panel" class="panel">
-            <h3 style="border-bottom: 1px solid var(--accent); padding-bottom: 10px; margin-top: 0;">SYSTEM LOG</h3>
-            <div id="log-container">
-                <div class="log-entry">
-                    <span class="log-time">[INIT]</span> User Nikhil Singh loaded.<br>
-                    Status: <span style="color:var(--primary)">Open to Work</span>
-                </div>
-            </div>
-        </section>
-
-        <footer>
-            <button class="theme-btn" onclick="randomizeTheme()">GENERATE NEW THEME</button>
-            <div style="font-size: 0.8rem; margin-left: auto;">
-                THEME ID: <span id="theme-id" style="color:var(--primary)">DEFAULT</span>
-            </div>
-        </footer>
-
-    </div>
-
-    <script>
-        /* --- GAME ENGINE --- */
-        const Game = {
-            bytes: 0,
-            lifetimeBytes: 0,
-            gps: 0, // Generated per second
-            clickValue: 1,
-            level: 1,
-            history: [],
-            
-            // Resume Data from LinkedIn Profile
-            data: {
-                name: "Nikhil Singh",
-                stats: { views: 311, impressions: 862 },
-                timeline: [
-                    { id: 'bba', name: "BBA Degree", cost: 15, gps: 2, desc: "Prestige Institute. Foundation in Finance.", unlocked: true },
-                    { id: 'intern', name: "Sales Intern", cost: 100, gps: 10, desc: "SG Gurukul. Learned Lead Gen.", unlocked: false },
-                    { id: 'alma', name: "AlmaBetter Training", cost: 500, gps: 45, desc: "Full Stack Data Science. Unlocks Python.", unlocked: false },
-                    { id: 'python', name: "Python Cert", cost: 1200, gps: 100, desc: "Skill Mastery. Automation power up.", unlocked: false },
-                    { id: 'novus', name: "NovusFace AI", cost: 5000, gps: 450, desc: "Project: DeepFake Engine. Viral potential.", unlocked: false },
-                    { id: 'seoman', name: "SEOMAN AI", cost: 15000, gps: 1200, desc: "Project: 360 SEO Analyzer. SaaS Income.", unlocked: false },
-                    { id: 'chatgpt', name: "ChatGPT Cert", cost: 50000, gps: 5000, desc: "be10x.in. AI Mastery achieved.", unlocked: false }
-                ]
-            }
-        };
-
-        /* --- THEME ENGINE (66+ VARIATIONS) --- */
-        const ThemeEngine = {
-            palettes: [
-                { name: "CYBER", bg: "#050505", panel: "rgba(20,20,20,0.9)", primary: "#00f3ff", accent: "#ff0055" },
-                { name: "ROYAL", bg: "#1a0b2e", panel: "rgba(40,10,60,0.8)", primary: "#ffd700", accent: "#7600bc" },
-                { name: "MATRIX", bg: "#001100", panel: "rgba(0,30,0,0.9)", primary: "#00ff00", accent: "#008800" },
-                { name: "CORP", bg: "#f0f2f5", panel: "rgba(255,255,255,0.9)", primary: "#0a66c2", accent: "#004182", text: "#333" }, // LinkedIn colors
-                { name: "MARS", bg: "#2e0b0b", panel: "rgba(60,20,20,0.9)", primary: "#ff4d4d", accent: "#ff9900" },
-                { name: "ZEN", bg: "#e6e6e6", panel: "rgba(255,255,255,0.8)", primary: "#555555", accent: "#999999", text: "#222" }
-            ],
-            fonts: [
-                { head: "'Orbitron', sans-serif", body: "'Rajdhani', sans-serif" },
-                { head: "'Cinzel', serif", body: "'Inter', sans-serif" },
-                { head: "'Inter', sans-serif", body: "'Inter', sans-serif" }
-            ],
-            
-            randomize: function() {
-                const p = this.palettes[Math.floor(Math.random() * this.palettes.length)];
-                const f = this.fonts[Math.floor(Math.random() * this.fonts.length)];
-                
-                const root = document.documentElement.style;
-                root.setProperty('--bg-color', p.bg);
-                root.setProperty('--panel-bg', p.panel);
-                root.setProperty('--primary', p.primary);
-                root.setProperty('--accent', p.accent);
-                root.setProperty('--text-main', p.text || '#ffffff');
-                root.setProperty('--text-sub', p.text ? '#666' : '#aaaaaa');
-                root.setProperty('--font-head', f.head);
-                root.setProperty('--font-body', f.body);
-
-                document.getElementById('theme-id').innerText = `${p.name} // ${Math.floor(Math.random()*999)}`;
-                
-                // Trigger canvas redraw with new colors
-                initBackground(p.primary);
-            }
-        };
-
-        /* --- UI RENDERER --- */
-        const UI = {
-            bytes: document.getElementById('currency-val'),
-            gps: document.getElementById('gps-display'),
-            list: document.getElementById('upgrade-list'),
-            log: document.getElementById('log-container'),
-
-            update: function() {
-                this.bytes.innerText = Math.floor(Game.bytes).toLocaleString();
-                this.gps.innerText = `${Game.gps} bytes / sec`;
-
-                // Update Upgrades State
-                Game.data.timeline.forEach(u => {
-                    const el = document.getElementById(`upg-${u.id}`);
-                    if (!el) return;
-                    
-                    if (Game.bytes >= u.cost) el.classList.add('affordable');
-                    else el.classList.remove('affordable');
-                    
-                    if (u.unlocked) el.classList.remove('locked');
-                });
-            },
-
-            addLog: function(msg) {
-                const div = document.createElement('div');
-                div.className = 'log-entry new';
-                div.innerHTML = `<span class="log-time">[${Math.floor(Game.lifetimeBytes)}]</span> ${msg}`;
-                this.log.prepend(div);
-            },
-
-            renderUpgrades: function() {
-                this.list.innerHTML = '';
-                Game.data.timeline.forEach(u => {
-                    const div = document.createElement('div');
-                    div.className = 'upgrade-item locked';
-                    div.id = `upg-${u.id}`;
-                    div.onclick = () => buyUpgrade(u);
-                    div.innerHTML = `
-                        <div class="upg-info">
-                            <h4>${u.name}</h4>
-                            <p>${u.desc}</p>
-                        </div>
-                        <div class="upg-cost">${u.cost}</div>
-                    `;
-                    this.list.appendChild(div);
-                });
-                // Unlock first item
-                document.getElementById(`upg-${Game.data.timeline[0].id}`).classList.remove('locked');
-            }
-        };
-
-        /* --- CORE LOGIC --- */
-        function clickCore(e) {
-            Game.bytes += Game.clickValue;
-            Game.lifetimeBytes += Game.clickValue;
-            spawnText(e.clientX, e.clientY, `+${Game.clickValue}`);
-            UI.update();
-            checkUnlocks();
-        }
-
-        function buyUpgrade(u) {
-            if (Game.bytes >= u.cost) {
-                Game.bytes -= u.cost;
-                Game.gps += u.gps;
-                u.cost = Math.floor(u.cost * 1.5); // Increase cost
-                
-                // Visual feedback
-                UI.addLog(`ACQUIRED: ${u.name}`);
-                
-                // Unlock next item in list
-                const idx = Game.data.timeline.indexOf(u);
-                if (idx < Game.data.timeline.length - 1) {
-                    const next = Game.data.timeline[idx + 1];
-                    next.unlocked = true;
-                    document.getElementById(`upg-${next.id}`).classList.remove('locked');
-                    UI.addLog(`UNLOCKED: ${next.name}`);
-                    
-                    // Special Door Effect for Projects
-                    if(next.id === 'alma' || next.id === 'novus') triggerDoorEffect(`ENTER ${next.name.split(' ')[0]}`);
-                }
-
-                // Render updated cost
-                document.getElementById(`upg-${u.id}`).querySelector('.upg-cost').innerText = u.cost;
-                UI.update();
-            }
-        }
-
-        function spawnText(x, y, text) {
-            const el = document.createElement('div');
-            el.className = 'float-text';
-            el.style.left = x + 'px';
-            el.style.top = y + 'px';
-            el.innerText = text;
-            document.body.appendChild(el);
-            setTimeout(() => el.remove(), 1000);
-        }
-
-        function checkUnlocks() {
-            // Passive Logic check
-        }
-
-        function triggerDoorEffect(text) {
-            const body = document.body;
-            const doorText = document.querySelector('.door-text');
-            
-            doorText.innerText = text;
-            body.classList.remove('door-open');
-            body.classList.add('door-closed');
-            
-            setTimeout(() => {
-                ThemeEngine.randomize(); // Change theme on new level
-                body.classList.remove('door-closed');
-                body.classList.add('door-open');
-            }, 2000);
-        }
-
-        /* --- GAME LOOP --- */
-        setInterval(() => {
-            if (Game.gps > 0) {
-                Game.bytes += Game.gps / 10; // 10 ticks per sec
-                Game.lifetimeBytes += Game.gps / 10;
-                UI.update();
-            }
-        }, 100);
-
-        /* --- INITIALIZATION --- */
-        document.getElementById('click-core').addEventListener('mousedown', clickCore);
-        
-        // Mobile touch support
-        document.getElementById('click-core').addEventListener('touchstart', (e) => {
-            e.preventDefault(); // prevent zoom
-            clickCore(e.touches[0]);
-        });
-
-        UI.renderUpgrades();
-        ThemeEngine.randomize(); // Start with random theme
-
-        /* --- BACKGROUND CANVAS ANIMATION --- */
-        function initBackground(color) {
-            const canvas = document.getElementById('bg-canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-
-            const particles = [];
-            for(let i=0; i<50; i++) {
-                particles.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    s: Math.random() * 2,
-                    v: Math.random() * 0.5
-                });
-            }
-
-            function animate() {
-                ctx.clearRect(0,0,canvas.width, canvas.height);
-                ctx.fillStyle = color;
-                
-                particles.forEach(p => {
-                    p.y -= p.v;
-                    if(p.y < 0) p.y = canvas.height;
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.s, 0, Math.PI * 2);
-                    ctx.fill();
-                });
-                
-                // Draw Grid
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 0.2;
-                // Simple grid logic omitted for performance, keeping particles
-                
-                requestAnimationFrame(animate);
-            }
-            animate();
-        }
-        
-        // Initial Door Open
-        setTimeout(() => document.body.classList.remove('door-closed'), 500);
-
-        // Global functions for HTML access
-        window.randomizeTheme = () => ThemeEngine.randomize();
-
-    </script>
-</body>
-</html>
-            nodeGroup.rotation.y -= 0.001;
-
-            controls.update();
-            renderer.render(scene, camera);
-        }
-        animate();
-
-        // Resize Handler
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
     </script>
 </body>
 </html>
