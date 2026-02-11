@@ -3,756 +3,392 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NIKHIL SINGH | 6D MOBILE NEXUS</title>
+    <title>NIKHIL SINGH | VIRTUAL TOURMAN</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;900&family=Rajdhani:wght@500;700&display=swap');
 
         :root {
-            --neon-blue: #00f3ff;
-            --neon-pink: #ff0055;
-            --glass: rgba(20, 30, 40, 0.4);
-            --border: rgba(255, 255, 255, 0.2);
+            --neon-cyan: #00f3ff;
+            --neon-purple: #bc13fe;
+            --dark-bg: #050510;
+            --glass: rgba(20, 30, 40, 0.6);
         }
 
         body {
-            margin: 0; overflow: hidden; background: #000;
+            margin: 0; overflow: hidden; background: var(--dark-bg);
             font-family: 'Rajdhani', sans-serif;
-            touch-action: none; /* Prevent scroll on mobile */
-            user-select: none;
+            user-select: none; touch-action: none;
         }
 
-        /* --- 6D PARALLAX UI LAYER --- */
-        #ui-layer {
+        /* --- 6D HUD LAYER --- */
+        #hud {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; perspective: 1000px;
-            z-index: 10;
+            pointer-events: none; z-index: 10;
+            perspective: 1000px;
         }
 
-        .hud-element {
+        .hud-panel {
             position: absolute;
             transform-style: preserve-3d;
             transition: transform 0.1s ease-out;
         }
 
-        /* Header */
-        #header-box {
-            top: 30px; left: 30px;
+        /* Header Stats */
+        #stats-bar {
+            top: 20px; left: 20px;
             background: var(--glass);
-            border: 1px solid var(--border);
-            padding: 20px 40px;
-            border-radius: 15px;
+            border: 1px solid var(--neon-cyan);
+            padding: 15px 30px; border-radius: 10px;
             backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            box-shadow: 0 10px 30px rgba(0, 243, 255, 0.1);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+            display: flex; gap: 20px;
             transform: translateZ(20px);
         }
-        h1 { margin: 0; color: #fff; text-transform: uppercase; letter-spacing: 2px; font-size: 1.5rem; }
-        .sub { color: var(--neon-blue); font-size: 0.8rem; letter-spacing: 4px; }
+        .stat-item { text-align: center; }
+        .stat-val { font-family: 'Orbitron'; font-size: 1.5rem; color: #fff; }
+        .stat-label { font-size: 0.8rem; color: var(--neon-cyan); letter-spacing: 2px; }
 
-        /* Mobile Controls */
-        #mobile-controls {
-            position: absolute; bottom: 40px; left: 40px;
-            width: 120px; height: 120px;
-            background: rgba(255,255,255,0.05);
-            border: 2px solid rgba(255,255,255,0.1);
-            border-radius: 50%;
-            pointer-events: auto;
-            touch-action: none;
-            display: none; /* Hidden on desktop by default, shown via JS detect */
-        }
-        #joystick-knob {
-            width: 50px; height: 50px;
-            background: var(--neon-blue);
-            border-radius: 50%;
-            position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 20px var(--neon-blue);
-            pointer-events: none;
-        }
-
-        /* Right Side Touch Area (Camera) */
-        #look-zone {
-            position: absolute; top: 0; right: 0; width: 50%; height: 100%;
-            z-index: 5; pointer-events: auto; touch-action: none;
-        }
-
-        /* 3D Modal */
-        #modal-container {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; align-items: center; justify-content: center;
-            background: rgba(0,0,0,0.6);
-            opacity: 0; pointer-events: none; transition: 0.5s;
-            perspective: 1200px; z-index: 100;
-        }
-        #modal-container.active { opacity: 1; pointer-events: auto; }
-
-        .holo-card {
-            width: 80%; max-width: 400px;
-            background: rgba(10, 10, 15, 0.9);
-            border: 2px solid var(--neon-pink);
-            padding: 30px; border-radius: 20px;
-            text-align: center; color: #fff;
-            transform: rotateX(20deg) translateZ(-100px);
-            transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 0 50px rgba(255, 0, 85, 0.3);
-        }
-        #modal-container.active .holo-card { transform: rotateX(0) translateZ(0); }
-
-        .btn {
-            margin-top: 20px; padding: 12px 30px;
-            background: var(--neon-pink); border: none; color: #fff;
-            font-weight: bold; border-radius: 30px; font-size: 1rem;
-            cursor: pointer; box-shadow: 0 0 20px var(--neon-pink);
-        }
-
-        /* Start Button (Audio Context) */
+        /* Start Screen */
         #start-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 999;
+            background: rgba(0,0,0,0.85); z-index: 100;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
+            backdrop-filter: blur(20px);
         }
-        .start-btn {
-            padding: 20px 50px; border: 2px solid var(--neon-blue);
-            background: transparent; color: var(--neon-blue);
-            font-family: 'Rajdhani'; font-size: 1.5rem; letter-spacing: 5px;
+        h1 {
+            font-family: 'Orbitron'; font-size: 3rem; color: #fff;
+            text-shadow: 0 0 30px var(--neon-cyan); text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle { color: var(--neon-purple); letter-spacing: 5px; margin-bottom: 40px; font-size: 1.2rem; }
+        
+        #start-btn {
+            padding: 20px 60px; font-size: 1.5rem; font-family: 'Orbitron';
+            background: transparent; color: var(--neon-cyan);
+            border: 2px solid var(--neon-cyan); border-radius: 50px;
             cursor: pointer; transition: 0.3s;
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.3);
         }
-        .start-btn:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 40px var(--neon-blue); }
+        #start-btn:hover { background: var(--neon-cyan); color: #000; transform: scale(1.1); }
+
+        /* Info Modal (Hologram) */
+        #holo-modal {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 80%; max-width: 500px;
+            background: rgba(10, 15, 20, 0.95);
+            border: 2px solid var(--neon-purple);
+            padding: 40px; border-radius: 20px;
+            text-align: center; color: #fff;
+            box-shadow: 0 0 100px rgba(188, 19, 254, 0.4);
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: auto;
+        }
+        #holo-modal.active { transform: translate(-50%, -50%) scale(1); }
+        
+        .holo-title { color: var(--neon-cyan); font-family: 'Orbitron'; margin-bottom: 15px; font-size: 1.8rem; }
+        .holo-text { line-height: 1.6; font-size: 1.1rem; color: #ddd; margin-bottom: 25px; }
+        .holo-btn {
+            background: var(--neon-purple); border: none; padding: 10px 30px;
+            color: #fff; font-weight: bold; cursor: pointer; border-radius: 5px;
+            box-shadow: 0 0 20px var(--neon-purple);
+        }
+
+        /* Mobile Controls Hint */
+        #tap-hint {
+            position: absolute; bottom: 50px; width: 100%; text-align: center;
+            color: rgba(255,255,255,0.5); font-size: 1.2rem; animation: pulse 1s infinite;
+            pointer-events: none; display: none;
+        }
+        @keyframes pulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
 
     </style>
 </head>
 <body>
 
     <div id="start-screen">
-        <button class="start-btn" onclick="initGame()">INITIALIZE SYSTEM</button>
-        <p style="color: #666; margin-top: 20px; font-size: 0.8rem;">HEADPHONES RECOMMENDED</p>
+        <h1>NIKHIL SINGH</h1>
+        <div class="subtitle">DATA ANALYST // AI ARCHITECT</div>
+        <button id="start-btn" onclick="startGame()">INITIATE RUN</button>
     </div>
 
-    <div id="ui-layer">
-        <div id="header-box" class="hud-element">
-            <h1>Nikhil Singh</h1>
-            <div class="sub">AI ARCHITECT // LEVEL 99</div>
+    <div id="hud">
+        <div id="stats-bar" class="hud-panel">
+            <div class="stat-item">
+                <div class="stat-val" id="score">0</div>
+                <div class="stat-label">DATA BYTES</div>
+            </div>
+            <div class="stat-item" style="margin-left: 20px;">
+                <div class="stat-val" id="distance">0m</div>
+                <div class="stat-label">DISTANCE</div>
+            </div>
         </div>
+        <div id="tap-hint">TAP TO JUMP</div>
     </div>
 
-    <div id="mobile-controls">
-        <div id="joystick-knob"></div>
-    </div>
-    <div id="look-zone"></div>
-
-    <div id="modal-container">
-        <div class="holo-card" id="modal-card">
-            <h2 id="m-title" style="color: var(--neon-blue); margin-bottom: 10px;">PROJECT NAME</h2>
-            <p id="m-desc" style="color: #ccc; line-height: 1.5;">Description...</p>
-            <button class="btn" onclick="closeModal()">CLOSE</button>
-        </div>
+    <div id="holo-modal">
+        <h2 class="holo-title" id="m-title">DATA UNLOCKED</h2>
+        <p class="holo-text" id="m-desc">Description...</p>
+        <button class="holo-btn" onclick="resumeGame()">CONTINUE</button>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
-        // --- 1. SETUP AUDIO ---
-        const AudioSys = {
-            ctx: null,
-            init: function() {
-                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-            },
-            play: function(freq, type) {
-                if(!this.ctx) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = type;
-                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(freq/2, this.ctx.currentTime + 0.3);
-                gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.3);
-            }
-        };
-
-        // --- 2. 3D SCENE ---
-        const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x000000, 0.02);
-
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Optimization
-        document.body.appendChild(renderer.domElement);
-
-        // Lights
-        const amb = new THREE.AmbientLight(0xffffff, 0.5);
-        scene.add(amb);
-        const light = new THREE.PointLight(0x00f3ff, 1, 50);
-        light.position.set(0, 10, 0);
-        scene.add(light);
-
-        // Terrain
-        const geo = new THREE.PlaneGeometry(200, 200, 50, 50);
-        const mat = new THREE.MeshBasicMaterial({ color: 0x00f3ff, wireframe: true, transparent: true, opacity: 0.1 });
-        const terrain = new THREE.Mesh(geo, mat);
-        terrain.rotation.x = -Math.PI / 2;
-        scene.add(terrain);
-
-        // Player
-        const player = new THREE.Mesh(
-            new THREE.OctahedronGeometry(0.5),
-            new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true })
-        );
-        player.position.y = 2;
-        scene.add(player);
-
-        // Collectibles
-        const projects = [
-            { name: "NovusFace AI", color: 0xff0055, x: 0, z: -10, desc: "Deepfake Engine" },
-            { name: "TubeMan", color: 0x00f3ff, x: -10, z: 0, desc: "Video Pipeline" },
-            { name: "SEO Bot", color: 0xffff00, x: 10, z: 0, desc: "Automation" }
+        // --- DATA STORE (From Images) ---
+        const profileData = [
+            { type: "ROLE", title: "Data Analyst Trainee", desc: "Currently mastering Full Stack Data Science & AI at AlmaBetter (Aug 2025 - Present). Specializing in Python, SQL, and GenAI." },
+            { type: "PROJECT", title: "NovusFace AI", desc: "Built a Full-Stack Generative AI Engine for Face Swapping using Python, FastAPI, Docker, and PyTorch." },
+            { type: "PROJECT", title: "SEOMAN AI", desc: "Developed a 360-degree AI-powered SEO Analyzer to solve real-world business ranking problems." },
+            { type: "EXP", title: "Sales & Marketing", desc: "Former Intern at SG Gurukul. Experienced in Telesales and Education Counseling." },
+            { type: "EDU", title: "Education", desc: "BBA (Finance) from Prestige Institute (2021-2023). Shifted focus to solving problems with Data & AI." },
+            { type: "CERT", title: "ChatGPT Expert", desc: "Certified by be10x.in in ChatGPT & AI Tools. Focused on staying at the cutting edge of AI." }
         ];
 
-        const orbs = [];
-        projects.forEach(p => {
-            const mesh = new THREE.Mesh(
-                new THREE.IcosahedronGeometry(1, 1),
-                new THREE.MeshBasicMaterial({ color: p.color, wireframe: true })
-            );
-            mesh.position.set(p.x, 2, p.z);
-            mesh.userData = p;
-            scene.add(mesh);
-            orbs.push(mesh);
-            
-            // Beacon
-            const beam = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.05, 0.05, 50),
-                new THREE.MeshBasicMaterial({ color: p.color, transparent: true, opacity: 0.3 })
-            );
-            beam.position.set(p.x, 25, p.z);
-            scene.add(beam);
-        });
-
-        // --- 3. INPUT SYSTEM (KEYBOARD + TOUCH) ---
-        const input = { x: 0, y: 0 }; // Joystick vector
-        let camRotation = 0;
-
-        // Joystick Logic
-        const joyZone = document.getElementById('mobile-controls');
-        const knob = document.getElementById('joystick-knob');
-        let joyTouchId = null;
-        let joyCenter = { x: 0, y: 0 };
-
-        if ('ontouchstart' in window) {
-            joyZone.style.display = 'block'; // Show on mobile
-        }
-
-        joyZone.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            const touch = e.changedTouches[0];
-            joyTouchId = touch.identifier;
-            const rect = joyZone.getBoundingClientRect();
-            joyCenter = { x: rect.left + rect.width/2, y: rect.top + rect.height/2 };
-            updateJoystick(touch);
-        });
-
-        joyZone.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            for(let i=0; i<e.changedTouches.length; i++) {
-                if(e.changedTouches[i].identifier === joyTouchId) {
-                    updateJoystick(e.changedTouches[i]);
-                }
-            }
-        });
-
-        joyZone.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            input.x = 0; input.y = 0;
-            knob.style.transform = `translate(-50%, -50%)`;
-        });
-
-        function updateJoystick(touch) {
-            const maxDist = 60;
-            let dx = touch.clientX - joyCenter.x;
-            let dy = touch.clientY - joyCenter.y;
-            const dist = Math.sqrt(dx*dx + dy*dy);
-            
-            if(dist > maxDist) {
-                const angle = Math.atan2(dy, dx);
-                dx = Math.cos(angle) * maxDist;
-                dy = Math.sin(angle) * maxDist;
-            }
-
-            knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-            input.x = dx / maxDist;
-            input.y = dy / maxDist;
-        }
-
-        // Camera Look Logic (Touch)
-        const lookZone = document.getElementById('look-zone');
-        let lookStartX = 0;
-
-        lookZone.addEventListener('touchstart', (e) => {
-            lookStartX = e.touches[0].clientX;
-        });
-        
-        lookZone.addEventListener('touchmove', (e) => {
-            const dx = e.touches[0].clientX - lookStartX;
-            camRotation -= dx * 0.005;
-            lookStartX = e.touches[0].clientX;
-        });
-
-        // Keyboard Fallback
-        window.addEventListener('keydown', (e) => {
-            if(e.key === 'w') input.y = -1;
-            if(e.key === 's') input.y = 1;
-            if(e.key === 'a') input.x = -1;
-            if(e.key === 'd') input.x = 1;
-            if(e.key === 'ArrowLeft') camRotation += 0.05;
-            if(e.key === 'ArrowRight') camRotation -= 0.05;
-        });
-        window.addEventListener('keyup', (e) => {
-            if(['w','s'].includes(e.key)) input.y = 0;
-            if(['a','d'].includes(e.key)) input.x = 0;
-        });
-
-        // --- 4. 6D PARALLAX LOGIC ---
-        let tiltX = 0, tiltY = 0;
-        
-        // Gyroscope
-        window.addEventListener('deviceorientation', (e) => {
-            if(e.beta && e.gamma) {
-                tiltX = e.gamma; // Left/Right tilt
-                tiltY = e.beta - 45; // Forward/Back tilt (adjusted for holding angle)
-            }
-        });
-
-        // Mouse Fallback
-        window.addEventListener('mousemove', (e) => {
-            tiltX = (e.clientX / window.innerWidth - 0.5) * 40;
-            tiltY = (e.clientY / window.innerHeight - 0.5) * 40;
-            camRotation = -tiltX * 0.02; // Look with mouse
-        });
-
-        function updateParallax() {
-            const header = document.getElementById('header-box');
-            header.style.transform = `translateZ(20px) rotateX(${-tiltY}deg) rotateY(${tiltX}deg)`;
-            
-            const card = document.getElementById('modal-card');
-            if(document.getElementById('modal-container').classList.contains('active')) {
-                card.style.transform = `rotateX(${-tiltY/2}deg) rotateY(${tiltX/2}deg)`;
-            }
-        }
-
-        // --- 5. GAME LOOP ---
-        let time = 0;
-        let isModal = false;
-
-        function animate() {
-            requestAnimationFrame(animate);
-            time += 0.02;
-
-            updateParallax();
-
-            if(!isModal) {
-                // Move Player based on Input & Camera Rotation
-                const speed = 0.2;
-                const angle = camRotation;
-                
-                // Rotate input vector by camera angle
-                const dx = input.x * Math.cos(angle) - input.y * Math.sin(angle);
-                const dz = input.x * Math.sin(angle) + input.y * Math.cos(angle);
-
-                player.position.x += dx * speed;
-                player.position.z += dz * speed;
-
-                // Camera Follow
-                const camDist = 10;
-                camera.position.x += (player.position.x + Math.sin(camRotation)*camDist - camera.position.x) * 0.1;
-                camera.position.z += (player.position.z + Math.cos(camRotation)*camDist - camera.position.z) * 0.1;
-                camera.position.y = 6;
-                camera.lookAt(player.position);
-            }
-
-            // Visuals
-            player.rotation.x += 0.05;
-            player.rotation.y += 0.05;
-            
-            // Terrain Wave
-            const positions = terrain.geometry.attributes.position.array;
-            for(let i=0; i<positions.length; i+=3) {
-                positions[i+2] = Math.sin(positions[i]*0.2 + time) * 0.5 + Math.cos(positions[i+1]*0.2 + time) * 0.5;
-            }
-            terrain.geometry.attributes.position.needsUpdate = true;
-            terrain.position.x = player.position.x;
-            terrain.position.z = player.position.z;
-
-            // Orb Logic
-            orbs.forEach(orb => {
-                orb.rotation.y += 0.02;
-                orb.position.y = 2 + Math.sin(time*2) * 0.5;
-                
-                if(player.position.distanceTo(orb.position) < 2 && !isModal) {
-                    openModal(orb.userData);
-                }
-            });
-
-            renderer.render(scene, camera);
-        }
-
-        function openModal(data) {
-            isModal = true;
-            document.getElementById('m-title').innerText = data.name;
-            document.getElementById('m-desc').innerText = data.desc;
-            document.getElementById('modal-container').classList.add('active');
-            AudioSys.play(600, 'sine');
-        }
-
-        window.closeModal = function() {
-            document.getElementById('modal-container').classList.remove('active');
-            isModal = false;
-            player.position.z += 3; // Push back
-        };
-
-        window.initGame = function() {
-            AudioSys.init();
-            document.getElementById('start-screen').style.opacity = 0;
-            setTimeout(() => {
-                document.getElementById('start-screen').style.display = 'none';
-                animate();
-            }, 1000);
-        };
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-    </script>
-</body>
-</html>
-        }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-
-    </style>
-</head>
-<body>
-
-    <div id="loader">
-        <div class="spinner"></div>
-        <div>INITIALIZING 4D WORLD...</div>
-    </div>
-
-    <div id="ui-layer">
-        <header class="hud-panel" id="hud-header">
-            <div>
-                <h1>Nikhil Singh</h1>
-                <div style="opacity: 0.8;">Full Stack AI Architect // Data Scientist</div>
-            </div>
-            <div class="badge">LVL 99</div>
-        </header>
-
-        <div class="tutorial">
-            <p>USE <span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> TO FLY // <span class="key">MOUSE</span> TO LOOK</p>
-            <p>COLLECT ORBS TO VIEW PROJECTS</p>
-        </div>
-    </div>
-
-    <div id="modal-overlay">
-        <div class="modal-card">
-            <h2 id="m-title" style="font-size: 2.5rem; margin-bottom: 10px; color: var(--neon-blue);">PROJECT</h2>
-            <p id="m-desc" style="font-size: 1.1rem; line-height: 1.6; color: #ddd;">Description goes here.</p>
-            <button class="btn-action" onclick="closeModal()">RESUME FLIGHT</button>
-        </div>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
-
-    <script>
-        /**
-         * --- AUDIO ENGINE (SYNTHESIZER) ---
-         * Generates high-end UI sounds without external files.
-         */
-        const AudioSys = {
-            ctx: new (window.AudioContext || window.webkitAudioContext)(),
-            
-            playTone: function(freq, type, duration, vol) {
-                if(this.ctx.state === 'suspended') this.ctx.resume();
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                
-                osc.type = type;
-                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(freq * 0.5, this.ctx.currentTime + duration);
-                
-                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
-                
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start();
-                osc.stop(this.ctx.currentTime + duration);
-            },
-
-            playHover: function() { this.playTone(800, 'sine', 0.1, 0.1); },
-            playClick: function() { this.playTone(1200, 'triangle', 0.1, 0.2); },
-            playCollect: function() { 
-                this.playTone(440, 'sine', 0.1, 0.2); 
-                setTimeout(() => this.playTone(880, 'sine', 0.2, 0.2), 100);
-                setTimeout(() => this.playTone(1760, 'sine', 0.4, 0.2), 200);
-            }
-        };
-
-        /**
-         * --- 3D ENGINE SETUP ---
-         */
+        // --- GAME ENGINE SETUP ---
         const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x0a0a12, 0.015);
+        scene.fog = new THREE.FogExp2(0x050510, 0.04); // Cyber fog
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        camera.position.set(0, 3, 6);
+        camera.lookAt(0, 1, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = true;
         document.body.appendChild(renderer.domElement);
 
-        // Lights
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
         scene.add(ambientLight);
-
-        const pointLight = new THREE.PointLight(0x00f3ff, 1, 100);
-        pointLight.position.set(0, 20, 0);
-        pointLight.castShadow = true;
-        scene.add(pointLight);
-
-        const pinkLight = new THREE.PointLight(0xff006e, 1, 100);
-        pinkLight.position.set(20, 10, 20);
-        scene.add(pinkLight);
-
-        /**
-         * --- GAME WORLD ---
-         */
         
-        // 1. Terrain (Moving Grid)
-        const planeGeo = new THREE.PlaneGeometry(200, 200, 60, 60);
-        const planeMat = new THREE.MeshStandardMaterial({ 
-            color: 0x0a0a12, 
-            emissive: 0x000000,
-            roughness: 0.2,
-            metalness: 0.8,
-            wireframe: true 
+        const dirLight = new THREE.DirectionalLight(0x00f3ff, 1);
+        dirLight.position.set(5, 10, 5);
+        dirLight.castShadow = true;
+        scene.add(dirLight);
+
+        // --- GAME OBJECTS ---
+
+        // 1. Infinite Floor (Grid)
+        const gridHelper = new THREE.GridHelper(200, 100, 0xbc13fe, 0x111111);
+        gridHelper.position.y = 0;
+        scene.add(gridHelper);
+
+        const floorGeo = new THREE.PlaneGeometry(200, 200);
+        const floorMat = new THREE.MeshBasicMaterial({ color: 0x050510 });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.y = -0.1;
+        scene.add(floor);
+
+        // 2. The Runner (Cyber Cube)
+        const runnerGeo = new THREE.BoxGeometry(0.8, 0.8, 0.8);
+        const runnerMat = new THREE.MeshStandardMaterial({ 
+            color: 0x00f3ff, emissive: 0x001133, roughness: 0.1, metalness: 0.8 
         });
-        const terrain = new THREE.Mesh(planeGeo, planeMat);
-        terrain.rotation.x = -Math.PI / 2;
-        terrain.receiveShadow = true;
-        scene.add(terrain);
+        const runner = new THREE.Mesh(runnerGeo, runnerMat);
+        runner.position.y = 0.4;
+        runner.castShadow = true;
+        scene.add(runner);
 
-        // 2. Player (The Drone)
-        const playerGeo = new THREE.OctahedronGeometry(0.5, 0);
-        const playerMat = new THREE.MeshPhongMaterial({ 
-            color: 0x00f3ff, 
-            emissive: 0x001133, 
-            shininess: 100,
-            flatShading: true
-        });
-        const player = new THREE.Mesh(playerGeo, playerMat);
-        player.position.y = 2;
-        player.castShadow = true;
-        scene.add(player);
+        // Glow Trail
+        const trailGeo = new THREE.TrailGeometry(runner.position, 20); // Pseudo-trail logic handled in animate
 
-        // Add a "Glow" to player
-        const glowGeo = new THREE.SphereGeometry(1, 16, 16);
-        const glowMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.2, wireframe: true });
-        const glow = new THREE.Mesh(glowGeo, glowMat);
-        player.add(glow);
-
-        // 3. Projects (Collectibles)
-        const projects = [
-            { name: "NOVUSFACE AI", desc: "DeepFake Engine vX6. High fidelity face swapping.", color: 0xff006e, x: 0, z: -20 },
-            { name: "TUBEMAN", desc: "Automated Video Pipeline. Python & FFmpeg.", color: 0x00f3ff, x: -15, z: -10 },
-            { name: "SEO BOT", desc: "RankMaster 3000. Dominate search results.", color: 0xffd000, x: 15, z: -10 },
-            { name: "GULLYLINK", desc: "Hyperlocal Tracking App. React Native.", color: 0xaa00ff, x: 0, z: 10 }
-        ];
-
-        const orbs = [];
-        const orbGeo = new THREE.IcosahedronGeometry(1, 1);
-
-        projects.forEach(p => {
-            const mat = new THREE.MeshPhongMaterial({ 
-                color: p.color, 
-                emissive: p.color, 
-                emissiveIntensity: 0.5,
-                shininess: 100 
-            });
-            const mesh = new THREE.Mesh(orbGeo, mat);
-            mesh.position.set(p.x, 2, p.z);
-            mesh.userData = p; // Store data
+        // 3. Object Pools
+        const obstacles = [];
+        const collectibles = [];
+        
+        function createObstacle(z) {
+            const geo = new THREE.ConeGeometry(0.5, 1.5, 4);
+            const mat = new THREE.MeshStandardMaterial({ color: 0xff0055, emissive: 0x440000 });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(0, 0.75, z);
             mesh.castShadow = true;
-            
-            // Floating animation offset
-            mesh.userData.yBase = 2;
-            mesh.userData.offset = Math.random() * 100;
-            
             scene.add(mesh);
-            orbs.push(mesh);
-
-            // Beacon beam
-            const beamGeo = new THREE.CylinderGeometry(0.1, 0.1, 50, 8);
-            const beamMat = new THREE.MeshBasicMaterial({ color: p.color, transparent: true, opacity: 0.2 });
-            const beam = new THREE.Mesh(beamGeo, beamMat);
-            beam.position.set(p.x, 25, p.z);
-            scene.add(beam);
-        });
-
-        // 4. Floating Particles (Starfield)
-        const starsGeo = new THREE.BufferGeometry();
-        const starsCount = 1000;
-        const posArray = new Float32Array(starsCount * 3);
-        for(let i=0; i<starsCount*3; i++) {
-            posArray[i] = (Math.random() - 0.5) * 100;
+            obstacles.push(mesh);
         }
-        starsGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-        const starsMat = new THREE.PointsMaterial({ size: 0.1, color: 0xffffff, transparent: true, opacity: 0.8 });
-        const starField = new THREE.Points(starsGeo, starsMat);
-        scene.add(starField);
 
-
-        /**
-         * --- CONTROLS & LOGIC ---
-         */
-        const input = { w: false, a: false, s: false, d: false };
-        const velocity = new THREE.Vector3();
-        let isModalOpen = false;
-
-        window.addEventListener('keydown', (e) => {
-            if(e.key.toLowerCase() === 'w') input.w = true;
-            if(e.key.toLowerCase() === 'a') input.a = true;
-            if(e.key.toLowerCase() === 's') input.s = true;
-            if(e.key.toLowerCase() === 'd') input.d = true;
-        });
-
-        window.addEventListener('keyup', (e) => {
-            if(e.key.toLowerCase() === 'w') input.w = false;
-            if(e.key.toLowerCase() === 'a') input.a = false;
-            if(e.key.toLowerCase() === 's') input.s = false;
-            if(e.key.toLowerCase() === 'd') input.d = false;
-        });
-
-        // Mouse Parallax for UI
-        window.addEventListener('mousemove', (e) => {
-            if(isModalOpen) return;
-            const x = (e.clientX / window.innerWidth - 0.5) * 20;
-            const y = (e.clientY / window.innerHeight - 0.5) * 20;
-            document.getElementById('hud-header').style.transform = `rotateX(${-y}deg) rotateY(${x}deg)`;
+        function createCollectible(z) {
+            const geo = new THREE.IcosahedronGeometry(0.4, 0);
+            const mat = new THREE.MeshStandardMaterial({ color: 0xbc13fe, emissive: 0x4400aa, wireframe: true });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(0, 1.5, z);
+            scene.add(mesh);
+            collectibles.push(mesh);
             
-            // Rotate Player slightly
-            player.rotation.y = -x * 0.1;
-            player.rotation.z = -x * 0.05;
+            // Beacon
+            const lineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,10,0)]);
+            const lineMat = new THREE.LineBasicMaterial({ color: 0xbc13fe, transparent: true, opacity: 0.3 });
+            const line = new THREE.Line(lineGeo, lineMat);
+            line.position.copy(mesh.position);
+            scene.add(line);
+            mesh.userData.line = line; // link to remove later
+        }
+
+        // --- GAME LOGIC ---
+        let isPlaying = false;
+        let isPaused = false;
+        let speed = 0.3;
+        let score = 0;
+        let dist = 0;
+        let jumpVelocity = 0;
+        let isJumping = false;
+        const gravity = -0.015;
+        const jumpForce = 0.35;
+        
+        let spawnTimer = 0;
+
+        function startGame() {
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('tap-hint').style.display = 'block';
+            isPlaying = true;
+            animate();
+        }
+
+        function jump() {
+            if(isJumping || isPaused || !isPlaying) return;
+            isJumping = true;
+            jumpVelocity = jumpForce;
+            
+            // Flip Animation
+            const flip = setInterval(() => {
+                runner.rotation.x -= 0.2;
+                if(!isJumping) clearInterval(flip);
+            }, 16);
+        }
+
+        function unlockData() {
+            isPaused = true;
+            const data = profileData[Math.floor(Math.random() * profileData.length)];
+            document.getElementById('m-title').innerText = data.title;
+            document.getElementById('m-desc').innerText = data.desc;
+            document.getElementById('holo-modal').classList.add('active');
+        }
+
+        window.resumeGame = function() {
+            document.getElementById('holo-modal').classList.remove('active');
+            isPaused = false;
+        };
+
+        // Inputs
+        window.addEventListener('keydown', (e) => {
+            if(e.code === 'Space') jump();
+        });
+        window.addEventListener('touchstart', (e) => {
+            e.preventDefault(); jump();
+        });
+        window.addEventListener('mousedown', () => jump());
+
+        // --- 6D PARALLAX ---
+        window.addEventListener('mousemove', (e) => {
+            if(isPaused) return;
+            const x = (e.clientX / window.innerWidth - 0.5) * 30;
+            const y = (e.clientY / window.innerHeight - 0.5) * 30;
+            document.getElementById('stats-bar').style.transform = `translateZ(20px) rotateX(${-y}deg) rotateY(${x}deg)`;
         });
 
-        // Collision Check
-        function checkCollisions() {
-            if(isModalOpen) return;
-            orbs.forEach(orb => {
-                const dist = player.position.distanceTo(orb.position);
-                if(dist < 2) {
-                    openModal(orb.userData);
-                }
-            });
-        }
-
-        function openModal(data) {
-            isModalOpen = true;
-            document.getElementById('m-title').innerText = data.name;
-            document.getElementById('m-desc').innerText = data.desc;
-            document.getElementById('m-title').style.color = '#' + data.color.toString(16);
-            document.getElementById('modal-overlay').classList.add('active');
-            AudioSys.playCollect();
-        }
-
-        window.closeModal = function() {
-            document.getElementById('modal-overlay').classList.remove('active');
-            isModalOpen = false;
-            // Teleport player back slightly to avoid infinite loop
-            player.position.z += 2;
-            AudioSys.playClick();
-        }
-
-        /**
-         * --- MAIN GAME LOOP ---
-         */
-        const simplex = new SimplexNoise();
-        let time = 0;
-
+        // --- MAIN LOOP ---
         function animate() {
             requestAnimationFrame(animate);
-            time += 0.01;
+            if(!isPlaying || isPaused) return;
 
-            if(!isModalOpen) {
-                // Movement Physics
-                if(input.w) velocity.z -= 0.02;
-                if(input.s) velocity.z += 0.02;
-                if(input.a) velocity.x -= 0.02;
-                if(input.d) velocity.x += 0.02;
+            // 1. Move Environment (Illusion of running)
+            dist += speed;
+            document.getElementById('distance').innerText = Math.floor(dist) + 'm';
+            
+            gridHelper.position.z += speed;
+            if(gridHelper.position.z > 10) gridHelper.position.z = 0; // Reset grid
 
-                // Friction
-                velocity.multiplyScalar(0.9);
-                
-                // Apply Velocity
-                player.position.add(velocity);
-                
-                // Camera Follow
-                camera.position.x += (player.position.x - camera.position.x) * 0.1;
-                camera.position.z += (player.position.z + 10 - camera.position.z) * 0.1;
-                camera.position.y = 8;
-                camera.lookAt(player.position);
+            // 2. Physics
+            if(isJumping) {
+                runner.position.y += jumpVelocity;
+                jumpVelocity += gravity;
+                if(runner.position.y <= 0.4) {
+                    runner.position.y = 0.4;
+                    isJumping = false;
+                    runner.rotation.x = 0; // Reset rotation
+                }
             }
 
-            // Animate Player
-            player.rotation.x += 0.05;
-            player.rotation.y += 0.05;
-            glow.scale.setScalar(1 + Math.sin(time * 5) * 0.2);
-
-            // Animate Terrain (Waves)
-            const positions = terrain.geometry.attributes.position.array;
-            for (let i = 0; i < positions.length; i += 3) {
-                const x = positions[i];
-                const y = positions[i+1];
-                // Update Z (which is Up because plane is rotated)
-                // Actually in BufferGeometry plane is Z up, but we rotated X. 
-                // Let's just modulate Z attribute based on X/Y
-                const noise = simplex.noise2D(x * 0.1 + time * 0.1, y * 0.1) * 2;
-                positions[i+2] = noise;
+            // 3. Spawning
+            spawnTimer += speed;
+            if(spawnTimer > 15) {
+                spawnTimer = 0;
+                // Randomly spawn obstacle or collectible
+                if(Math.random() > 0.4) createObstacle(-50);
+                else createCollectible(-50);
             }
-            terrain.geometry.attributes.position.needsUpdate = true;
-            terrain.position.x = player.position.x; // Endless Runner effect (ground follows)
-            terrain.position.z = player.position.z;
 
-            // Animate Orbs
-            orbs.forEach(orb => {
-                orb.rotation.y += 0.02;
-                orb.rotation.z += 0.02;
-                orb.position.y = orb.userData.yBase + Math.sin(time * 2 + orb.userData.offset) * 0.5;
-            });
+            // 4. Update Objects & Collision
+            
+            // Obstacles
+            for(let i = obstacles.length - 1; i >= 0; i--) {
+                const obs = obstacles[i];
+                obs.position.z += speed;
+                
+                // Collision
+                if(obs.position.z > -1 && obs.position.z < 1) {
+                    if(runner.position.y < 1.0) {
+                        // HIT! Reset stats for now
+                        score = Math.max(0, score - 50);
+                        document.getElementById('score').innerText = score;
+                        // Flash red
+                        document.body.style.background = '#300';
+                        setTimeout(() => document.body.style.background = '#050510', 100);
+                        
+                        scene.remove(obs);
+                        obstacles.splice(i, 1);
+                        continue;
+                    }
+                }
 
-            checkCollisions();
+                // Cleanup
+                if(obs.position.z > 10) {
+                    scene.remove(obs);
+                    obstacles.splice(i, 1);
+                }
+            }
+
+            // Collectibles
+            for(let i = collectibles.length - 1; i >= 0; i--) {
+                const col = collectibles[i];
+                col.position.z += speed;
+                col.rotation.y += 0.05;
+                col.userData.line.position.z = col.position.z;
+
+                // Collision
+                if(col.position.z > -1 && col.position.z < 1) {
+                    if(runner.position.y > 0.8 || Math.abs(runner.position.x - col.position.x) < 0.5) {
+                        // COLLECTED!
+                        score += 100;
+                        document.getElementById('score').innerText = score;
+                        
+                        scene.remove(col);
+                        scene.remove(col.userData.line);
+                        collectibles.splice(i, 1);
+                        
+                        unlockData(); // Trigger Modal
+                        continue;
+                    }
+                }
+
+                if(col.position.z > 10) {
+                    scene.remove(col);
+                    scene.remove(col.userData.line);
+                    collectibles.splice(i, 1);
+                }
+            }
+
             renderer.render(scene, camera);
         }
 
-        // --- INIT ---
+        // Resize
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
-
-        // Hide loader after assets "load"
-        setTimeout(() => {
-            document.getElementById('loader').style.opacity = 0;
-            setTimeout(() => document.getElementById('loader').style.display = 'none', 1000);
-            animate();
-        }, 1500);
 
     </script>
 </body>
