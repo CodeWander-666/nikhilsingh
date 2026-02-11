@@ -2,226 +2,515 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>NIKHIL SINGH | 3D NEURAL NEXUS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NIKHIL SINGH | AI LEGACY RPG</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&family=Cinzel:wght@400;700&family=Inter:wght@300;600&display=swap" rel="stylesheet">
     <style>
-        /* --- CSS (The Skin) --- */
-        body { margin: 0; overflow: hidden; background: #000; font-family: 'Courier New', monospace; }
+        :root {
+            /* Dynamic Theme Variables */
+            --bg-color: #050505;
+            --panel-bg: rgba(20, 20, 20, 0.85);
+            --primary: #00f3ff;
+            --accent: #ff0055;
+            --text-main: #ffffff;
+            --text-sub: #aaaaaa;
+            --font-head: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+            --border-radius: 12px;
+            --shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+            --glass: blur(12px);
+        }
+
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         
-        #ui-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; /* Let clicks pass through to 3D */
+        body {
+            margin: 0; overflow: hidden;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            height: 100vh; width: 100vw;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+
+        /* --- BACKGROUND CANVAS --- */
+        #bg-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; opacity: 0.4;
+        }
+
+        /* --- UI GRID --- */
+        #game-ui {
+            display: grid;
+            grid-template-columns: 350px 1fr 350px;
+            grid-template-rows: 80px 1fr 80px;
+            height: 100vh;
+            padding: 20px;
+            gap: 20px;
             z-index: 10;
+            position: relative;
         }
 
-        #header {
-            position: absolute; top: 20px; left: 20px;
-            color: #00f3ff;
-            text-shadow: 0 0 10px #00f3ff;
-            pointer-events: auto;
+        /* --- PANELS --- */
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: var(--glass);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            transition: 0.3s;
+            overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+        .panel:hover { border-color: var(--primary); }
+
+        /* --- HEADER --- */
+        header {
+            grid-column: 1 / -1;
+            display: flex; justify-content: space-between; align-items: center;
+            background: linear-gradient(90deg, var(--panel-bg), transparent);
+            padding: 0 30px; border-bottom: 2px solid var(--primary);
+        }
+        h1 { margin: 0; font-family: var(--font-head); font-size: 2rem; text-transform: uppercase; letter-spacing: 2px; }
+        .subtitle { font-size: 0.8rem; color: var(--accent); letter-spacing: 4px; font-weight: bold; }
+
+        /* --- CENTER STAGE (CLICKER) --- */
+        #main-stage {
+            grid-column: 2 / 3; grid-row: 2 / 3;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            position: relative;
         }
 
-        /* The Info Panel (Hidden by default) */
-        #data-panel {
-            position: absolute; right: -400px; top: 0;
-            width: 350px; height: 100%;
-            background: rgba(10, 15, 20, 0.9);
-            border-left: 2px solid #00f3ff;
-            padding: 40px;
-            box-sizing: border-box;
-            transition: right 0.5s cubic-bezier(0.77, 0, 0.175, 1);
-            color: #fff;
-            pointer-events: auto;
-            backdrop-filter: blur(10px);
+        #click-core {
+            width: 250px; height: 250px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--panel-bg), #000);
+            border: 4px solid var(--primary);
+            box-shadow: 0 0 50px var(--primary);
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.1s;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 5;
         }
-        #data-panel.active { right: 0; }
+        #click-core:active { transform: scale(0.95); }
+        #click-core::after {
+            content: ''; position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px;
+            border: 2px dashed var(--accent); border-radius: 50%;
+            animation: spin 10s linear infinite;
+        }
 
-        h2 { border-bottom: 1px solid #ff0055; padding-bottom: 10px; margin-top: 0; color: #ff0055; }
-        p { line-height: 1.6; color: #ccc; font-size: 0.9rem; }
+        .core-icon { font-size: 4rem; color: var(--primary); text-shadow: 0 0 20px var(--primary); }
+
+        #resource-display {
+            text-align: center; margin-bottom: 30px;
+        }
+        #currency-val { font-size: 4rem; font-family: var(--font-head); font-weight: 900; line-height: 1; }
+        #currency-label { font-size: 1rem; color: var(--accent); letter-spacing: 2px; }
+        #gps-display { font-size: 1.2rem; color: var(--text-sub); margin-top: 10px; }
+
+        /* --- LEFT PANEL (UPGRADES) --- */
+        #upgrades-panel { grid-column: 1 / 2; grid-row: 2 / 3; }
+        .upgrade-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255,255,255,0.03);
+            margin-bottom: 10px; padding: 15px;
+            border-radius: 8px; cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: 0.2s;
+        }
+        .upgrade-item:hover { background: rgba(255,255,255,0.08); transform: translateX(5px); }
+        .upgrade-item.affordable { border-left-color: var(--primary); }
+        .upgrade-item.locked { opacity: 0.5; pointer-events: none; filter: grayscale(1); }
         
-        .btn {
-            display: inline-block; margin-top: 20px; padding: 10px 20px;
-            border: 1px solid #00f3ff; color: #00f3ff; text-decoration: none;
-            transition: 0.3s; cursor: pointer;
-        }
-        .btn:hover { background: #00f3ff; color: #000; }
+        .upg-info h4 { margin: 0; font-family: var(--font-head); font-size: 0.9rem; }
+        .upg-info p { margin: 2px 0 0; font-size: 0.7rem; color: var(--text-sub); }
+        .upg-cost { font-weight: bold; color: var(--accent); font-family: monospace; }
 
-        #loading {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: #00f3ff; animation: blink 1s infinite;
+        /* --- RIGHT PANEL (STORY & PROJECTS) --- */
+        #story-panel { grid-column: 3 / 4; grid-row: 2 / 3; }
+        #log-container {
+            flex: 1; overflow-y: auto;
+            font-family: monospace; font-size: 0.8rem;
+            color: var(--text-sub);
+            padding-right: 5px;
         }
-        @keyframes blink { 50% { opacity: 0; } }
+        .log-entry { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed rgba(255,255,255,0.1); }
+        .log-entry.new { color: var(--primary); animation: flash 1s; }
+        .log-time { color: var(--accent); font-size: 0.7rem; }
+
+        /* --- FOOTER (THEMES) --- */
+        footer {
+            grid-column: 1 / -1; grid-row: 3 / 4;
+            display: flex; align-items: center; gap: 20px;
+            background: var(--panel-bg); padding: 0 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .theme-btn {
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            border: none; padding: 10px 20px;
+            color: #fff; font-family: var(--font-head); font-weight: bold;
+            cursor: pointer; clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
+            transition: 0.3s;
+        }
+        .theme-btn:hover { filter: brightness(1.2); letter-spacing: 1px; }
+
+        /* --- DOOR ANIMATION (LEVEL UP) --- */
+        #door-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 100; pointer-events: none;
+            display: flex;
+        }
+        .door-panel {
+            width: 50%; height: 100%; background: #000;
+            border-right: 2px solid var(--primary);
+            transition: transform 1.5s cubic-bezier(0.77, 0, 0.175, 1);
+            position: relative;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .door-panel:nth-child(2) { border-right: none; border-left: 2px solid var(--primary); }
+        
+        .door-text {
+            color: var(--primary); font-family: var(--font-head); font-size: 3rem;
+            position: absolute; opacity: 0; transition: 1s;
+        }
+        
+        body.door-closed .door-panel:nth-child(1) { transform: translateX(0); }
+        body.door-closed .door-panel:nth-child(2) { transform: translateX(0); }
+        body.door-open .door-panel:nth-child(1) { transform: translateX(-100%); }
+        body.door-open .door-panel:nth-child(2) { transform: translateX(100%); }
+        body.door-closed .door-text { opacity: 1; }
+
+        /* --- FLOATING TEXT --- */
+        .float-text {
+            position: absolute; color: #fff; font-weight: bold; pointer-events: none;
+            animation: floatUp 1s forwards; text-shadow: 0 0 5px var(--primary);
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 900px) {
+            #game-ui {
+                display: flex; flex-direction: column; overflow-y: auto; height: auto;
+            }
+            #click-core { width: 180px; height: 180px; margin: 30px 0; }
+            .panel { min-height: 200px; }
+            header { padding: 20px; flex-direction: column; align-items: flex-start; }
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-50px); } }
+        @keyframes flash { 0% { color: #fff; } 100% { color: var(--primary); } }
+
     </style>
 </head>
-<body>
+<body class="door-open">
 
-    <div id="ui-layer">
-        <div id="header">
-            <h1>NIKHIL SINGH</h1>
-            <small>AI ARCHITECT // SYSTEM V.X6</small>
-        </div>
-        <div id="loading">INITIALIZING 3D ENGINE...</div>
-        
-        <div id="data-panel">
-            <h2 id="panel-title">DATA NODE</h2>
-            <div id="panel-content">Select a node to view data.</div>
-            <a href="#" id="panel-link" class="btn" style="display:none">ACCESS</a>
-            <button onclick="closePanel()" style="position:absolute; top:10px; right:10px; background:none; border:none; color:#555; cursor:pointer;">[X]</button>
-        </div>
+    <canvas id="bg-canvas"></canvas>
+
+    <div id="door-overlay">
+        <div class="door-panel"></div>
+        <div class="door-panel"><div class="door-text">LEVEL UP</div></div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <div id="game-ui">
+        
+        <header>
+            <div>
+                <h1>Nikhil Singh</h1>
+                <div class="subtitle">DATA ANALYST // AI DEVELOPER // SYSTEM V.6.01</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 0.8rem; color: var(--text-sub);">TOTAL VIEWS</div>
+                <div style="font-size: 1.5rem; color: var(--primary); font-family: var(--font-head);">311</div>
+            </div>
+        </header>
+
+        <section id="upgrades-panel" class="panel">
+            <h3 style="border-bottom: 1px solid var(--accent); padding-bottom: 10px; margin-top: 0;">CAREER PATH</h3>
+            <div style="overflow-y: auto; padding-right: 5px;" id="upgrade-list">
+                </div>
+        </section>
+
+        <section id="main-stage">
+            <div id="resource-display">
+                <div id="currency-val">0</div>
+                <div id="currency-label">NEURAL BYTES</div>
+                <div id="gps-display">0 bytes / sec</div>
+            </div>
+
+            <div id="click-core">
+                <div class="core-icon">⌘</div>
+            </div>
+        </section>
+
+        <section id="story-panel" class="panel">
+            <h3 style="border-bottom: 1px solid var(--accent); padding-bottom: 10px; margin-top: 0;">SYSTEM LOG</h3>
+            <div id="log-container">
+                <div class="log-entry">
+                    <span class="log-time">[INIT]</span> User Nikhil Singh loaded.<br>
+                    Status: <span style="color:var(--primary)">Open to Work</span>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <button class="theme-btn" onclick="randomizeTheme()">GENERATE NEW THEME</button>
+            <div style="font-size: 0.8rem; margin-left: auto;">
+                THEME ID: <span id="theme-id" style="color:var(--primary)">DEFAULT</span>
+            </div>
+        </footer>
+
+    </div>
 
     <script>
-        // --- JAVASCRIPT LOGIC (The Engine) ---
-
-        // 1. SETUP SCENE
-        const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x000000, 0.02); // Distance fog
-
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.z = 15;
-
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        document.body.appendChild(renderer.domElement);
-
-        // Controls
-        const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-        controls.autoRotate = true;
-        controls.autoRotateSpeed = 0.5;
-
-        // 2. CREATE THE "NEURAL CORE" (Central Object)
-        const geometry = new THREE.IcosahedronGeometry(4, 1);
-        const material = new THREE.MeshBasicMaterial({ 
-            color: 0x00f3ff, 
-            wireframe: true, 
-            transparent: true, 
-            opacity: 0.3 
-        });
-        const core = new THREE.Mesh(geometry, material);
-        scene.add(core);
-
-        // Inner Core (Glowing)
-        const innerGeo = new THREE.IcosahedronGeometry(2, 0);
-        const innerMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
-        const innerCore = new THREE.Mesh(innerGeo, innerMat);
-        scene.add(innerCore);
-
-        // 3. CREATE DATA NODES (Orbiting Satellites)
-        const nodes = [];
-        const nodeData = [
-            { id: 1, title: "NOVUSFACE AI", type: "PROJECT", color: 0xff0055, desc: "Deep learning face swap engine (vX6). High fidelity rendering.", link: "https://codewander-666.github.io" },
-            { id: 2, title: "TUBEMAN AI", type: "TOOL", color: 0x00ff00, desc: "Python-based video extraction and processing pipeline.", link: "https://github.com/codewander-666" },
-            { id: 3, title: "SKILLS", type: "INFO", color: 0xffff00, desc: "Python, TensorFlow, OpenCV, Three.js, React, Java Spring.", link: "#" },
-            { id: 4, title: "CONTACT", type: "LINK", color: 0xffffff, desc: "Connect via LinkedIn or Email for collaboration.", link: "https://linkedin.com" }
-        ];
-
-        const nodeGroup = new THREE.Group();
-        scene.add(nodeGroup);
-
-        nodeData.forEach((data, index) => {
-            const sphere = new THREE.Mesh(
-                new THREE.SphereGeometry(0.5, 32, 32),
-                new THREE.MeshBasicMaterial({ color: data.color })
-            );
+        /* --- GAME ENGINE --- */
+        const Game = {
+            bytes: 0,
+            lifetimeBytes: 0,
+            gps: 0, // Generated per second
+            clickValue: 1,
+            level: 1,
+            history: [],
             
-            // Math to position them in orbit
-            const angle = (index / nodeData.length) * Math.PI * 2;
-            const radius = 8;
-            sphere.position.x = Math.cos(angle) * radius;
-            sphere.position.z = Math.sin(angle) * radius;
-            sphere.userData = data; // Attach data to the 3D object
+            // Resume Data from LinkedIn Profile
+            data: {
+                name: "Nikhil Singh",
+                stats: { views: 311, impressions: 862 },
+                timeline: [
+                    { id: 'bba', name: "BBA Degree", cost: 15, gps: 2, desc: "Prestige Institute. Foundation in Finance.", unlocked: true },
+                    { id: 'intern', name: "Sales Intern", cost: 100, gps: 10, desc: "SG Gurukul. Learned Lead Gen.", unlocked: false },
+                    { id: 'alma', name: "AlmaBetter Training", cost: 500, gps: 45, desc: "Full Stack Data Science. Unlocks Python.", unlocked: false },
+                    { id: 'python', name: "Python Cert", cost: 1200, gps: 100, desc: "Skill Mastery. Automation power up.", unlocked: false },
+                    { id: 'novus', name: "NovusFace AI", cost: 5000, gps: 450, desc: "Project: DeepFake Engine. Viral potential.", unlocked: false },
+                    { id: 'seoman', name: "SEOMAN AI", cost: 15000, gps: 1200, desc: "Project: 360 SEO Analyzer. SaaS Income.", unlocked: false },
+                    { id: 'chatgpt', name: "ChatGPT Cert", cost: 50000, gps: 5000, desc: "be10x.in. AI Mastery achieved.", unlocked: false }
+                ]
+            }
+        };
+
+        /* --- THEME ENGINE (66+ VARIATIONS) --- */
+        const ThemeEngine = {
+            palettes: [
+                { name: "CYBER", bg: "#050505", panel: "rgba(20,20,20,0.9)", primary: "#00f3ff", accent: "#ff0055" },
+                { name: "ROYAL", bg: "#1a0b2e", panel: "rgba(40,10,60,0.8)", primary: "#ffd700", accent: "#7600bc" },
+                { name: "MATRIX", bg: "#001100", panel: "rgba(0,30,0,0.9)", primary: "#00ff00", accent: "#008800" },
+                { name: "CORP", bg: "#f0f2f5", panel: "rgba(255,255,255,0.9)", primary: "#0a66c2", accent: "#004182", text: "#333" }, // LinkedIn colors
+                { name: "MARS", bg: "#2e0b0b", panel: "rgba(60,20,20,0.9)", primary: "#ff4d4d", accent: "#ff9900" },
+                { name: "ZEN", bg: "#e6e6e6", panel: "rgba(255,255,255,0.8)", primary: "#555555", accent: "#999999", text: "#222" }
+            ],
+            fonts: [
+                { head: "'Orbitron', sans-serif", body: "'Rajdhani', sans-serif" },
+                { head: "'Cinzel', serif", body: "'Inter', sans-serif" },
+                { head: "'Inter', sans-serif", body: "'Inter', sans-serif" }
+            ],
             
-            nodes.push(sphere);
-            nodeGroup.add(sphere);
+            randomize: function() {
+                const p = this.palettes[Math.floor(Math.random() * this.palettes.length)];
+                const f = this.fonts[Math.floor(Math.random() * this.fonts.length)];
+                
+                const root = document.documentElement.style;
+                root.setProperty('--bg-color', p.bg);
+                root.setProperty('--panel-bg', p.panel);
+                root.setProperty('--primary', p.primary);
+                root.setProperty('--accent', p.accent);
+                root.setProperty('--text-main', p.text || '#ffffff');
+                root.setProperty('--text-sub', p.text ? '#666' : '#aaaaaa');
+                root.setProperty('--font-head', f.head);
+                root.setProperty('--font-body', f.body);
 
-            // Add ring around node
-            const ring = new THREE.Mesh(
-                new THREE.TorusGeometry(0.8, 0.02, 16, 100),
-                new THREE.MeshBasicMaterial({ color: data.color, transparent: true, opacity: 0.5 })
-            );
-            ring.position.copy(sphere.position);
-            ring.lookAt(0,0,0);
-            nodeGroup.add(ring);
-        });
+                document.getElementById('theme-id').innerText = `${p.name} // ${Math.floor(Math.random()*999)}`;
+                
+                // Trigger canvas redraw with new colors
+                initBackground(p.primary);
+            }
+        };
 
-        // 4. PARTICLES (Stars)
-        const starGeo = new THREE.BufferGeometry();
-        const starCount = 2000;
-        const posArray = new Float32Array(starCount * 3);
-        for(let i=0; i<starCount * 3; i++) {
-            posArray[i] = (Math.random() - 0.5) * 100;
+        /* --- UI RENDERER --- */
+        const UI = {
+            bytes: document.getElementById('currency-val'),
+            gps: document.getElementById('gps-display'),
+            list: document.getElementById('upgrade-list'),
+            log: document.getElementById('log-container'),
+
+            update: function() {
+                this.bytes.innerText = Math.floor(Game.bytes).toLocaleString();
+                this.gps.innerText = `${Game.gps} bytes / sec`;
+
+                // Update Upgrades State
+                Game.data.timeline.forEach(u => {
+                    const el = document.getElementById(`upg-${u.id}`);
+                    if (!el) return;
+                    
+                    if (Game.bytes >= u.cost) el.classList.add('affordable');
+                    else el.classList.remove('affordable');
+                    
+                    if (u.unlocked) el.classList.remove('locked');
+                });
+            },
+
+            addLog: function(msg) {
+                const div = document.createElement('div');
+                div.className = 'log-entry new';
+                div.innerHTML = `<span class="log-time">[${Math.floor(Game.lifetimeBytes)}]</span> ${msg}`;
+                this.log.prepend(div);
+            },
+
+            renderUpgrades: function() {
+                this.list.innerHTML = '';
+                Game.data.timeline.forEach(u => {
+                    const div = document.createElement('div');
+                    div.className = 'upgrade-item locked';
+                    div.id = `upg-${u.id}`;
+                    div.onclick = () => buyUpgrade(u);
+                    div.innerHTML = `
+                        <div class="upg-info">
+                            <h4>${u.name}</h4>
+                            <p>${u.desc}</p>
+                        </div>
+                        <div class="upg-cost">${u.cost}</div>
+                    `;
+                    this.list.appendChild(div);
+                });
+                // Unlock first item
+                document.getElementById(`upg-${Game.data.timeline[0].id}`).classList.remove('locked');
+            }
+        };
+
+        /* --- CORE LOGIC --- */
+        function clickCore(e) {
+            Game.bytes += Game.clickValue;
+            Game.lifetimeBytes += Game.clickValue;
+            spawnText(e.clientX, e.clientY, `+${Game.clickValue}`);
+            UI.update();
+            checkUnlocks();
         }
-        starGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-        const starMat = new THREE.PointsMaterial({ size: 0.05, color: 0xffffff });
-        const stars = new THREE.Points(starGeo, starMat);
-        scene.add(stars);
 
-        // 5. RAYCASTER (Interaction Logic)
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
+        function buyUpgrade(u) {
+            if (Game.bytes >= u.cost) {
+                Game.bytes -= u.cost;
+                Game.gps += u.gps;
+                u.cost = Math.floor(u.cost * 1.5); // Increase cost
+                
+                // Visual feedback
+                UI.addLog(`ACQUIRED: ${u.name}`);
+                
+                // Unlock next item in list
+                const idx = Game.data.timeline.indexOf(u);
+                if (idx < Game.data.timeline.length - 1) {
+                    const next = Game.data.timeline[idx + 1];
+                    next.unlocked = true;
+                    document.getElementById(`upg-${next.id}`).classList.remove('locked');
+                    UI.addLog(`UNLOCKED: ${next.name}`);
+                    
+                    // Special Door Effect for Projects
+                    if(next.id === 'alma' || next.id === 'novus') triggerDoorEffect(`ENTER ${next.name.split(' ')[0]}`);
+                }
 
-        window.addEventListener('click', onMouseClick);
-        window.addEventListener('mousemove', (e) => {
-            // Hover effect logic could go here
-        });
-
-        function onMouseClick(event) {
-            // Calculate mouse position in normalized device coordinates
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
-
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(nodes);
-
-            if (intersects.length > 0) {
-                const object = intersects[0].object;
-                openPanel(object.userData);
+                // Render updated cost
+                document.getElementById(`upg-${u.id}`).querySelector('.upg-cost').innerText = u.cost;
+                UI.update();
             }
         }
 
-        // 6. UI LOGIC
-        function openPanel(data) {
-            controls.autoRotate = false; // Stop rotation to focus
-            const panel = document.getElementById('data-panel');
-            document.getElementById('panel-title').innerText = data.title;
-            document.getElementById('panel-content').innerText = data.desc;
+        function spawnText(x, y, text) {
+            const el = document.createElement('div');
+            el.className = 'float-text';
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            el.innerText = text;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1000);
+        }
+
+        function checkUnlocks() {
+            // Passive Logic check
+        }
+
+        function triggerDoorEffect(text) {
+            const body = document.body;
+            const doorText = document.querySelector('.door-text');
             
-            const btn = document.getElementById('panel-link');
-            if(data.link !== "#") {
-                btn.href = data.link;
-                btn.style.display = 'inline-block';
-            } else {
-                btn.style.display = 'none';
+            doorText.innerText = text;
+            body.classList.remove('door-open');
+            body.classList.add('door-closed');
+            
+            setTimeout(() => {
+                ThemeEngine.randomize(); // Change theme on new level
+                body.classList.remove('door-closed');
+                body.classList.add('door-open');
+            }, 2000);
+        }
+
+        /* --- GAME LOOP --- */
+        setInterval(() => {
+            if (Game.gps > 0) {
+                Game.bytes += Game.gps / 10; // 10 ticks per sec
+                Game.lifetimeBytes += Game.gps / 10;
+                UI.update();
             }
-            
-            panel.classList.add('active');
+        }, 100);
+
+        /* --- INITIALIZATION --- */
+        document.getElementById('click-core').addEventListener('mousedown', clickCore);
+        
+        // Mobile touch support
+        document.getElementById('click-core').addEventListener('touchstart', (e) => {
+            e.preventDefault(); // prevent zoom
+            clickCore(e.touches[0]);
+        });
+
+        UI.renderUpgrades();
+        ThemeEngine.randomize(); // Start with random theme
+
+        /* --- BACKGROUND CANVAS ANIMATION --- */
+        function initBackground(color) {
+            const canvas = document.getElementById('bg-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            for(let i=0; i<50; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    s: Math.random() * 2,
+                    v: Math.random() * 0.5
+                });
+            }
+
+            function animate() {
+                ctx.clearRect(0,0,canvas.width, canvas.height);
+                ctx.fillStyle = color;
+                
+                particles.forEach(p => {
+                    p.y -= p.v;
+                    if(p.y < 0) p.y = canvas.height;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.s, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                
+                // Draw Grid
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 0.2;
+                // Simple grid logic omitted for performance, keeping particles
+                
+                requestAnimationFrame(animate);
+            }
+            animate();
         }
+        
+        // Initial Door Open
+        setTimeout(() => document.body.classList.remove('door-closed'), 500);
 
-        window.closePanel = function() { // Expose to global scope for HTML button
-            document.getElementById('data-panel').classList.remove('active');
-            controls.autoRotate = true;
-        }
+        // Global functions for HTML access
+        window.randomizeTheme = () => ThemeEngine.randomize();
 
-        // 7. ANIMATION LOOP
-        document.getElementById('loading').style.display = 'none';
-
-        function animate() {
-            requestAnimationFrame(animate);
-
-            // Rotate core
-            core.rotation.x += 0.002;
-            core.rotation.y += 0.002;
-
-            // Pulse Inner Core
-            const time = Date.now() * 0.002;
-            innerCore.scale.setScalar(1 + Math.sin(time) * 0.1);
-
-            // Rotate Node Group
+    </script>
+</body>
+</html>
             nodeGroup.rotation.y -= 0.001;
 
             controls.update();
