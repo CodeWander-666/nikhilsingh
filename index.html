@@ -2,545 +2,240 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NIKHIL SINGH | SYSTEM_V.X6</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;500;600&display=swap" rel="stylesheet">
+    <title>NIKHIL SINGH | 3D NEURAL NEXUS</title>
     <style>
-        /* --- CORE VARIABLES --- */
-        :root {
-            --primary: #00f3ff;   /* Cyan */
-            --accent: #ff0055;    /* Red/Pink */
-            --warning: #fcee0a;   /* Yellow */
-            --dark: #050505;
-            --panel: rgba(10, 15, 20, 0.90);
-            --grid: rgba(0, 243, 255, 0.15);
-            --font-head: 'Orbitron', sans-serif;
-            --font-body: 'Rajdhani', sans-serif;
-        }
-
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        /* --- CSS (The Skin) --- */
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Courier New', monospace; }
         
-        body {
-            margin: 0; padding: 0;
-            background-color: var(--dark);
-            color: var(--primary);
-            font-family: var(--font-body);
-            overflow: hidden; /* Prevent scroll on body, scroll inside panels */
-            height: 100vh; width: 100vw;
-            user-select: none;
-        }
-
-        /* --- BACKGROUND FX --- */
-        #bg-layer {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: 
-                linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),
-                radial-gradient(circle at 50% 50%, rgba(0, 243, 255, 0.1) 0%, transparent 60%);
-            z-index: -2;
-        }
-        #grid-layer {
-            position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
-            background-image: 
-                linear-gradient(var(--grid) 1px, transparent 1px),
-                linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-            background-size: 50px 50px;
-            transform: perspective(500px) rotateX(60deg) translateY(0);
-            animation: grid-move 20s linear infinite;
-            z-index: -1;
-            opacity: 0.3;
-        }
-
-        /* --- UI LAYOUT (GRID SYSTEM) --- */
-        #interface {
-            display: grid;
-            grid-template-columns: 280px 1fr 60px; /* Sidebar | Content | Stats */
-            grid-template-rows: 80px 1fr 60px;     /* Header | Content | Footer */
-            height: 100vh;
-            padding: 20px;
-            gap: 15px;
-            position: relative;
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; /* Let clicks pass through to 3D */
             z-index: 10;
         }
 
-        /* --- HEADER --- */
-        header {
-            grid-column: 1 / -1;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--primary);
-            background: linear-gradient(90deg, rgba(0,243,255,0.1), transparent);
-            padding: 0 20px;
-            clip-path: polygon(0 0, 100% 0, 100% 70%, 98% 100%, 0 100%);
+        #header {
+            position: absolute; top: 20px; left: 20px;
+            color: #00f3ff;
+            text-shadow: 0 0 10px #00f3ff;
+            pointer-events: auto;
         }
-        .identity h1 {
-            font-family: var(--font-head);
-            font-weight: 900;
-            font-size: 2rem;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            margin: 0;
-            text-shadow: 0 0 10px var(--primary);
-        }
-        .identity span { font-size: 0.8rem; color: var(--accent); letter-spacing: 4px; }
 
-        /* --- NAVIGATION (LEFT) --- */
-        nav {
-            grid-column: 1 / 2;
-            grid-row: 2 / 3;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .nav-btn {
-            background: rgba(0,0,0,0.5);
-            border: 1px solid rgba(0, 243, 255, 0.3);
+        /* The Info Panel (Hidden by default) */
+        #data-panel {
+            position: absolute; right: -400px; top: 0;
+            width: 350px; height: 100%;
+            background: rgba(10, 15, 20, 0.9);
+            border-left: 2px solid #00f3ff;
+            padding: 40px;
+            box-sizing: border-box;
+            transition: right 0.5s cubic-bezier(0.77, 0, 0.175, 1);
             color: #fff;
-            padding: 20px;
-            text-align: left;
-            font-family: var(--font-head);
-            cursor: pointer;
-            transition: 0.3s;
-            position: relative;
-            overflow: hidden;
-            clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
+            pointer-events: auto;
+            backdrop-filter: blur(10px);
         }
-        .nav-btn:hover, .nav-btn.active {
-            background: var(--primary);
-            color: #000;
-            font-weight: bold;
-            box-shadow: 0 0 15px var(--primary);
-            transform: translateX(10px);
-        }
-        .nav-btn::before {
-            content: ''; position: absolute; left: 0; top: 0; width: 4px; height: 100%; background: var(--accent);
-            opacity: 0; transition: 0.3s;
-        }
-        .nav-btn.active::before { opacity: 1; }
+        #data-panel.active { right: 0; }
 
-        /* --- MAIN VIEWPORT --- */
-        main {
-            grid-column: 2 / 3;
-            grid-row: 2 / 3;
-            background: var(--panel);
-            border: 1px solid var(--primary);
-            position: relative;
-            overflow: hidden;
-            /* Corners Effect */
-            clip-path: polygon(
-                20px 0, 100% 0, 
-                100% calc(100% - 20px), calc(100% - 20px) 100%, 
-                0 100%, 0 20px
-            );
-        }
-        .content-scroll {
-            height: 100%;
-            overflow-y: auto;
-            padding: 30px;
-            scrollbar-width: thin;
-            scrollbar-color: var(--primary) #000;
-        }
-
-        /* --- SECTIONS & ANIMATIONS --- */
-        .section { display: none; }
-        .section.active { display: block; animation: holographic-pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-
-        h2 {
-            font-family: var(--font-head);
-            font-size: 2.5rem;
-            border-bottom: 2px solid var(--accent);
-            display: inline-block;
-            margin-bottom: 30px;
-        }
-
-        /* --- 3D PROJECT CARDS --- */
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            perspective: 1000px;
-        }
-        .holo-card {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(0, 243, 255, 0.2);
-            padding: 20px;
-            position: relative;
-            transition: transform 0.1s;
-            transform-style: preserve-3d;
-        }
-        .holo-card:hover {
-            border-color: var(--primary);
-            background: rgba(0, 243, 255, 0.05);
-        }
-        .holo-card h3 { color: var(--primary); margin: 0 0 10px 0; font-family: var(--font-head); }
-        .holo-card p { color: #ccc; font-size: 0.9rem; line-height: 1.5; }
-        .tag {
-            display: inline-block; font-size: 0.7rem; color: #000; background: var(--primary);
-            padding: 2px 6px; margin-right: 5px; font-weight: bold; margin-top: 10px;
-        }
-        .status-dot {
-            width: 8px; height: 8px; background: var(--accent); border-radius: 50%;
-            display: inline-block; margin-right: 5px; box-shadow: 0 0 5px var(--accent);
-        }
-        .card-btn {
-            display: block; margin-top: 15px;
-            text-align: center; border: 1px solid var(--primary);
-            padding: 10px; color: var(--primary); text-decoration: none;
-            font-family: var(--font-head); font-size: 0.8rem;
-            transition: 0.3s;
-        }
-        .card-btn:hover { background: var(--primary); color: #000; }
-
-        /* --- DECODING TEXT --- */
-        .decode-text { display: inline-block; min-width: 100px; }
-
-        /* --- RIGHT SIDEBAR (STATS) --- */
-        aside {
-            grid-column: 3 / 4;
-            grid-row: 2 / 3;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-            padding-top: 20px;
-            border-left: 1px solid rgba(255,255,255,0.1);
-        }
-        .bar-container {
-            width: 10px; height: 150px; background: #222; position: relative;
-            border: 1px solid #444;
-        }
-        .bar-fill {
-            position: absolute; bottom: 0; left: 0; width: 100%;
-            background: var(--primary);
-            box-shadow: 0 0 10px var(--primary);
-            animation: fill-up 2s ease-out forwards;
-        }
-        .vert-text {
-            writing-mode: vertical-rl; text-orientation: mixed;
-            font-size: 0.7rem; letter-spacing: 2px; color: var(--warning);
-        }
-
-        /* --- FOOTER --- */
-        footer {
-            grid-column: 1 / -1;
-            border-top: 1px solid #333;
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 0 20px; font-size: 0.8rem; color: #555;
-        }
-
-        /* --- MOBILE ADAPTATION --- */
-        @media (max-width: 900px) {
-            #interface {
-                grid-template-columns: 1fr;
-                grid-template-rows: 60px 1fr 70px; /* Header | Content | Bottom Nav */
-                padding: 10px;
-                gap: 10px;
-            }
-
-            /* Header Adjustments */
-            header { padding: 0 10px; }
-            .identity h1 { font-size: 1.2rem; }
-            .identity span { font-size: 0.6rem; }
-
-            /* Hide Sidebar Stats */
-            aside { display: none; }
-
-            /* Content Area expands */
-            main {
-                grid-column: 1 / -1;
-                grid-row: 2 / 3;
-                clip-path: none; /* Remove fancy corners for more screen space */
-                border: 1px solid var(--primary);
-            }
-            .content-scroll { padding: 15px; }
-            h2 { font-size: 1.8rem; margin-bottom: 15px; }
-
-            /* Bottom Navigation Deck */
-            nav {
-                grid-column: 1 / -1;
-                grid-row: 3 / 4;
-                flex-direction: row;
-                justify-content: space-between;
-                background: #000;
-                border-top: 2px solid var(--primary);
-            }
-            .nav-btn {
-                flex: 1;
-                padding: 10px 5px;
-                font-size: 0.8rem;
-                text-align: center;
-                border: none;
-                clip-path: none;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-            }
-            .nav-btn:hover { transform: none; } /* No hover transform on touch */
-            .nav-btn.active { border-top: 3px solid var(--accent); }
-            
-            /* Remove left border marker on mobile */
-            .nav-btn::before { display: none; }
-        }
-
-        /* --- ANIMATIONS --- */
-        @keyframes grid-move { 0% { transform: perspective(500px) rotateX(60deg) translateY(0); } 100% { transform: perspective(500px) rotateX(60deg) translateY(50px); } }
-        @keyframes holographic-pop { 
-            0% { opacity: 0; transform: scale(0.95) translateY(20px); filter: blur(5px); } 
-            100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); } 
-        }
-        @keyframes fill-up { from { height: 0%; } to { height: var(--h); } }
+        h2 { border-bottom: 1px solid #ff0055; padding-bottom: 10px; margin-top: 0; color: #ff0055; }
+        p { line-height: 1.6; color: #ccc; font-size: 0.9rem; }
         
-        /* Loading Screen */
-        #loader {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 9999;
-            display: flex; align-items: center; justify-content: center;
-            flex-direction: column;
+        .btn {
+            display: inline-block; margin-top: 20px; padding: 10px 20px;
+            border: 1px solid #00f3ff; color: #00f3ff; text-decoration: none;
+            transition: 0.3s; cursor: pointer;
         }
-        .loader-text { font-family: var(--font-head); font-size: 1.5rem; animation: pulse 1s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .btn:hover { background: #00f3ff; color: #000; }
 
+        #loading {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: #00f3ff; animation: blink 1s infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <div id="loader">
-        <div class="loader-text">INITIALIZING SYSTEM...</div>
-        <div style="margin-top: 10px; color: var(--primary); font-family: monospace;">LOADING ASSETS // V.X6</div>
-    </div>
-
-    <div id="grid-layer"></div>
-    <div id="bg-layer"></div>
-
-    <div id="interface">
+    <div id="ui-layer">
+        <div id="header">
+            <h1>NIKHIL SINGH</h1>
+            <small>AI ARCHITECT // SYSTEM V.X6</small>
+        </div>
+        <div id="loading">INITIALIZING 3D ENGINE...</div>
         
-        <header>
-            <div class="identity">
-                <h1>Nikhil Singh</h1>
-                <span>AI ARCHITECT // FULL STACK</span>
-            </div>
-            <div style="text-align: right; font-size: 0.7rem; color: var(--warning);">
-                SYS_STATUS: ONLINE<br>
-                LOC: INDIA
-            </div>
-        </header>
-
-        <nav>
-            <div class="nav-btn active" onclick="switchTab('profile')">
-                <span>01 // PROFILE</span>
-            </div>
-            <div class="nav-btn" onclick="switchTab('projects')">
-                <span>02 // PROJECTS</span>
-            </div>
-            <div class="nav-btn" onclick="switchTab('skills')">
-                <span>03 // SKILLS</span>
-            </div>
-            <div class="nav-btn" onclick="switchTab('contact')">
-                <span>04 // CONNECT</span>
-            </div>
-        </nav>
-
-        <main>
-            <div class="content-scroll">
-                
-                <div id="profile" class="section active">
-                    <h2 class="decode" data-text="OPERATOR_PROFILE">OPERATOR_PROFILE</h2>
-                    <p style="font-size: 1.1rem; line-height: 1.6; color: #ddd;">
-                        <span style="color: var(--primary); font-weight: bold;">>> IDENTITY VERIFIED.</span><br><br>
-                        I am a Full Stack Data Scientist and AI Developer currently upgrading skills at <strong>AlmaBetter</strong>. My architecture is built on Python, Generative AI, and futuristic web technologies.
-                        <br><br>
-                        I specialize in building "Stealth" systems—tools that automate the mundane and create visual spectacles. Creator of the <strong style="color: var(--accent);">NovusFace AI</strong> engine.
-                    </p>
-                    <div style="margin-top: 30px; padding: 15px; border: 1px dashed var(--primary); background: rgba(0,243,255,0.05);">
-                        <strong>CURRENT MISSION:</strong> Developing "GullyLink" hyperlocal tracking architecture.
-                    </div>
-                </div>
-
-                <div id="projects" class="section">
-                    <h2 class="decode" data-text="DEPLOYED_UNITS">DEPLOYED_UNITS</h2>
-                    <div class="card-grid">
-                        
-                        <div class="holo-card">
-                            <div style="display: flex; justify-content: space-between;">
-                                <h3>NovusFace AI</h3>
-                                <div class="status-dot"></div>
-                            </div>
-                            <p>High-performance face swap engine (vX6.01) capable of 4K photo reface. Features a neon-aesthetic UI.</p>
-                            <div>
-                                <span class="tag">PYTHON</span> <span class="tag">AI/ML</span> <span class="tag">UI/UX</span>
-                            </div>
-                            <a href="https://codewander-666.github.io" target="_blank" class="card-btn">LAUNCH PROTOCOL</a>
-                        </div>
-
-                        <div class="holo-card">
-                            <div style="display: flex; justify-content: space-between;">
-                                <h3>TubeMan AI</h3>
-                                <div class="status-dot"></div>
-                            </div>
-                            <p>Robust YouTube video downloader and processing tool. Handles multi-format extraction seamlessly.</p>
-                            <div>
-                                <span class="tag">PYTHON</span> <span class="tag">FFMPEG</span> <span class="tag">BACKEND</span>
-                            </div>
-                            <a href="https://github.com/codewander-666" target="_blank" class="card-btn">VIEW SOURCE</a>
-                        </div>
-
-                        <div class="holo-card">
-                            <div style="display: flex; justify-content: space-between;">
-                                <h3>SEO Vision Pro</h3>
-                                <div class="status-dot"></div>
-                            </div>
-                            <p>Automated ranking warfare suite. Generates sitemaps and configures robots.txt programmatically.</p>
-                            <div>
-                                <span class="tag">AUTOMATION</span> <span class="tag">SEO</span>
-                            </div>
-                            <a href="#" class="card-btn">ACCESS DATA</a>
-                        </div>
-
-                        <div class="holo-card">
-                            <div style="display: flex; justify-content: space-between;">
-                                <h3>GullyLink</h3>
-                                <div class="status-dot" style="background: var(--warning);"></div>
-                            </div>
-                            <p>Concept: Hyperlocal tracking for street vendors. Real-time geolocation bridge.</p>
-                            <div>
-                                <span class="tag">CONCEPT</span> <span class="tag">MOBILE</span>
-                            </div>
-                            <a href="#" class="card-btn">BLUEPRINT</a>
-                        </div>
-
-                    </div>
-                </div>
-
-                <div id="skills" class="section">
-                    <h2 class="decode" data-text="NEURAL_LINKS">NEURAL_LINKS</h2>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                        <div>
-                            <h3 style="color:var(--primary)">// LANGUAGES</h3>
-                            <ul style="list-style: none; padding: 0; line-height: 2;">
-                                <li>> PYTHON [MASTER]</li>
-                                <li>> JAVASCRIPT [ADVANCED]</li>
-                                <li>> HTML5/CSS3 [ARCHITECT]</li>
-                                <li>> SQL [CORE]</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h3 style="color:var(--accent)">// TECH STACK</h3>
-                            <ul style="list-style: none; padding: 0; line-height: 2;">
-                                <li>> GENERATIVE AI MODELS</li>
-                                <li>> OPENCV / COMPUTER VISION</li>
-                                <li>> SELENIUM / AUTOMATION</li>
-                                <li>> GIT / LINUX</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="contact" class="section">
-                    <h2 class="decode" data-text="ESTABLISH_UPLINK">ESTABLISH_UPLINK</h2>
-                    <p>Secure channels are open. Click to transmit.</p>
-                    <div style="display: flex; flex-direction: column; gap: 15px; max-width: 300px;">
-                        <a href="https://www.linkedin.com/in/nikhil-singh-8a4338298" target="_blank" class="nav-btn" style="text-align: center; clip-path: none; border: 1px solid var(--primary);">
-                            LINKEDIN PROFILE
-                        </a>
-                        <a href="https://github.com/codewander-666" target="_blank" class="nav-btn" style="text-align: center; clip-path: none; border: 1px solid var(--accent);">
-                            GITHUB REPO
-                        </a>
-                        <a href="mailto:nikhil@example.com" class="nav-btn" style="text-align: center; clip-path: none; border: 1px solid var(--warning);">
-                            SEND EMAIL
-                        </a>
-                    </div>
-                </div>
-
-            </div>
-        </main>
-
-        <aside>
-            <div class="vert-text">CPU LOAD</div>
-            <div class="bar-container"><div class="bar-fill" style="--h: 80%;"></div></div>
-            <div class="vert-text" style="margin-top: 20px;">RAM USAGE</div>
-            <div class="bar-container"><div class="bar-fill" style="--h: 60%; background: var(--accent); box-shadow: 0 0 10px var(--accent);"></div></div>
-        </aside>
-
-        <footer>
-            <div>© 2026 NIKHIL SINGH</div>
-            <div>FRAMEWORK: NOVUS_UI</div>
-        </footer>
-
+        <div id="data-panel">
+            <h2 id="panel-title">DATA NODE</h2>
+            <div id="panel-content">Select a node to view data.</div>
+            <a href="#" id="panel-link" class="btn" style="display:none">ACCESS</a>
+            <button onclick="closePanel()" style="position:absolute; top:10px; right:10px; background:none; border:none; color:#555; cursor:pointer;">[X]</button>
+        </div>
     </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
     <script>
-        // --- BOOT LOADER ---
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                document.getElementById('loader').style.display = 'none';
-                // Trigger Text Decoder on first load
-                decodeText(document.querySelector('.section.active .decode'));
-            }, 1500);
+        // --- JAVASCRIPT LOGIC (The Engine) ---
+
+        // 1. SETUP SCENE
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x000000, 0.02); // Distance fog
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 15;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+
+        // Controls
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.5;
+
+        // 2. CREATE THE "NEURAL CORE" (Central Object)
+        const geometry = new THREE.IcosahedronGeometry(4, 1);
+        const material = new THREE.MeshBasicMaterial({ 
+            color: 0x00f3ff, 
+            wireframe: true, 
+            transparent: true, 
+            opacity: 0.3 
+        });
+        const core = new THREE.Mesh(geometry, material);
+        scene.add(core);
+
+        // Inner Core (Glowing)
+        const innerGeo = new THREE.IcosahedronGeometry(2, 0);
+        const innerMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
+        const innerCore = new THREE.Mesh(innerGeo, innerMat);
+        scene.add(innerCore);
+
+        // 3. CREATE DATA NODES (Orbiting Satellites)
+        const nodes = [];
+        const nodeData = [
+            { id: 1, title: "NOVUSFACE AI", type: "PROJECT", color: 0xff0055, desc: "Deep learning face swap engine (vX6). High fidelity rendering.", link: "https://codewander-666.github.io" },
+            { id: 2, title: "TUBEMAN AI", type: "TOOL", color: 0x00ff00, desc: "Python-based video extraction and processing pipeline.", link: "https://github.com/codewander-666" },
+            { id: 3, title: "SKILLS", type: "INFO", color: 0xffff00, desc: "Python, TensorFlow, OpenCV, Three.js, React, Java Spring.", link: "#" },
+            { id: 4, title: "CONTACT", type: "LINK", color: 0xffffff, desc: "Connect via LinkedIn or Email for collaboration.", link: "https://linkedin.com" }
+        ];
+
+        const nodeGroup = new THREE.Group();
+        scene.add(nodeGroup);
+
+        nodeData.forEach((data, index) => {
+            const sphere = new THREE.Mesh(
+                new THREE.SphereGeometry(0.5, 32, 32),
+                new THREE.MeshBasicMaterial({ color: data.color })
+            );
+            
+            // Math to position them in orbit
+            const angle = (index / nodeData.length) * Math.PI * 2;
+            const radius = 8;
+            sphere.position.x = Math.cos(angle) * radius;
+            sphere.position.z = Math.sin(angle) * radius;
+            sphere.userData = data; // Attach data to the 3D object
+            
+            nodes.push(sphere);
+            nodeGroup.add(sphere);
+
+            // Add ring around node
+            const ring = new THREE.Mesh(
+                new THREE.TorusGeometry(0.8, 0.02, 16, 100),
+                new THREE.MeshBasicMaterial({ color: data.color, transparent: true, opacity: 0.5 })
+            );
+            ring.position.copy(sphere.position);
+            ring.lookAt(0,0,0);
+            nodeGroup.add(ring);
         });
 
-        // --- TAB SWITCHING ---
-        function switchTab(tabId) {
-            // Remove active class
-            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-            
-            // Add active class
-            const target = document.getElementById(tabId);
-            target.classList.add('active');
-            
-            // Highlight button (find matching button logic simplified for this snippet)
-            event.currentTarget.classList.add('active');
+        // 4. PARTICLES (Stars)
+        const starGeo = new THREE.BufferGeometry();
+        const starCount = 2000;
+        const posArray = new Float32Array(starCount * 3);
+        for(let i=0; i<starCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 100;
+        }
+        starGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const starMat = new THREE.PointsMaterial({ size: 0.05, color: 0xffffff });
+        const stars = new THREE.Points(starGeo, starMat);
+        scene.add(stars);
 
-            // Trigger decode effect on header
-            const header = target.querySelector('.decode');
-            if(header) decodeText(header);
+        // 5. RAYCASTER (Interaction Logic)
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        window.addEventListener('click', onMouseClick);
+        window.addEventListener('mousemove', (e) => {
+            // Hover effect logic could go here
+        });
+
+        function onMouseClick(event) {
+            // Calculate mouse position in normalized device coordinates
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(nodes);
+
+            if (intersects.length > 0) {
+                const object = intersects[0].object;
+                openPanel(object.userData);
+            }
         }
 
-        // --- TEXT DECODER EFFECT ---
-        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&";
-        function decodeText(element) {
-            if(!element) return;
-            const originalText = element.getAttribute('data-text');
-            let iterations = 0;
+        // 6. UI LOGIC
+        function openPanel(data) {
+            controls.autoRotate = false; // Stop rotation to focus
+            const panel = document.getElementById('data-panel');
+            document.getElementById('panel-title').innerText = data.title;
+            document.getElementById('panel-content').innerText = data.desc;
             
-            const interval = setInterval(() => {
-                element.innerText = originalText.split('')
-                    .map((letter, index) => {
-                        if(index < iterations) return originalText[index];
-                        return chars[Math.floor(Math.random() * chars.length)];
-                    })
-                    .join('');
-                
-                if(iterations >= originalText.length) clearInterval(interval);
-                iterations += 1 / 2; // Speed of decoding
-            }, 30);
+            const btn = document.getElementById('panel-link');
+            if(data.link !== "#") {
+                btn.href = data.link;
+                btn.style.display = 'inline-block';
+            } else {
+                btn.style.display = 'none';
+            }
+            
+            panel.classList.add('active');
         }
 
-        // --- 3D TILT EFFECT FOR CARDS (DESKTOP ONLY) ---
-        if (window.matchMedia("(min-width: 900px)").matches) {
-            const cards = document.querySelectorAll('.holo-card');
-            
-            cards.forEach(card => {
-                card.addEventListener('mousemove', (e) => {
-                    const rect = card.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    
-                    const centerX = rect.width / 2;
-                    const centerY = rect.height / 2;
-                    
-                    const rotateX = ((y - centerY) / centerY) * -10; // Max rotation deg
-                    const rotateY = ((x - centerX) / centerX) * 10;
-
-                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-                });
-
-                card.addEventListener('mouseleave', () => {
-                    card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0)';
-                });
-            });
+        window.closePanel = function() { // Expose to global scope for HTML button
+            document.getElementById('data-panel').classList.remove('active');
+            controls.autoRotate = true;
         }
+
+        // 7. ANIMATION LOOP
+        document.getElementById('loading').style.display = 'none';
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Rotate core
+            core.rotation.x += 0.002;
+            core.rotation.y += 0.002;
+
+            // Pulse Inner Core
+            const time = Date.now() * 0.002;
+            innerCore.scale.setScalar(1 + Math.sin(time) * 0.1);
+
+            // Rotate Node Group
+            nodeGroup.rotation.y -= 0.001;
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Resize Handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
     </script>
 </body>
 </html>
