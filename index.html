@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIKHIL SINGH | SYSTEM_OVERRIDE // V.6.01</title>
+    <style>
+        /* --- CORE SYSTEM --- */
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --neon-cyan: #00f3ff;
+            --neon-pink: #bc13fe;
+            --neon-green: #0aff00;
+            --neon-red: #ff003c;
+            --bg-dark: #020202;
+            --panel-bg: rgba(10, 15, 20, 0.85);
+            --border-color: rgba(0, 243, 255, 0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--neon-cyan);
+            font-family: 'Share Tech Mono', monospace;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* --- CUSTOM CURSOR --- */
+        #cursor {
+            position: fixed;
+            width: 20px; height: 20px;
+            border: 2px solid var(--neon-cyan);
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+            transition: width 0.2s, height 0.2s, background 0.2s;
+            mix-blend-mode: difference;
+        }
+        #cursor.hovered {
+            width: 50px; height: 50px;
+            background: rgba(0, 243, 255, 0.2);
+            border-color: var(--neon-pink);
+        }
+
+        /* --- BACKGROUND MATRIX --- */
+        #bg-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -1;
+        }
+
+        /* --- CRT SCANLINE OVERLAY --- */
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 100;
+            animation: scanline-anim 10s linear infinite;
+        }
+
+        /* --- LOADING SCREEN (BOOT SEQ) --- */
+        #boot-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Orbitron', sans-serif;
+        }
+        .boot-text {
+            color: var(--neon-green);
+            text-shadow: 0 0 10px var(--neon-green);
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+        .loader-bar {
+            width: 300px; height: 4px;
+            background: #333;
+            position: relative;
+            overflow: hidden;
+        }
+        .loader-progress {
+            width: 0%; height: 100%;
+            background: var(--neon-green);
+            box-shadow: 0 0 15px var(--neon-green);
+            animation: load 3s ease-in-out forwards;
+        }
+
+        /* --- MAIN UI CONTAINER --- */
+        #main-ui {
+            display: none; /* Hidden until boot finishes */
+            height: 100%;
+            display: grid;
+            grid-template-columns: 250px 1fr 300px;
+            grid-template-rows: 80px 1fr 60px;
+            gap: 10px;
+            padding: 20px;
+            opacity: 0;
+            animation: hud-flicker 1s forwards; /* Triggered by JS */
+        }
+
+        /* --- HEADER --- */
+        header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--neon-cyan);
+            padding: 0 20px;
+            background: linear-gradient(90deg, rgba(0,0,0,0.8), transparent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .logo {
+            font-family: 'Orbitron';
+            font-weight: 900;
+            font-size: 2rem;
+            text-shadow: 0 0 10px var(--neon-cyan);
+            position: relative;
+        }
+        .logo::after {
+            content: 'vX6.01';
+            font-size: 0.8rem;
+            color: var(--neon-pink);
+            position: absolute;
+            top: -5px; right: -40px;
+        }
+
+        /* --- LEFT NAVIGATION --- */
+        nav {
+            grid-row: 2 / 3;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding-top: 40px;
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+        .nav-btn {
+            background: transparent;
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            color: #fff;
+            padding: 15px 20px;
+            font-family: 'Orbitron';
+            font-size: 1rem;
+            text-align: left;
+            transition: 0.3s;
+            position: relative;
+            overflow: hidden;
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+        }
+        .nav-btn::before {
+            content: '';
+            position: absolute; top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 243, 255, 0.4), transparent);
+            transition: 0.4s;
+        }
+        .nav-btn:hover::before, .nav-btn.active::before { left: 100%; transition: 0.4s; }
+        .nav-btn:hover, .nav-btn.active {
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+            text-shadow: 0 0 8px var(--neon-cyan);
+            background: rgba(0, 243, 255, 0.05);
+            transform: translateX(10px);
+        }
+
+        /* --- CENTER CONTENT (VIEWPORT) --- */
+        #viewport {
+            grid-column: 2 / 3;
+            grid-row: 2 / 3;
+            position: relative;
+            overflow-y: auto;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            background: rgba(0,0,0,0.6);
+            box-shadow: inset 0 0 20px rgba(0, 243, 255, 0.1);
+            scrollbar-width: none;
+        }
+        /* Hide scrollbar */
+        #viewport::-webkit-scrollbar { display: none; }
+
+        .section {
+            display: none;
+            animation: glitch-fade-in 0.5s ease-out;
+        }
+        .section.active { display: block; }
+
+        h2 {
+            font-family: 'Orbitron';
+            font-size: 3rem;
+            color: #fff;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--neon-pink);
+            display: inline-block;
+            text-transform: uppercase;
+        }
+
+        /* --- RIGHT STATS PANEL --- */
+        aside {
+            grid-column: 3 / 4;
+            grid-row: 2 / 3;
+            border-left: 1px solid var(--neon-cyan);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .stat-box {
+            border: 1px solid #333;
+            padding: 15px;
+            background: rgba(0,0,0,0.5);
+        }
+        .stat-header { color: var(--neon-pink); font-size: 0.8rem; margin-bottom: 5px; }
+        .stat-bar {
+            width: 100%; height: 8px; background: #222; margin-top: 5px;
+        }
+        .stat-fill { height: 100%; background: var(--neon-green); width: 0%; transition: width 1s; }
+
+        /* --- PROJECT CARDS --- */
+        .project-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.8) 100%);
+            border: 1px solid var(--neon-cyan);
+            padding: 25px;
+            margin-bottom: 20px;
+            position: relative;
+            transition: 0.3s;
+        }
+        .project-card:hover {
+            border-color: var(--neon-pink);
+            box-shadow: 0 0 20px rgba(188, 19, 254, 0.3);
+            transform: scale(1.02);
+        }
+        .card-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px;
+        }
+        .card-title { font-size: 1.5rem; font-weight: bold; color: var(--neon-cyan); }
+        .card-badge {
+            background: var(--neon-red); color: #000; padding: 2px 8px; font-weight: bold; font-size: 0.8rem;
+        }
+        .tech-tags span {
+            display: inline-block;
+            border: 1px solid #555;
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            color: #aaa;
+            margin-right: 5px;
+            margin-top: 10px;
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 0.8rem;
+            color: #555;
+            border-top: 1px solid #333;
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes load { 0% { width: 0%; } 100% { width: 100%; } }
+        @keyframes scanline-anim { 0% { background-position: 0% 0%; } 100% { background-position: 0% 100%; } }
+        @keyframes hud-flicker { 0% { opacity: 0; } 50% { opacity: 0.1; } 55% { opacity: 0; } 100% { opacity: 1; } }
+        @keyframes glitch-fade-in {
+            0% { opacity: 0; transform: translateX(-50px) skewX(20deg); }
+            100% { opacity: 1; transform: translateX(0) skewX(0); }
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            #main-ui {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto 1fr auto;
+                display: flex; flex-direction: column;
+            }
+            nav { flex-direction: row; padding: 10px; overflow-x: scroll; border: none; }
+            aside { display: none; } /* Hide stats on mobile */
+            header h1 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="cursor"></div>
+
+    <canvas id="bg-canvas"></canvas>
+    
+    <div class="scanlines"></div>
+
+    <div id="boot-screen">
+        <div class="boot-text">INITIALIZING NOVUS_CORE...</div>
+        <div class="loader-bar">
+            <div class="loader-progress"></div>
+        </div>
+        <div id="boot-log" style="font-family: monospace; font-size: 0.8rem; color: #555; margin-top: 10px;">
+            > MOUNTING FILESYSTEM...
+        </div>
+    </div>
+
+    <div id="main-ui" style="display: none;">
+        
+        <header>
+            <div class="logo">NIKHIL SINGH</div>
+            <div class="system-time" id="clock">00:00:00 UTC</div>
+        </header>
+
+        <nav>
+            <button class="nav-btn active" onclick="navigate('profile')">01 // PROFILE</button>
+            <button class="nav-btn" onclick="navigate('projects')">02 // PROJECTS</button>
+            <button class="nav-btn" onclick="navigate('skills')">03 // ABILITIES</button>
+            <button class="nav-btn" onclick="navigate('contact')">04 // CONNECT</button>
+        </nav>
+
+        <div id="viewport">
+            
+            <div id="profile" class="section active">
+                <h2><span style="color:var(--neon-cyan)">></span> OPERATOR BIO</h2>
+                <p class="typing-effect" style="font-size: 1.2rem; line-height: 1.6; color: #ccc;">
+                    Identity confirmed: AI Developer & Full Stack Architect.<br><br>
+                    Currently operating out of AlmaBetter. Specializes in building high-performance Generative AI engines and futuristic web interfaces using Python and Deep Learning.<br><br>
+                    Creator of <span style="color:var(--neon-pink)">NovusFace AI</span>.
+                </p>
+                <br><br>
+                <div style="border: 1px solid var(--neon-cyan); padding: 15px; display: inline-block;">
+                    STATUS: <span style="color:var(--neon-green)">ONLINE</span><br>
+                    LOCATION: INDIA SERVER<br>
+                    MISSION: AUTOMATE EVERYTHING
+                </div>
+            </div>
+
+            <div id="projects" class="section">
+                <h2><span style="color:var(--neon-red)">></span> DEPLOYED SYSTEMS</h2>
+                
+                <div class="project-card">
+                    <div class="card-header">
+                        <div class="card-title">NOVUSFACE AI</div>
+                        <div class="card-badge">FLAGSHIP</div>
+                    </div>
+                    <p>Advanced face-swap engine (vX6.01) utilizing deep learning for realistic 4K reface. Features "stealth" processing and neon-aesthetic UI.</p>
+                    <div class="tech-tags">
+                        <span>PYTHON</span> <span>PYTORCH</span> <span>OPENCV</span> <span>HTML5</span>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div class="card-header">
+                        <div class="card-title">TUBEMAN AI</div>
+                        <div class="card-badge">UTILITY</div>
+                    </div>
+                    <p>High-speed YouTube content extraction tool. Optimized for bulk downloading and format conversion.</p>
+                    <div class="tech-tags">
+                        <span>PYTHON</span> <span>FFMPEG</span> <span>AUTOMATION</span>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div class="card-header">
+                        <div class="card-title">SEO VISION PRO</div>
+                        <div class="card-badge">BOT</div>
+                    </div>
+                    <p>Automated ranking warfare suite. Generates sitemaps, robots.txt, and audits site health programmatically.</p>
+                    <div class="tech-tags">
+                        <span>SEO LOGIC</span> <span>CRAWLERS</span> <span>DATA ANALYSIS</span>
+                    </div>
+                </div>
+                
+                <div class="project-card">
+                    <div class="card-header">
+                        <div class="card-title">GULLYLINK</div>
+                        <div class="card-badge">CONCEPT</div>
+                    </div>
+                    <p>Hyperlocal tracking system for street vendors. Real-time geolocation bridge between informal markets and consumers.</p>
+                    <div class="tech-tags">
+                        <span>GEOLOCATION</span> <span>MOBILE ARCHITECTURE</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="skills" class="section">
+                <h2><span style="color:var(--neon-green)">></span> NEURAL LINKS</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <h3 style="color:var(--neon-cyan)">CORE LANGUAGES</h3>
+                        <ul style="list-style: square; margin-left: 20px; color: #aaa; line-height: 2;">
+                            <li>Python (Mastery)</li>
+                            <li>JavaScript (Advanced)</li>
+                            <li>SQL / NoSQL</li>
+                            <li>HTML5 / CSS3 (Futuristic UI)</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 style="color:var(--neon-pink)">SPECIALIZATIONS</h3>
+                        <ul style="list-style: square; margin-left: 20px; color: #aaa; line-height: 2;">
+                            <li>Generative AI & LLMs</li>
+                            <li>Computer Vision (OpenCV)</li>
+                            <li>SEO Automation</li>
+                            <li>Web Scraping & Bots</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="contact" class="section">
+                <h2><span style="color:var(--neon-cyan)">></span> ESTABLISH UPLINK</h2>
+                <p>Secure channels available for collaboration.</p>
+                <br>
+                <div class="project-card" style="text-align: center;">
+                    <h3 style="color: #fff;">LINKEDIN</h3>
+                    <p style="color: #555;">Professional Network</p>
+                    <br>
+                    <a href="https://www.linkedin.com/in/nikhil-singh-8a4338298" target="_blank" style="background: var(--neon-cyan); color: #000; padding: 10px 20px; text-decoration: none; font-weight: bold; display: inline-block;">CONNECT</a>
+                </div>
+                <div class="project-card" style="text-align: center;">
+                    <h3 style="color: #fff;">GITHUB</h3>
+                    <p style="color: #555;">Code Repository</p>
+                    <br>
+                    <a href="https://github.com/codewander-666" target="_blank" style="background: var(--neon-pink); color: #000; padding: 10px 20px; text-decoration: none; font-weight: bold; display: inline-block;">ACCESS REPO</a>
+                </div>
+            </div>
+
+        </div>
+
+        <aside>
+            <div class="stat-box">
+                <div class="stat-header">CPU USAGE (PYTHON)</div>
+                <div class="stat-bar"><div class="stat-fill" style="width: 95%;"></div></div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-header">MEMORY (DATA SCIENCE)</div>
+                <div class="stat-bar"><div class="stat-fill" style="width: 85%;"></div></div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-header">CREATIVITY</div>
+                <div class="stat-bar"><div class="stat-fill" style="width: 98%; background: var(--neon-pink);"></div></div>
+            </div>
+            <div class="stat-box" style="margin-top: auto; border: none; text-align: center;">
+                <div style="font-size: 3rem; color: var(--neon-cyan);">LVL 26</div>
+                <div style="font-size: 0.7rem; color: #555;">DEV RANK</div>
+            </div>
+        </aside>
+
+        <footer>
+            <div>SYSTEM STATUS: OPTIMAL</div>
+            <div>© 2026 NIKHIL SINGH</div>
+        </footer>
+    </div>
+
+    <script>
+        // --- BOOT SEQUENCE LOGIC ---
+        const bootScreen = document.getElementById('boot-screen');
+        const mainUi = document.getElementById('main-ui');
+        const bootLog = document.getElementById('boot-log');
+        
+        const logs = [
+            "> LOADING KERNEL...",
+            "> PARSING NEURAL NETWORKS...",
+            "> DECRYPTING PROJECT FILES...",
+            "> ESTABLISHING SECURE CONNECTION...",
+            "> WELCOME, USER."
+        ];
+
+        let logIndex = 0;
+        const logInterval = setInterval(() => {
+            if(logIndex < logs.length) {
+                bootLog.innerHTML += "<br>" + logs[logIndex];
+                logIndex++;
+            } else {
+                clearInterval(logInterval);
+            }
+        }, 400);
+
+        setTimeout(() => {
+            bootScreen.style.opacity = '0';
+            bootScreen.style.transition = 'opacity 1s';
+            setTimeout(() => {
+                bootScreen.style.display = 'none';
+                mainUi.style.display = 'grid'; // Grid for layout
+            }, 1000);
+        }, 3500); // 3.5s boot time
+
+        // --- NAVIGATION LOGIC ---
+        function navigate(sectionId) {
+            // Remove active classes
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+
+            // Add active classes
+            document.getElementById(sectionId).classList.add('active');
+            event.target.classList.add('active'); // Assumes button click
+        }
+
+        // --- CLOCK ---
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toISOString().split('T')[1].split('.')[0] + " UTC";
+        }, 1000);
+
+        // --- CUSTOM CURSOR ---
+        const cursor = document.getElementById('cursor');
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        });
+
+        document.querySelectorAll('a, button, .project-card').forEach(el => {
+            el.addEventListener('mouseenter', () => cursor.classList.add('hovered'));
+            el.addEventListener('mouseleave', () => cursor.classList.remove('hovered'));
+        });
+
+        // --- CANVAS BACKGROUND (MATRIX NODES) ---
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        const particleCount = 60;
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 1;
+                this.vy = (Math.random() - 0.5) * 1;
+                this.size = Math.random() * 2 + 1;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if(this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if(this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+            draw() {
+                ctx.fillStyle = 'rgba(0, 243, 255, 0.5)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        for(let i=0; i<particleCount; i++) particles.push(new Particle());
+
+        function animateCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw lines between particles
+            for(let i=0; i<particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                
+                for(let j=i; j<particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    
+                    if(dist < 150) {
+                        ctx.strokeStyle = `rgba(0, 243, 255, ${1 - dist/150})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateCanvas);
+        }
+        animateCanvas();
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+    </script>
+</body>
+</html>
