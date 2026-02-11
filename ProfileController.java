@@ -1,31 +1,38 @@
-// ProfileController.java
-package com.nikhilsingh.neuralnexus;
+package com.nikhilsingh.profile;
 
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Map;
 
+@SpringBootApplication
 @RestController
-@RequestMapping("/api/v1")
+@CrossOrigin(origins = "*") // Allow frontend access
 public class ProfileController {
 
-    @GetMapping("/status")
-    public Map<String, String> getSystemStatus() {
+    public static void main(String[] args) {
+        SpringApplication.run(ProfileController.class, args);
+    }
+
+    @GetMapping("/api/profile")
+    public Map<String, Object> getProfile() {
         return Map.of(
-            "operator", "Nikhil Singh",
-            "status", "OPTIMAL",
-            "security_level", "MAXIMUM"
+            "name", "Nikhil Singh",
+            "title", "AI Architect // Reality Bender",
+            "status", "ONLINE",
+            "location", "India Node"
         );
     }
 
-    @GetMapping("/projects")
-    public List<Map<String, Object>> getProjects() {
-        // In a real app, this would fetch from a database
+    @GetMapping("/api/projects")
+    public List<Map<String, String>> getProjects() {
         return List.of(
-            Map.of("name", "NovusFace", "tech", "Python/PyTorch", "prio", "HIGH"),
-            Map.of("name", "SEO Vision", "tech", "Automation", "prio", "MED")
+            Map.of("id", "1", "name", "NOVUSFACE AI", "type", "DEEPFAKE_ENGINE", "desc", "4K Real-time Face Swapping Architecture."),
+            Map.of("id", "2", "name", "TUBEMAN", "type", "VIDEO_PIPELINE", "desc", "High-throughput video extraction bot."),
+            Map.of("id", "3", "name", "SEOMAN PRO", "type", "RANKING_BOT", "desc", "Automated SEO Warfare Suite.")
         );
     }
 }
