@@ -2,114 +2,435 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>NIKHIL SINGH | HYPER_REALITY_V8</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NIKHIL SINGH | 6D MOBILE NEXUS</title>
     <style>
-        /* --- 6D VISUAL INTERFACE (CSS) --- */
-        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap');
 
         :root {
-            --glass: rgba(255, 255, 255, 0.15);
-            --glass-border: rgba(255, 255, 255, 0.4);
-            --neon-pink: rgba(255, 0, 110, 1);
-            --neon-blue: rgba(0, 243, 255, 1);
-            --dark-bg: #0a0a12;
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff0055;
+            --glass: rgba(20, 30, 40, 0.4);
+            --border: rgba(255, 255, 255, 0.2);
         }
 
         body {
-            margin: 0; overflow: hidden; background: var(--dark-bg);
-            font-family: 'Fredoka', sans-serif;
-            cursor: crosshair;
+            margin: 0; overflow: hidden; background: #000;
+            font-family: 'Rajdhani', sans-serif;
+            touch-action: none; /* Prevent scroll on mobile */
+            user-select: none;
         }
 
-        /* The 3D UI Overlay */
+        /* --- 6D PARALLAX UI LAYER --- */
         #ui-layer {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; perspective: 1000px;
-            display: flex; flex-direction: column; justify-content: space-between;
-            padding: 30px; box-sizing: border-box;
             z-index: 10;
         }
 
-        .hud-panel {
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 2px solid var(--glass-border);
-            border-radius: 25px;
-            padding: 20px;
-            color: #fff;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3), inset 0 0 20px rgba(255,255,255,0.1);
+        .hud-element {
+            position: absolute;
             transform-style: preserve-3d;
             transition: transform 0.1s ease-out;
+        }
+
+        /* Header */
+        #header-box {
+            top: 30px; left: 30px;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            padding: 20px 40px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0, 243, 255, 0.1);
+            transform: translateZ(20px);
+        }
+        h1 { margin: 0; color: #fff; text-transform: uppercase; letter-spacing: 2px; font-size: 1.5rem; }
+        .sub { color: var(--neon-blue); font-size: 0.8rem; letter-spacing: 4px; }
+
+        /* Mobile Controls */
+        #mobile-controls {
+            position: absolute; bottom: 40px; left: 40px;
+            width: 120px; height: 120px;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 50%;
             pointer-events: auto;
+            touch-action: none;
+            display: none; /* Hidden on desktop by default, shown via JS detect */
+        }
+        #joystick-knob {
+            width: 50px; height: 50px;
+            background: var(--neon-blue);
+            border-radius: 50%;
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 20px var(--neon-blue);
+            pointer-events: none;
         }
 
-        /* Header Styling */
-        header {
-            display: flex; justify-content: space-between; align-items: center;
-            width: 100%; max-width: 1200px; margin: 0 auto;
-        }
-        h1 {
-            margin: 0; font-size: 2.5rem; font-weight: 700;
-            background: linear-gradient(to right, #fff, var(--neon-blue));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 30px var(--neon-blue);
-        }
-        .badge {
-            background: var(--neon-pink); color: #fff; padding: 5px 15px;
-            border-radius: 50px; font-size: 0.9rem; font-weight: bold;
-            box-shadow: 0 0 20px var(--neon-pink);
+        /* Right Side Touch Area (Camera) */
+        #look-zone {
+            position: absolute; top: 0; right: 0; width: 50%; height: 100%;
+            z-index: 5; pointer-events: auto; touch-action: none;
         }
 
-        /* Project Cards Modal */
-        #modal-overlay {
+        /* 3D Modal */
+        #modal-container {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); z-index: 20;
             display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.6);
             opacity: 0; pointer-events: none; transition: 0.5s;
+            perspective: 1200px; z-index: 100;
         }
-        #modal-overlay.active { opacity: 1; pointer-events: auto; }
-        
-        .modal-card {
-            background: linear-gradient(135deg, rgba(20,20,30,0.9), rgba(40,40,60,0.9));
-            border: 2px solid var(--neon-blue);
-            width: 500px; padding: 40px; border-radius: 30px;
+        #modal-container.active { opacity: 1; pointer-events: auto; }
+
+        .holo-card {
+            width: 80%; max-width: 400px;
+            background: rgba(10, 10, 15, 0.9);
+            border: 2px solid var(--neon-pink);
+            padding: 30px; border-radius: 20px;
             text-align: center; color: #fff;
-            box-shadow: 0 0 100px rgba(0, 243, 255, 0.3);
-            transform: scale(0.8); transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: rotateX(20deg) translateZ(-100px);
+            transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 50px rgba(255, 0, 85, 0.3);
         }
-        #modal-overlay.active .modal-card { transform: scale(1); }
+        #modal-container.active .holo-card { transform: rotateX(0) translateZ(0); }
 
-        .btn-action {
-            background: var(--neon-blue); color: #000; border: none;
-            padding: 15px 40px; border-radius: 50px; font-size: 1.2rem; font-weight: bold;
-            margin-top: 20px; cursor: pointer; transition: 0.3s;
-            box-shadow: 0 0 30px var(--neon-blue);
-        }
-        .btn-action:hover { transform: scale(1.1); background: #fff; }
-
-        /* Tutorial / Controls */
-        .tutorial {
-            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-            text-align: center; color: rgba(255,255,255,0.7);
-        }
-        .key {
-            display: inline-block; border: 1px solid #fff; padding: 5px 10px;
-            border-radius: 8px; margin: 0 5px; font-weight: bold;
+        .btn {
+            margin-top: 20px; padding: 12px 30px;
+            background: var(--neon-pink); border: none; color: #fff;
+            font-weight: bold; border-radius: 30px; font-size: 1rem;
+            cursor: pointer; box-shadow: 0 0 20px var(--neon-pink);
         }
 
-        /* Loading Screen */
-        #loader {
+        /* Start Button (Audio Context) */
+        #start-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 100;
+            background: #000; z-index: 999;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: var(--neon-blue); font-size: 2rem; font-weight: bold;
         }
-        .spinner {
-            width: 50px; height: 50px; border: 5px solid var(--neon-blue);
-            border-top: 5px solid transparent; border-radius: 50%;
-            animation: spin 1s linear infinite; margin-bottom: 20px;
+        .start-btn {
+            padding: 20px 50px; border: 2px solid var(--neon-blue);
+            background: transparent; color: var(--neon-blue);
+            font-family: 'Rajdhani'; font-size: 1.5rem; letter-spacing: 5px;
+            cursor: pointer; transition: 0.3s;
+        }
+        .start-btn:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 40px var(--neon-blue); }
+
+    </style>
+</head>
+<body>
+
+    <div id="start-screen">
+        <button class="start-btn" onclick="initGame()">INITIALIZE SYSTEM</button>
+        <p style="color: #666; margin-top: 20px; font-size: 0.8rem;">HEADPHONES RECOMMENDED</p>
+    </div>
+
+    <div id="ui-layer">
+        <div id="header-box" class="hud-element">
+            <h1>Nikhil Singh</h1>
+            <div class="sub">AI ARCHITECT // LEVEL 99</div>
+        </div>
+    </div>
+
+    <div id="mobile-controls">
+        <div id="joystick-knob"></div>
+    </div>
+    <div id="look-zone"></div>
+
+    <div id="modal-container">
+        <div class="holo-card" id="modal-card">
+            <h2 id="m-title" style="color: var(--neon-blue); margin-bottom: 10px;">PROJECT NAME</h2>
+            <p id="m-desc" style="color: #ccc; line-height: 1.5;">Description...</p>
+            <button class="btn" onclick="closeModal()">CLOSE</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        // --- 1. SETUP AUDIO ---
+        const AudioSys = {
+            ctx: null,
+            init: function() {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            },
+            play: function(freq, type) {
+                if(!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(freq/2, this.ctx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.3);
+            }
+        };
+
+        // --- 2. 3D SCENE ---
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x000000, 0.02);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Optimization
+        document.body.appendChild(renderer.domElement);
+
+        // Lights
+        const amb = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(amb);
+        const light = new THREE.PointLight(0x00f3ff, 1, 50);
+        light.position.set(0, 10, 0);
+        scene.add(light);
+
+        // Terrain
+        const geo = new THREE.PlaneGeometry(200, 200, 50, 50);
+        const mat = new THREE.MeshBasicMaterial({ color: 0x00f3ff, wireframe: true, transparent: true, opacity: 0.1 });
+        const terrain = new THREE.Mesh(geo, mat);
+        terrain.rotation.x = -Math.PI / 2;
+        scene.add(terrain);
+
+        // Player
+        const player = new THREE.Mesh(
+            new THREE.OctahedronGeometry(0.5),
+            new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true })
+        );
+        player.position.y = 2;
+        scene.add(player);
+
+        // Collectibles
+        const projects = [
+            { name: "NovusFace AI", color: 0xff0055, x: 0, z: -10, desc: "Deepfake Engine" },
+            { name: "TubeMan", color: 0x00f3ff, x: -10, z: 0, desc: "Video Pipeline" },
+            { name: "SEO Bot", color: 0xffff00, x: 10, z: 0, desc: "Automation" }
+        ];
+
+        const orbs = [];
+        projects.forEach(p => {
+            const mesh = new THREE.Mesh(
+                new THREE.IcosahedronGeometry(1, 1),
+                new THREE.MeshBasicMaterial({ color: p.color, wireframe: true })
+            );
+            mesh.position.set(p.x, 2, p.z);
+            mesh.userData = p;
+            scene.add(mesh);
+            orbs.push(mesh);
+            
+            // Beacon
+            const beam = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.05, 0.05, 50),
+                new THREE.MeshBasicMaterial({ color: p.color, transparent: true, opacity: 0.3 })
+            );
+            beam.position.set(p.x, 25, p.z);
+            scene.add(beam);
+        });
+
+        // --- 3. INPUT SYSTEM (KEYBOARD + TOUCH) ---
+        const input = { x: 0, y: 0 }; // Joystick vector
+        let camRotation = 0;
+
+        // Joystick Logic
+        const joyZone = document.getElementById('mobile-controls');
+        const knob = document.getElementById('joystick-knob');
+        let joyTouchId = null;
+        let joyCenter = { x: 0, y: 0 };
+
+        if ('ontouchstart' in window) {
+            joyZone.style.display = 'block'; // Show on mobile
+        }
+
+        joyZone.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.changedTouches[0];
+            joyTouchId = touch.identifier;
+            const rect = joyZone.getBoundingClientRect();
+            joyCenter = { x: rect.left + rect.width/2, y: rect.top + rect.height/2 };
+            updateJoystick(touch);
+        });
+
+        joyZone.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            for(let i=0; i<e.changedTouches.length; i++) {
+                if(e.changedTouches[i].identifier === joyTouchId) {
+                    updateJoystick(e.changedTouches[i]);
+                }
+            }
+        });
+
+        joyZone.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            input.x = 0; input.y = 0;
+            knob.style.transform = `translate(-50%, -50%)`;
+        });
+
+        function updateJoystick(touch) {
+            const maxDist = 60;
+            let dx = touch.clientX - joyCenter.x;
+            let dy = touch.clientY - joyCenter.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            
+            if(dist > maxDist) {
+                const angle = Math.atan2(dy, dx);
+                dx = Math.cos(angle) * maxDist;
+                dy = Math.sin(angle) * maxDist;
+            }
+
+            knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+            input.x = dx / maxDist;
+            input.y = dy / maxDist;
+        }
+
+        // Camera Look Logic (Touch)
+        const lookZone = document.getElementById('look-zone');
+        let lookStartX = 0;
+
+        lookZone.addEventListener('touchstart', (e) => {
+            lookStartX = e.touches[0].clientX;
+        });
+        
+        lookZone.addEventListener('touchmove', (e) => {
+            const dx = e.touches[0].clientX - lookStartX;
+            camRotation -= dx * 0.005;
+            lookStartX = e.touches[0].clientX;
+        });
+
+        // Keyboard Fallback
+        window.addEventListener('keydown', (e) => {
+            if(e.key === 'w') input.y = -1;
+            if(e.key === 's') input.y = 1;
+            if(e.key === 'a') input.x = -1;
+            if(e.key === 'd') input.x = 1;
+            if(e.key === 'ArrowLeft') camRotation += 0.05;
+            if(e.key === 'ArrowRight') camRotation -= 0.05;
+        });
+        window.addEventListener('keyup', (e) => {
+            if(['w','s'].includes(e.key)) input.y = 0;
+            if(['a','d'].includes(e.key)) input.x = 0;
+        });
+
+        // --- 4. 6D PARALLAX LOGIC ---
+        let tiltX = 0, tiltY = 0;
+        
+        // Gyroscope
+        window.addEventListener('deviceorientation', (e) => {
+            if(e.beta && e.gamma) {
+                tiltX = e.gamma; // Left/Right tilt
+                tiltY = e.beta - 45; // Forward/Back tilt (adjusted for holding angle)
+            }
+        });
+
+        // Mouse Fallback
+        window.addEventListener('mousemove', (e) => {
+            tiltX = (e.clientX / window.innerWidth - 0.5) * 40;
+            tiltY = (e.clientY / window.innerHeight - 0.5) * 40;
+            camRotation = -tiltX * 0.02; // Look with mouse
+        });
+
+        function updateParallax() {
+            const header = document.getElementById('header-box');
+            header.style.transform = `translateZ(20px) rotateX(${-tiltY}deg) rotateY(${tiltX}deg)`;
+            
+            const card = document.getElementById('modal-card');
+            if(document.getElementById('modal-container').classList.contains('active')) {
+                card.style.transform = `rotateX(${-tiltY/2}deg) rotateY(${tiltX/2}deg)`;
+            }
+        }
+
+        // --- 5. GAME LOOP ---
+        let time = 0;
+        let isModal = false;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.02;
+
+            updateParallax();
+
+            if(!isModal) {
+                // Move Player based on Input & Camera Rotation
+                const speed = 0.2;
+                const angle = camRotation;
+                
+                // Rotate input vector by camera angle
+                const dx = input.x * Math.cos(angle) - input.y * Math.sin(angle);
+                const dz = input.x * Math.sin(angle) + input.y * Math.cos(angle);
+
+                player.position.x += dx * speed;
+                player.position.z += dz * speed;
+
+                // Camera Follow
+                const camDist = 10;
+                camera.position.x += (player.position.x + Math.sin(camRotation)*camDist - camera.position.x) * 0.1;
+                camera.position.z += (player.position.z + Math.cos(camRotation)*camDist - camera.position.z) * 0.1;
+                camera.position.y = 6;
+                camera.lookAt(player.position);
+            }
+
+            // Visuals
+            player.rotation.x += 0.05;
+            player.rotation.y += 0.05;
+            
+            // Terrain Wave
+            const positions = terrain.geometry.attributes.position.array;
+            for(let i=0; i<positions.length; i+=3) {
+                positions[i+2] = Math.sin(positions[i]*0.2 + time) * 0.5 + Math.cos(positions[i+1]*0.2 + time) * 0.5;
+            }
+            terrain.geometry.attributes.position.needsUpdate = true;
+            terrain.position.x = player.position.x;
+            terrain.position.z = player.position.z;
+
+            // Orb Logic
+            orbs.forEach(orb => {
+                orb.rotation.y += 0.02;
+                orb.position.y = 2 + Math.sin(time*2) * 0.5;
+                
+                if(player.position.distanceTo(orb.position) < 2 && !isModal) {
+                    openModal(orb.userData);
+                }
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        function openModal(data) {
+            isModal = true;
+            document.getElementById('m-title').innerText = data.name;
+            document.getElementById('m-desc').innerText = data.desc;
+            document.getElementById('modal-container').classList.add('active');
+            AudioSys.play(600, 'sine');
+        }
+
+        window.closeModal = function() {
+            document.getElementById('modal-container').classList.remove('active');
+            isModal = false;
+            player.position.z += 3; // Push back
+        };
+
+        window.initGame = function() {
+            AudioSys.init();
+            document.getElementById('start-screen').style.opacity = 0;
+            setTimeout(() => {
+                document.getElementById('start-screen').style.display = 'none';
+                animate();
+            }, 1000);
+        };
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+    </script>
+</body>
+</html>
         }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
