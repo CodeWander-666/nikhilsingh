@@ -3,244 +3,353 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NIKHIL SINGH | 4D REALITY</title>
+    <title>COMMANDER SINGH | STRATEGIC OVERVIEW</title>
     <style>
-        /* --- HIGH-END CSS STYLING --- */
-        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;500;700&display=swap');
+        /* --- MILITARY OS STYLING --- */
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
 
         :root {
-            --glass: rgba(255, 255, 255, 0.05);
-            --border: rgba(255, 255, 255, 0.1);
+            --hud-bg: rgba(10, 15, 20, 0.95);
+            --hud-border: rgba(0, 243, 255, 0.3);
             --neon: #00f3ff;
+            --alert: #ff003c;
+            --success: #0aff00;
         }
 
-        body { margin: 0; overflow: hidden; background: #050505; font-family: 'Rajdhani', sans-serif; color: #fff; }
-        canvas { display: block; width: 100vw; height: 100vh; }
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Share Tech Mono', monospace; color: var(--neon); }
+        canvas { display: block; }
 
-        #ui-overlay {
+        /* --- TACTICAL HUD --- */
+        #hud-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; padding: 40px; box-sizing: border-box;
-            display: flex; flex-direction: column; justify-content: space-between;
+            pointer-events: none;
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            grid-template-rows: 60px 1fr 200px;
+            padding: 10px; box-sizing: border-box;
+            background: radial-gradient(circle at center, transparent 60%, #000 150%);
         }
 
-        /* HUD Header */
-        header {
-            display: flex; justify-content: space-between; align-items: flex-end;
-            border-bottom: 1px solid var(--border); padding-bottom: 20px;
+        /* Top Bar */
+        .top-bar {
+            grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--hud-border); background: linear-gradient(90deg, var(--hud-bg), transparent);
+            padding: 0 20px; pointer-events: auto;
         }
-        h1 { margin: 0; font-size: 3rem; letter-spacing: 5px; text-transform: uppercase; mix-blend-mode: overlay; }
-        .status-badge {
-            font-size: 0.8rem; background: var(--glass); padding: 5px 10px;
-            border: 1px solid var(--neon); color: var(--neon);
-        }
+        h1 { font-size: 1.5rem; letter-spacing: 3px; text-transform: uppercase; margin: 0; }
+        .status-light { width: 10px; height: 10px; background: var(--success); border-radius: 50%; box-shadow: 0 0 10px var(--success); }
 
-        /* Project Cards (Fetched from Java) */
-        #project-dock {
-            pointer-events: auto;
-            display: flex; gap: 20px; overflow-x: auto; padding-bottom: 20px;
+        /* Left Panel: Mission Brief */
+        .side-panel {
+            grid-row: 2 / 3; background: var(--hud-bg); border: 1px solid var(--hud-border);
+            padding: 20px; pointer-events: auto; overflow-y: auto;
+            backdrop-filter: blur(10px); opacity: 0.9;
+            transform: translateX(-20px); transition: 0.3s;
         }
-        .holo-card {
-            min-width: 250px; background: var(--glass); border: 1px solid var(--border);
-            padding: 20px; backdrop-filter: blur(10px); transition: 0.3s;
-            cursor: pointer; transform: skewX(-10deg);
-        }
-        .holo-card:hover { border-color: var(--neon); background: rgba(0, 243, 255, 0.1); }
-        .holo-card h3 { margin: 0 0 10px 0; color: var(--neon); }
-        .holo-card p { font-size: 0.8rem; color: #aaa; }
+        .side-panel:hover { transform: translateX(0); opacity: 1; border-color: var(--neon); }
 
-        /* AI Debug Info */
-        #ai-debug {
-            position: absolute; top: 100px; right: 40px; text-align: right;
-            font-family: monospace; font-size: 0.7rem; color: #555;
-        }
-        .param-row { margin-bottom: 5px; }
+        h2 { font-size: 1rem; border-bottom: 1px solid var(--alert); padding-bottom: 5px; color: var(--alert); }
+        p { font-size: 0.8rem; color: #ccc; line-height: 1.6; }
 
-        #loading {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            letter-spacing: 10px; animation: blink 1s infinite;
+        .mission-btn {
+            display: block; width: 100%; padding: 10px; margin-top: 10px;
+            background: rgba(0, 243, 255, 0.1); border: 1px solid var(--hud-border);
+            color: var(--neon); font-family: inherit; cursor: pointer; text-align: left;
+            transition: 0.2s;
         }
-        @keyframes blink { 50% { opacity: 0; } }
+        .mission-btn:hover { background: var(--neon); color: #000; }
+        .mission-btn.active { border-left: 4px solid var(--alert); background: rgba(255,0,60,0.1); }
+
+        /* Bottom Panel: Console */
+        .bottom-panel {
+            grid-column: 2 / 3; grid-row: 3 / 4;
+            background: rgba(0,0,0,0.8); border-top: 2px solid var(--hud-border);
+            padding: 10px; font-size: 0.8rem; pointer-events: none;
+            display: flex; flex-direction: column-reverse; /* Newest logs at bottom */
+            mask-image: linear-gradient(to bottom, transparent, black 20%);
+        }
+        .log-entry { margin-bottom: 5px; }
+        .log-time { color: #666; margin-right: 10px; }
+
+        /* Loading Screen */
+        #loader {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .loader-bar { width: 300px; height: 2px; background: #333; margin-top: 20px; position: relative; }
+        .loader-fill { width: 0%; height: 100%; background: var(--neon); transition: width 0.5s; box-shadow: 0 0 20px var(--neon); }
+        
+        /* Scanline Overlay */
+        .scanlines {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+            background-size: 100% 4px; pointer-events: none; z-index: 50;
+        }
 
     </style>
 </head>
 <body>
 
-    <div id="loading">CONNECTING TO NEURAL CORE...</div>
+    <div class="scanlines"></div>
 
-    <div id="ui-overlay">
-        <header>
-            <div>
-                <h1 id="profile-name">LOADING...</h1>
-                <div style="opacity: 0.6;" id="profile-title">SYSTEM BOOT</div>
+    <div id="loader">
+        <div style="font-size: 1.5rem; letter-spacing: 5px;">ESTABLISHING SATELLITE UPLINK</div>
+        <div class="loader-bar"><div class="loader-fill" id="load-bar"></div></div>
+        <div style="margin-top: 10px; font-size: 0.8rem; color: #555;">ENCRYPTING CONNECTION...</div>
+    </div>
+
+    <div id="hud-layer">
+        
+        <div class="top-bar">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div class="status-light"></div>
+                <h1>NIKHIL SINGH</h1>
+                <span style="font-size: 0.8rem; color: #aaa;">// COMMANDER [AI_DIVISION]</span>
             </div>
-            <div class="status-badge">JAVA BACKEND: CONNECTED</div>
-        </header>
-
-        <div id="ai-debug">
-            <div class="param-row">AI_ENGINE: <span style="color:var(--neon)">PYTHON_FLASK</span></div>
-            <div class="param-row">DISTORTION: <span id="debug-dist">0.00</span></div>
-            <div class="param-row">VOLATILITY: <span id="debug-vol">0.00</span></div>
+            <div id="clock">00:00:00 ZULU</div>
         </div>
 
-        <div id="project-dock">
+        <div class="side-panel" style="grid-column: 1 / 2;">
+            <h2>ACTIVE OPERATIONS</h2>
+            <div id="mission-list">
+                </div>
+        </div>
+
+        <div class="side-panel" style="grid-column: 3 / 4; text-align: right; transform: translateX(20px);">
+            <h2>TARGET INTEL</h2>
+            <div id="intel-display">
+                <p>SELECT A MISSION TO VIEW INTEL.</p>
+                <div style="margin-top: 20px; border: 1px solid #333; height: 150px; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
+                    [NO SIGNAL]
+                </div>
             </div>
+            <button class="mission-btn" style="text-align: center; margin-top: 20px;" onclick="deployUnit()">DEPLOY UNIT</button>
+        </div>
+
+        <div class="bottom-panel" id="console-log">
+            <div class="log-entry"><span class="log-time">SYSTEM</span> Ready for command.</div>
+        </div>
+
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/controls/MapControls.js"></script>
     <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
     <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
-    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
     <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 
     <script>
-        // --- 1. CONNECT TO BACKENDS ---
-        const JAVA_API = 'http://localhost:8080/api';
-        const PYTHON_API = 'http://localhost:5000/api';
+        // --- 1. STRATEGY ENGINE CONFIG ---
+        const GameState = {
+            selectedMission: null,
+            cameraTarget: new THREE.Vector3(0, 0, 0),
+            missions: [
+                { id: 1, code: "OP_NOVUS", name: "NovusFace AI", loc: { x: -10, z: -10 }, desc: "Deploy DeepFake countermeasures. High priority target.", status: "ACTIVE" },
+                { id: 2, code: "OP_TUBE", name: "TubeMan Protocol", loc: { x: 10, z: -10 }, desc: "Secure video extraction pipeline.", status: "STABLE" },
+                { id: 3, code: "OP_SEO", name: "RankMaster", loc: { x: 0, z: 10 }, desc: "Automated ranking warfare bot.", status: "DEPLOYED" }
+            ]
+        };
 
-        async function initSystem() {
-            try {
-                // Fetch Profile (Java)
-                // Note: For demo without running backend, we use mock data fallback
-                try {
-                    const profileRes = await fetch(`${JAVA_API}/profile`);
-                    const profile = await profileRes.json();
-                    document.getElementById('profile-name').innerText = profile.name;
-                    document.getElementById('profile-title').innerText = profile.title;
-                } catch(e) {
-                    console.log("Java Backend Offline - Using Mock Data");
-                    document.getElementById('profile-name').innerText = "NIKHIL SINGH";
-                    document.getElementById('profile-title').innerText = "AI ARCHITECT // OFFLINE MODE";
-                }
-
-                // Fetch Projects (Java)
-                const projects = [
-                    { name: "NOVUSFACE", desc: "4K Face Swap Engine", type: "AI" },
-                    { name: "TUBEMAN", desc: "Video Extraction Bot", type: "TOOL" },
-                    { name: "SEOMAN", desc: "Rank Warfare Suite", type: "SEO" }
-                ]; 
-                
-                const dock = document.getElementById('project-dock');
-                projects.forEach(p => {
-                    const card = document.createElement('div');
-                    card.className = 'holo-card';
-                    card.innerHTML = `<h3>${p.name}</h3><p>${p.desc}</p>`;
-                    card.onclick = () => triggerGlitch(2.0); // Interaction triggers AI effect
-                    dock.appendChild(card);
-                });
-
-                document.getElementById('loading').style.display = 'none';
-
-            } catch (err) {
-                console.error("System Failure", err);
-            }
-        }
-
-        initSystem();
-
-        // --- 2. THE VISUAL ENGINE (THREE.JS) ---
+        // --- 2. SCENE SETUP (The Holotable) ---
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-        camera.position.z = 5;
+        scene.background = new THREE.Color(0x050505);
+        scene.fog = new THREE.FogExp2(0x050505, 0.02);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+        camera.position.set(0, 20, 30); // RTS View angle
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
         document.body.appendChild(renderer.domElement);
 
-        // --- LIQUID METAL SHADER ---
-        const uniforms = {
-            time: { value: 0 },
-            distortion: { value: 0.0 },
-            color: { value: new THREE.Color(0x00f3ff) }
-        };
+        // Map Controls (RTS Style Pan/Zoom)
+        const controls = new THREE.MapControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.screenSpacePanning = false;
+        controls.minDistance = 10;
+        controls.maxDistance = 50;
+        controls.maxPolarAngle = Math.PI / 2 - 0.1;
 
-        const material = new THREE.ShaderMaterial({
-            uniforms: uniforms,
-            wireframe: true,
-            vertexShader: `
-                uniform float time;
-                uniform float distortion;
-                varying vec2 vUv;
-                void main() {
-                    vUv = uv;
-                    vec3 pos = position;
-                    // AI DRIVEN DISTORTION
-                    float wave = sin(pos.y * 5.0 + time) * distortion;
-                    float twist = cos(pos.x * 5.0 + time) * distortion;
-                    pos.x += wave;
-                    pos.z += twist;
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-                }
-            `,
-            fragmentShader: `
-                uniform vec3 color;
-                varying vec2 vUv;
-                void main() {
-                    gl_FragColor = vec4(color, 1.0);
-                }
-            `
+        // --- 3. TERRAIN GENERATION (The 4D Grid) ---
+        const gridHelper = new THREE.GridHelper(100, 100, 0x00f3ff, 0x111111);
+        scene.add(gridHelper);
+
+        // Animated Terrain Mesh
+        const geometry = new THREE.PlaneGeometry(100, 100, 50, 50);
+        const material = new THREE.MeshBasicMaterial({ 
+            color: 0x00f3ff, 
+            wireframe: true, 
+            transparent: true, 
+            opacity: 0.1 
+        });
+        const terrain = new THREE.Mesh(geometry, material);
+        terrain.rotation.x = -Math.PI / 2;
+        scene.add(terrain);
+
+        // --- 4. MISSION MARKERS (Bases) ---
+        const markers = [];
+        
+        GameState.missions.forEach(mission => {
+            // The Base
+            const baseGeo = new THREE.CylinderGeometry(0, 1.5, 3, 4, 1);
+            const baseMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff, wireframe: true });
+            const base = new THREE.Mesh(baseGeo, baseMat);
+            base.position.set(mission.loc.x, 1.5, mission.loc.z);
+            scene.add(base);
+
+            // The "Shield" (Pulsing Sphere)
+            const shieldGeo = new THREE.SphereGeometry(2, 16, 16);
+            const shieldMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.2, wireframe: true });
+            const shield = new THREE.Mesh(shieldGeo, shieldMat);
+            shield.position.copy(base.position);
+            scene.add(shield);
+
+            markers.push({ mesh: base, shield: shield, data: mission });
+            
+            // Add Beacon Beam
+            const beamGeo = new THREE.CylinderGeometry(0.1, 0.1, 50, 8);
+            const beamMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.5 });
+            const beam = new THREE.Mesh(beamGeo, beamMat);
+            beam.position.set(mission.loc.x, 25, mission.loc.z);
+            scene.add(beam);
         });
 
-        const geo = new THREE.IcosahedronGeometry(2, 10);
-        const mesh = new THREE.Mesh(geo, material);
-        scene.add(mesh);
-
-        // --- POST PROCESSING (BLOOM) ---
+        // --- 5. POST PROCESSING (The Hologram Look) ---
         const composer = new THREE.EffectComposer(renderer);
         const renderPass = new THREE.RenderPass(scene, camera);
         composer.addPass(renderPass);
         const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+        bloomPass.threshold = 0.1;
+        bloomPass.strength = 1.2;
+        bloomPass.radius = 0.5;
         composer.addPass(bloomPass);
 
-        // --- 3. AI UPDATE LOOP (PYTHON CONNECTION) ---
-        let targetDistortion = 0.5;
+        // --- 6. GAME LOGIC & UI INTERACTION ---
         
-        // Poll Python Backend for visual parameters
-        setInterval(async () => {
-            try {
-                const res = await fetch(`${PYTHON_API}/visual-effects`);
-                const aiData = await res.json();
-                
-                // Update Visuals based on Python AI
-                targetDistortion = aiData.liquid_volatility;
-                uniforms.color.value.setRGB(aiData.color_palette.r, aiData.color_palette.g, aiData.color_palette.b);
-                
-                // Update Debug UI
-                document.getElementById('debug-dist').innerText = aiData.glitch_intensity.toFixed(2);
-                document.getElementById('debug-vol').innerText = aiData.liquid_volatility.toFixed(2);
-                
-            } catch(e) {
-                // Fallback if Python is offline
-                targetDistortion = (Math.sin(Date.now()*0.001)+1)/2;
-            }
-        }, 1000);
+        // Raycaster for clicking bases
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
 
-        function triggerGlitch(intensity) {
-            uniforms.distortion.value = intensity;
-            setTimeout(() => uniforms.distortion.value = targetDistortion, 200);
+        window.addEventListener('click', onMouseClick, false);
+
+        function onMouseClick(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(markers.map(m => m.shield));
+
+            if (intersects.length > 0) {
+                // Find which mission was clicked based on position match
+                const target = markers.find(m => m.shield === intersects[0].object);
+                if (target) selectMission(target.data);
+            }
         }
 
+        function selectMission(mission) {
+            GameState.selectedMission = mission;
+            GameState.cameraTarget.set(mission.loc.x, 0, mission.loc.z);
+            
+            // Update Intel UI
+            const intelHTML = `
+                <h3 style="color:#fff">${mission.name}</h3>
+                <div style="color:var(--neon); font-size:0.8rem; margin-bottom:10px;">${mission.code} // ${mission.status}</div>
+                <p>${mission.desc}</p>
+                <div style="margin-top:20px; border:1px solid var(--neon); padding:5px; text-align:center;">
+                    <div style="font-size:2rem;">98%</div>
+                    <div style="font-size:0.6rem;">SUCCESS PROBABILITY</div>
+                </div>
+            `;
+            document.getElementById('intel-display').innerHTML = intelHTML;
+            logToConsole(`TARGET ACQUIRED: ${mission.code}`);
+        }
+
+        function logToConsole(text) {
+            const consoleDiv = document.getElementById('console-log');
+            const time = new Date().toISOString().split('T')[1].split('.')[0];
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `<span class="log-time">${time}</span> ${text}`;
+            consoleDiv.prepend(entry);
+        }
+
+        // Initialize UI List
+        const missionList = document.getElementById('mission-list');
+        GameState.missions.forEach(m => {
+            const btn = document.createElement('button');
+            btn.className = 'mission-btn';
+            btn.innerText = `[${m.code}] ${m.name}`;
+            btn.onclick = () => selectMission(m);
+            missionList.appendChild(btn);
+        });
+
+        // --- 7. ANIMATION LOOP ---
+        let time = 0;
+        
         function animate() {
             requestAnimationFrame(animate);
-            const time = performance.now() * 0.001;
-            
-            uniforms.time.value = time;
-            // Smoothly interpolate distortion
-            uniforms.distortion.value += (targetDistortion - uniforms.distortion.value) * 0.05;
-            
-            mesh.rotation.y = time * 0.2;
-            mesh.rotation.x = time * 0.1;
+            time += 0.01;
+
+            // Animate Terrain (The Living Map)
+            const positions = terrain.geometry.attributes.position.array;
+            for(let i = 0; i < positions.length; i += 3) {
+                // Perlin-like noise simulation
+                positions[i+2] = Math.sin((positions[i] / 10) + time) * 2 + Math.cos((positions[i+1] / 10) + time) * 2;
+            }
+            terrain.geometry.attributes.position.needsUpdate = true;
+
+            // Animate Markers
+            markers.forEach(m => {
+                m.mesh.rotation.y += 0.01;
+                m.shield.scale.setScalar(1 + Math.sin(time * 2) * 0.1); // Pulse
+            });
+
+            // Smooth Camera Pan to Target
+            controls.target.lerp(GameState.cameraTarget, 0.05);
+            controls.update();
 
             composer.render();
         }
-        animate();
 
-        // Resize handler
+        // --- BOOT UP ---
+        setTimeout(() => {
+            document.getElementById('load-bar').style.width = '100%';
+            setTimeout(() => {
+                document.getElementById('loader').style.display = 'none';
+                logToConsole("SYSTEM ONLINE. AWAITING ORDERS.");
+                animate();
+            }, 500);
+        }, 1000);
+
+        // Clock
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toISOString().split('T')[1].split('.')[0] + " ZULU";
+        }, 1000);
+
+        window.deployUnit = function() {
+            if(!GameState.selectedMission) {
+                logToConsole("ERROR: NO TARGET SELECTED.");
+                return;
+            }
+            logToConsole(`DEPLOYING ASSETS TO ${GameState.selectedMission.code}...`);
+            // Here you could trigger a particle effect or redirect to the project link
+            setTimeout(() => {
+                logToConsole("UNIT DEPLOYED. ESTABLISHING LINK...");
+                // window.open('your-project-link', '_blank');
+            }, 1000);
+        };
+
+        // Resize
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
             composer.setSize(window.innerWidth, window.innerHeight);
         });
+
     </script>
 </body>
 </html>
