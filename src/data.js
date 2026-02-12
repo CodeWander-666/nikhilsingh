@@ -1,39 +1,50 @@
 export const PROFILE = {
-  name: "NIKHIL SINGH",
-  role: "DATA ANALYST & FULL STACK SCIENTIST",
+  name: "Nikhil Singh",
+  tagline: "DATA ANALYST // FULL STACK OPERATIVE",
   socials: {
-    linkedin: "linkedin.com/in/nikhil-singh",
-    github: "github.com/codewonder-666"
+    linkedin: "https://linkedin.com/in/nikhil-singh",
+    github: "https://github.com/codewonder-666" 
   },
+  stats: [
+    { label: "IMPRESSIONS", value: "225+" },
+    { label: "FOLLOWERS", value: "888" },
+    { label: "PROFILE VIEWS", value: "313" }
+  ],
   skills: [
-    { name: "PYTHON", color: "#FFD43B" },
-    { name: "SQL", color: "#00758F" },
-    { name: "GEN-AI", color: "#00f3ff" },
-    { name: "ML", color: "#ff0055" }
+    { name: "PYTHON", level: 92, color: "bg-yellow-500" },
+    { name: "SQL_DATABASE", level: 85, color: "bg-blue-500" },
+    { name: "GEN_AI", level: 88, color: "bg-purple-500" },
+    { name: "COMPUTER_VISION", level: 75, color: "bg-red-500" }
   ],
   experience: [
     {
-      company: "AlmaBetter",
-      role: "Data Analyst Apprentice",
-      period: "Aug 2025 - Present",
-      details: "Mastering Full Stack Data Science & AI. Handling complex datasets."
+      role: "DATA ANALYST APPRENTICE",
+      company: "ALMABETTER",
+      date: "2025 - PRESENT",
+      desc: "Executing Full Stack Data Science operations. Model training and dataset management."
     },
     {
-      company: "SG Gurukul",
-      role: "Sales & Marketing Intern",
-      period: "Aug 2023 - Oct 2023",
-      details: "Lead generation and outbound strategies."
+      role: "SALES & MARKETING INTERN",
+      company: "SG GURUKUL",
+      date: "2023 - 2023",
+      desc: "Lead generation protocols and outbound communication strategies."
     }
   ],
   projects: [
     {
       title: "SEOMAN AI",
-      desc: "Full-stack AI SEO Analyzer with Traffic Forecasting.",
-      tech: "REACT • AI • ANALYTICS"
+      category: "ANALYTICS ENGINE",
+      desc: "Full-stack AI-powered SEO Analyzer with Traffic Forecasting.",
+      tech: ["REACT", "AI", "ANALYTICS"]
     },
     {
       title: "NOVUSFACE AI",
-      desc: "Biometric Face Regeneration & Swapper (100% Free).",
+      category: "NEURAL NETWORK",
+      desc: "Biometric Face Regeneration & Swapper. Zero-cost deployment.",
+      tech: ["CV", "PYTHON", "DEEPFAKE"]
+    }
+  ]
+};
       tech: "GEN-AI • COMPUTER VISION"
     }
   ]
