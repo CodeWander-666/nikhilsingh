@@ -3,37 +3,321 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NIKHIL SINGH | TERMINAL ACCESS</title>
+    <title>NIKHIL SINGH | QUANTUM SIMULATION</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
     <style>
-        /* --- 1. THE CRT MONITOR EFFECT --- */
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-purple: #bc13fe;
+            --glass-bg: rgba(10, 10, 20, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
         body {
-            background-color: #0d0d0d;
-            color: #33ff00; /* Classic Terminal Green */
-            font-family: 'Courier New', Courier, monospace;
-            overflow: hidden;
             margin: 0;
+            background-color: #030305;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(0, 243, 255, 0.05) 0%, transparent 50%),
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 30px 30px, 30px 30px;
+            color: white;
+            font-family: 'Rajdhani', sans-serif;
             height: 100vh;
-            text-shadow: 0 0 5px rgba(51, 255, 0, 0.7);
+            overflow: hidden;
+            perspective: 2000px; /* The Key to Optical Illusion */
         }
 
-        /* Scanline overlay */
-        .scanlines {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            background-size: 100% 2px, 3px 100%;
-            pointer-events: none;
-            z-index: 100;
+        /* THE 3D STAGE */
+        #scene {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform-style: preserve-3d;
         }
 
-        /* Screen flicker animation */
-        @keyframes flicker {
-            0% { opacity: 0.97; }
-            5% { opacity: 0.95; }
-            10% { opacity: 0.9; }
-            15% { opacity: 0.95; }
-            20% { opacity: 0.99; }
+        /* THE FLOATING DASHBOARD */
+        #dashboard {
+            display: grid;
+            grid-template-columns: 300px 1fr 250px;
+            grid-template-rows: 100px 1fr 200px;
+            gap: 20px;
+            width: 90vw;
+            max-width: 1400px;
+            height: 85vh;
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease-out; /* Smooth follow */
+        }
+
+        /* WIDGET BASE STYLE (Glassmorphism) */
+        .widget {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        .widget:hover {
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+            transform: translateZ(20px); /* Pop out effect */
+        }
+
+        /* OPTICAL ILLUSION LAYER (Depth) */
+        .depth-layer {
+            transform: translateZ(40px);
+        }
+
+        /* SPECIFIC WIDGET LAYOUTS */
+        .w-header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; }
+        .w-profile { grid-row: 2 / 4; }
+        .w-main { grid-column: 2 / 3; grid-row: 2 / 3; display: flex; flex-direction: column; gap: 20px;}
+        .w-skills { grid-column: 3 / 4; grid-row: 2 / 4; }
+        .w-log { grid-column: 2 / 3; grid-row: 3 / 4; }
+
+        /* TEXT STYLES */
+        .mono { font-family: 'Share Tech Mono', monospace; }
+        .text-glow { text-shadow: 0 0 10px var(--neon-blue); }
+        
+        /* ANIMATIONS */
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+        .status-dot {
+            width: 8px; height: 8px; background: var(--neon-blue);
+            border-radius: 50%; display: inline-block;
+            box-shadow: 0 0 10px var(--neon-blue);
+            animation: pulse 2s infinite;
+        }
+
+        /* PROJECT CARDS */
+        .project-card {
+            background: rgba(0,0,0,0.3);
+            border-left: 2px solid var(--glass-border);
+            padding: 15px;
+            margin-bottom: 10px;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .project-card:hover {
+            border-left-color: var(--neon-purple);
+            background: rgba(188, 19, 254, 0.1);
+            transform: translateX(10px);
+        }
+
+        /* MOBILE FIX */
+        @media (max-width: 1024px) {
+            body { height: auto; overflow-y: auto; perspective: none; }
+            #dashboard { 
+                display: flex; flex-direction: column; 
+                height: auto; width: 100%; padding: 20px; 
+                transform: none !important; /* Disable 3D on mobile */
+            }
+            #scene { height: auto; display: block; }
+            .widget { transform: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="scene">
+        <div id="dashboard">
+            
+            <div class="widget w-header">
+                <div class="depth-layer flex items-center gap-4">
+                    <div class="status-dot"></div>
+                    <h1 class="text-3xl font-bold tracking-widest">SIMULATION_<span style="color:var(--neon-blue)">CORE</span></h1>
+                </div>
+                <div class="depth-layer mono text-xs text-gray-400 text-right">
+                    SYS_TIME: <span id="clock">00:00:00</span><br>
+                    LOC: IND_MP
+                </div>
+            </div>
+
+            <div class="widget w-profile flex flex-col items-center text-center">
+                <div class="depth-layer relative mb-6 mt-4">
+                    <div class="w-32 h-32 rounded-full border-2 border-dashed border-gray-600 flex items-center justify-center relative">
+                        <div class="absolute inset-0 rounded-full border border-cyan-500 animate-[spin_10s_linear_infinite] opacity-50"></div>
+                        <img src="https://ui-avatars.com/api/?name=Nikhil+Singh&background=00f3ff&color=000" class="w-28 h-28 rounded-full opacity-90">
+                    </div>
+                </div>
+                <div class="depth-layer">
+                    <h2 class="text-3xl font-bold mb-1">NIKHIL SINGH</h2>
+                    <p class="text-cyan-400 mono text-sm mb-6">DATA ANALYST // FULL STACK</p>
+                    
+                    <div class="text-left w-full px-4 space-y-4">
+                        <div class="p-3 bg-white/5 rounded border border-white/10">
+                            <div class="text-[10px] text-gray-400 mono">CURRENT_STATUS</div>
+                            <div class="text-sm font-bold">OPEN TO WORK</div>
+                        </div>
+                        <div class="p-3 bg-white/5 rounded border border-white/10">
+                            <div class="text-[10px] text-gray-400 mono">CLEARANCE</div>
+                            <div class="text-sm font-bold">LEVEL 5 (ADMIN)</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-auto pt-8 w-full flex gap-2 justify-center">
+                        <a href="https://linkedin.com/in/nikhil-singh" target="_blank" class="px-4 py-2 bg-blue-600/20 border border-blue-500 text-xs hover:bg-blue-500 hover:text-white transition-all">LINKEDIN</a>
+                        <a href="https://github.com/codewonder-666" target="_blank" class="px-4 py-2 bg-purple-600/20 border border-purple-500 text-xs hover:bg-purple-500 hover:text-white transition-all">GITHUB</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="widget w-main">
+                <div class="flex-1 relative overflow-hidden">
+                    <div class="depth-layer">
+                        <h3 class="mono text-gray-500 text-sm mb-4 border-b border-gray-700 pb-2">EXPERIENCE_LOGS</h3>
+                        
+                        <div class="flex items-start gap-4 mb-4">
+                            <div class="w-1 h-full bg-cyan-500/50"></div>
+                            <div>
+                                <h4 class="font-bold text-lg">ALMABETTER</h4>
+                                <div class="text-cyan-400 text-xs mono">AUG 2025 - PRESENT</div>
+                                <p class="text-sm text-gray-400 mt-1">Data Analyst Apprentice. Full Stack Data Science & AI model training.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4">
+                            <div class="w-1 h-full bg-purple-500/50"></div>
+                            <div>
+                                <h4 class="font-bold text-lg">SG GURUKUL</h4>
+                                <div class="text-purple-400 text-xs mono">AUG 2023 - OCT 2023</div>
+                                <p class="text-sm text-gray-400 mt-1">Sales & Marketing Intern. Lead generation & counseling.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex-1">
+                    <div class="depth-layer">
+                        <h3 class="mono text-gray-500 text-sm mb-4 border-b border-gray-700 pb-2">DEPLOYED_PROJECTS</h3>
+                        
+                        <div class="project-card" onclick="window.open('https://seoman-ai.vercel.app')">
+                            <div class="flex justify-between">
+                                <span class="font-bold text-cyan-300">SEOMAN AI</span>
+                                <span class="text-[10px] border border-cyan-500 px-1 text-cyan-500">LIVE</span>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">Full-stack AI SEO Analyzer. Traffic Forecasting & Audits.</p>
+                        </div>
+
+                        <div class="project-card">
+                            <div class="flex justify-between">
+                                <span class="font-bold text-purple-300">NOVUSFACE AI</span>
+                                <span class="text-[10px] border border-purple-500 px-1 text-purple-500">BETA</span>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">Biometric Face Regeneration & Swapping. No Sign-up required.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="widget w-skills">
+                <div class="depth-layer h-full flex flex-col">
+                    <h3 class="mono text-gray-500 text-sm mb-4 border-b border-gray-700 pb-2">SKILL_MATRIX</h3>
+                    
+                    <div class="space-y-4 flex-1">
+                        <div>
+                            <div class="flex justify-between text-xs mb-1"><span>PYTHON</span><span>95%</span></div>
+                            <div class="h-1 bg-gray-700 w-full"><div class="h-full bg-yellow-400 shadow-[0_0_10px_orange]" style="width: 95%"></div></div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-xs mb-1"><span>SQL</span><span>90%</span></div>
+                            <div class="h-1 bg-gray-700 w-full"><div class="h-full bg-blue-500 shadow-[0_0_10px_blue]" style="width: 90%"></div></div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-xs mb-1"><span>GEN-AI</span><span>85%</span></div>
+                            <div class="h-1 bg-gray-700 w-full"><div class="h-full bg-purple-500 shadow-[0_0_10px_purple]" style="width: 85%"></div></div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-xs mb-1"><span>COMPUTER VISION</span><span>80%</span></div>
+                            <div class="h-1 bg-gray-700 w-full"><div class="h-full bg-red-500 shadow-[0_0_10px_red]" style="width: 80%"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-4 bg-black/40 rounded border border-gray-700 text-center">
+                        <div class="text-3xl font-bold text-white">225+</div>
+                        <div class="text-[10px] text-gray-400 tracking-widest">IMPRESSIONS</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="widget w-log">
+                <div class="depth-layer h-full font-mono text-xs overflow-hidden">
+                    <div class="text-gray-500 border-b border-gray-700 pb-1 mb-2">SYSTEM_LOGS</div>
+                    <div id="logs" class="space-y-1 text-green-500/80">
+                        </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- 1. OPTICAL ILLUSION ENGINE (Parallax) ---
+        const dashboard = document.getElementById('dashboard');
+        const scene = document.getElementById('scene');
+
+        // Only enable parallax on desktop
+        if (window.innerWidth > 1024) {
+            document.addEventListener('mousemove', (e) => {
+                const xAxis = (window.innerWidth / 2 - e.pageX) / 25;
+                const yAxis = (window.innerHeight / 2 - e.pageY) / 25;
+                
+                dashboard.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+            });
+        }
+
+        // --- 2. CLOCK ---
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString();
+        }, 1000);
+
+        // --- 3. AUTO-SCROLLING LOGS ---
+        const logsContainer = document.getElementById('logs');
+        const logMessages = [
+            "Connecting to Neural Link...",
+            "Decrypting Profile: NIKHIL SINGH",
+            "Loading Modules: Python, SQL, AI...",
+            "Fetching Project Data: SEOMAN AI...",
+            "Fetching Project Data: NOVUSFACE AI...",
+            "Analyzing Career Timeline...",
+            "System Optimization: 100%",
+            "Ready for Interaction."
+        ];
+
+        let logIndex = 0;
+        function addLog() {
+            if (logIndex < logMessages.length) {
+                const div = document.createElement('div');
+                div.innerText = `> ${logMessages[logIndex]}`;
+                div.style.opacity = 0;
+                logsContainer.appendChild(div);
+                
+                // Fade in
+                setTimeout(() => div.style.opacity = 1, 50);
+                
+                logIndex++;
+                setTimeout(addLog, 300); // Speed of typing
+            }
+        }
+        addLog();
+
+    </script>
+</body>
+</html>
             100% { opacity: 0.95; }
         }
         .crt-screen {
