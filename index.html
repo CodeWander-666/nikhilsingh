@@ -3,37 +3,271 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nikhil Singh | Insight Engine</title>
-    
+    <title>NIKHIL SINGH | TERMINAL ACCESS</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-
     <style>
-        /* CORE ATMOSPHERE */
+        /* --- 1. THE CRT MONITOR EFFECT --- */
         body {
-            background-color: #050505;
-            color: #e0e0e0;
-            font-family: 'Courier Prime', monospace;
-            cursor: none; /* Hides default cursor for our custom one */
-            overflow-x: hidden;
+            background-color: #0d0d0d;
+            color: #33ff00; /* Classic Terminal Green */
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
+            margin: 0;
+            height: 100vh;
+            text-shadow: 0 0 5px rgba(51, 255, 0, 0.7);
         }
 
-        /* THE TACTICAL GRID BACKGROUND */
-        .grid-bg {
+        /* Scanline overlay */
+        .scanlines {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background-image: 
-                linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
-            background-size: 40px 40px;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
             pointer-events: none;
-            z-index: -1;
+            z-index: 100;
         }
 
-        /* NEON GLOW UTILITIES */
-        .text-neon { color: #00f3ff; text-shadow: 0 0 10px rgba(0, 243, 255, 0.5); }
+        /* Screen flicker animation */
+        @keyframes flicker {
+            0% { opacity: 0.97; }
+            5% { opacity: 0.95; }
+            10% { opacity: 0.9; }
+            15% { opacity: 0.95; }
+            20% { opacity: 0.99; }
+            100% { opacity: 0.95; }
+        }
+        .crt-screen {
+            animation: flicker 0.15s infinite;
+            height: 100%;
+            padding: 20px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* --- 2. GAME UI ELEMENTS --- */
+        .input-line {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .prompt {
+            color: #00f3ff; /* User Prompt Color (Cyan) */
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: inherit;
+            font-size: 1rem;
+            flex-grow: 1;
+            outline: none;
+            caret-color: #33ff00;
+        }
+
+        /* Typing Effect for output */
+        .output-line {
+            margin-bottom: 5px;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+        .error { color: #ff3333; }
+        .highlight { color: #ffff33; font-weight: bold; }
+        .link { color: #00f3ff; text-decoration: underline; cursor: pointer; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-thumb { background: #33ff00; border-radius: 4px; }
+        ::-webkit-scrollbar-track { background: #0d0d0d; }
+
+        /* Mobile Controls */
+        #mobile-controls {
+            display: none; /* Hidden on desktop */
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 0 10px;
+            z-index: 200;
+        }
+        @media (max-width: 768px) {
+            #mobile-controls { display: flex; }
+        }
+        .cmd-btn {
+            background: rgba(0, 50, 0, 0.8);
+            border: 1px solid #33ff00;
+            color: #33ff00;
+            padding: 8px 12px;
+            font-family: inherit;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+        .cmd-btn:active { background: #33ff00; color: #000; }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    
+    <div class="crt-screen" id="terminal" onclick="document.getElementById('cmd-input').focus()">
+        <div id="history"></div>
+        <div class="input-line">
+            <span class="prompt">visitor@nikhil-singh:~$</span>
+            <input type="text" id="cmd-input" autocomplete="off" autofocus>
+        </div>
+    </div>
+
+    <div id="mobile-controls">
+        <button class="cmd-btn" onclick="runCmd('whois')">WHOIS</button>
+        <button class="cmd-btn" onclick="runCmd('skills')">SKILLS</button>
+        <button class="cmd-btn" onclick="runCmd('projects')">PROJECTS</button>
+        <button class="cmd-btn" onclick="runCmd('exp')">EXPERIENCE</button>
+        <button class="cmd-btn" onclick="runCmd('contact')">CONTACT</button>
+    </div>
+
+    <script>
+        // --- 3. DATA MATRIX (YOUR PROFILE) ---
+        const PROFILE = {
+            name: "NIKHIL SINGH",
+            role: "DATA ANALYST // FULL STACK SCIENTIST",
+            about: "A Data Analyst capable of turning raw chaos into actionable intelligence. Specializing in Python, AI, and Full Stack Data Science.",
+            skills: [
+                "PYTHON [95%]", "SQL [90%]", "GEN-AI [85%]", "MACHINE LEARNING [80%]", "COMPUTER VISION"
+            ],
+            projects: [
+                { title: "SEOMAN AI", desc: "Full-stack AI SEO Analyzer with Traffic Forecasting.", link: "https://seoman-ai.vercel.app" },
+                { title: "NOVUSFACE AI", desc: "Biometric Face Regeneration & Swapper (Free/No-Login).", link: "#" }
+            ],
+            experience: [
+                "ALMABETTER (2025-Present): Data Analyst Apprentice. Building AI models.",
+                "SG GURUKUL (2023): Sales & Marketing Intern. Lead generation."
+            ],
+            socials: {
+                linkedin: "https://linkedin.com/in/nikhil-singh",
+                github: "https://github.com/codewonder-666"
+            }
+        };
+
+        const terminal = document.getElementById('history');
+        const input = document.getElementById('cmd-input');
+
+        // --- 4. GAME ENGINE ---
+        
+        // Initial Boot Sequence
+        const bootSequence = [
+            "INITIALIZING KERNEL...",
+            "LOADING USER PROFILE: NIKHIL SINGH...",
+            "DECRYPTING SECURE FILES...",
+            "ACCESS GRANTED.",
+            "",
+            "WELCOME TO THE INSIGHT ENGINE (v1.0)",
+            "TYPE 'help' TO VIEW AVAILABLE COMMANDS."
+        ];
+
+        let delay = 0;
+        bootSequence.forEach((line, index) => {
+            setTimeout(() => printLine(line, index === 0 ? "highlight" : ""), delay);
+            delay += 100;
+        });
+
+        // Command Listener
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const command = input.value.trim().toLowerCase();
+                printLine(`visitor@nikhil-singh:~$ ${command}`, "prompt");
+                processCommand(command);
+                input.value = '';
+                window.scrollTo(0, document.body.scrollHeight);
+            }
+        });
+
+        // Mobile Button Helper
+        function runCmd(cmd) {
+            printLine(`visitor@nikhil-singh:~$ ${cmd}`, "prompt");
+            processCommand(cmd);
+        }
+
+        // Logic Core
+        function processCommand(cmd) {
+            switch(cmd) {
+                case 'help':
+                    printLine("AVAILABLE COMMANDS:", "highlight");
+                    printLine("  whois     - View Operator Identity");
+                    printLine("  skills    - Scan Technical Abilities");
+                    printLine("  projects  - Access Deployed Missions");
+                    printLine("  exp       - View Execution Logs");
+                    printLine("  contact   - Establish Uplink");
+                    printLine("  clear     - Clear Terminal Screen");
+                    break;
+
+                case 'whois':
+                    printLine(`ID: ${PROFILE.name}`, "highlight");
+                    printLine(`ROLE: ${PROFILE.role}`);
+                    printLine(`BIO: ${PROFILE.about}`);
+                    break;
+
+                case 'skills':
+                    printLine("SCANNING NEURAL PATHWAYS...", "highlight");
+                    PROFILE.skills.forEach(s => printLine(`> ${s}`));
+                    break;
+
+                case 'projects':
+                    printLine("ACCESSING CLASSIFIED FILES...", "highlight");
+                    PROFILE.projects.forEach(p => {
+                        printLine(`[${p.title}]`, "highlight");
+                        printLine(`  ${p.desc}`);
+                        if(p.link !== '#') printLine(`  LINK: ${p.link}`, "link", p.link);
+                    });
+                    break;
+
+                case 'exp':
+                    printLine("DECRYPTING TIMELINE...", "highlight");
+                    PROFILE.experience.forEach(e => printLine(`> ${e}`));
+                    break;
+
+                case 'contact':
+                    printLine("ESTABLISHING SECURE CHANNEL...", "highlight");
+                    printLine(`LINKEDIN: ${PROFILE.socials.linkedin}`, "link", PROFILE.socials.linkedin);
+                    printLine(`GITHUB: ${PROFILE.socials.github}`, "link", PROFILE.socials.github);
+                    break;
+
+                case 'clear':
+                    terminal.innerHTML = '';
+                    break;
+
+                default:
+                    printLine(`ERROR: Command '${cmd}' not recognized. Type 'help'.`, "error");
+            }
+        }
+
+        // Output Renderer
+        function printLine(text, type = "", linkUrl = null) {
+            const div = document.createElement('div');
+            div.className = `output-line ${type}`;
+            div.textContent = text;
+            
+            if (type === "link" && linkUrl) {
+                div.onclick = () => window.open(linkUrl, '_blank');
+            }
+            
+            if (type === "prompt") {
+                div.style.color = "#00f3ff";
+                div.style.marginTop = "10px";
+            }
+
+            terminal.appendChild(div);
+            // Auto-scroll to bottom
+            const screen = document.querySelector('.crt-screen');
+            screen.scrollTop = screen.scrollHeight;
+        }
+    </script>
+</body>
+</html>
         .border-neon { border-color: #00f3ff; box-shadow: 0 0 10px rgba(0, 243, 255, 0.2); }
         .bg-neon-dim { background-color: rgba(0, 243, 255, 0.05); }
 
