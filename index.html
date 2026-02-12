@@ -3,113 +3,339 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>NIKHIL SINGH | THE CYBER-MUSEUM</title>
+    <title>NIKHIL SINGH | CYBER_ASCENSION_PROTOCOL</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; user-select: none; }
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Courier New', monospace; user-select: none; }
         
-        /* Loading / Start Screen */
-        #start-overlay {
+        /* CINEMATIC START SCREEN */
+        #ui-layer {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 9999;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 1s ease-out;
+            z-index: 100; pointer-events: none;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
         
-        .start-btn {
+        #start-btn {
+            pointer-events: auto;
             background: transparent;
             color: #00f3ff;
-            font-family: 'Courier New', monospace;
-            font-size: 1.5rem;
             border: 2px solid #00f3ff;
-            padding: 20px 40px;
-            text-transform: uppercase;
+            padding: 20px 50px;
+            font-size: 1.5rem;
             letter-spacing: 5px;
+            text-transform: uppercase;
             cursor: pointer;
-            box-shadow: 0 0 20px #00f3ff;
+            box-shadow: 0 0 30px #00f3ff;
             transition: 0.3s;
-            animation: pulse 1.5s infinite;
+            background: rgba(0, 0, 0, 0.8);
         }
-        .start-btn:hover { background: #00f3ff; color: #000; box-shadow: 0 0 50px #00f3ff; }
-
-        @keyframes pulse { 0% { opacity: 0.8; box-shadow: 0 0 20px #00f3ff; } 50% { opacity: 1; box-shadow: 0 0 40px #00f3ff; } 100% { opacity: 0.8; box-shadow: 0 0 20px #00f3ff; } }
-
-        /* The "HUD" is actually just a canvas overlay for interactions, visually invisible */
-        #interaction-layer {
-            position: absolute; bottom: 50px; width: 100%; text-align: center;
-            color: rgba(255, 255, 255, 0.5); font-family: monospace; letter-spacing: 3px;
-            pointer-events: none; opacity: 0; transition: opacity 2s;
+        #start-btn:hover { background: #00f3ff; color: #000; box-shadow: 0 0 80px #00f3ff; transform: scale(1.1); }
+        
+        #hud-info {
+            position: absolute; bottom: 30px; width: 100%; text-align: center;
+            color: rgba(255, 255, 255, 0.5); font-size: 0.8rem; letter-spacing: 2px;
+            opacity: 0; transition: opacity 1s;
         }
+
+        /* PROGRESS BAR (Your "Level") */
+        #progress-container {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            width: 300px; height: 4px; background: rgba(255,255,255,0.1);
+            display: none;
+        }
+        #progress-fill {
+            width: 0%; height: 100%; background: #00f3ff;
+            box-shadow: 0 0 20px #00f3ff;
+        }
+
     </style>
 </head>
 <body>
 
-    <div id="start-overlay">
-        <h1 style="color:white; font-family:sans-serif; letter-spacing:10px; font-weight:100; margin-bottom:50px;">NIKHIL SINGH</h1>
-        <button class="start-btn" onclick="initExperience()">INITIALIZE SYSTEM</button>
-        <p style="color:#555; margin-top:20px; font-family:monospace;">AUDIO REQUIRED // HIGH PERFORMANCE MODE</p>
+    <div id="ui-layer">
+        <button id="start-btn" onclick="engageSystem()">INITIALIZE LINK</button>
+        <div id="progress-container"><div id="progress-fill"></div></div>
+        <div id="hud-info">HOLD SCREEN TO WARP // DRAG TO STEER</div>
     </div>
-
-    <div id="interaction-layer">SCROLL TO TRAVEL TIME</div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
     <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
     <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/GlitchPass.js"></script>
     <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
 
     <script>
-        // --- 1. AUDIO ENGINE (THX STYLE DEEP BASS) ---
+        // --- 1. AUDIO SYNC ENGINE (BASS DRIVER) ---
         const AudioSys = {
             ctx: null,
+            osc: null,
+            gain: null,
+            filter: null,
+            isPlaying: false,
+
             init: function() {
                 this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-            },
-            playDrone: function() {
-                if(!this.ctx) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                
-                // Super Saw effect for "Cyber" sound
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(50, this.ctx.currentTime); // Deep Bass
-                osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 5);
-                
-                gain.gain.setValueAtTime(0, this.ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.3, this.ctx.currentTime + 2); // Fade in
-                
-                // Lowpass Filter to make it muffled/cinematic
-                const filter = this.ctx.createBiquadFilter();
-                filter.type = 'lowpass';
-                filter.frequency.value = 200;
+                this.osc = this.ctx.createOscillator();
+                this.gain = this.ctx.createGain();
+                this.filter = this.ctx.createBiquadFilter();
 
-                osc.connect(filter);
-                filter.connect(gain);
-                gain.connect(this.ctx.destination);
+                // Dark Synth Setup
+                this.osc.type = 'sawtooth';
+                this.osc.frequency.value = 50; // Deep bass
+                this.filter.type = 'lowpass';
+                this.filter.frequency.value = 200;
                 
-                osc.start();
-                // Infinite drone
+                this.osc.connect(this.filter);
+                this.filter.connect(this.gain);
+                this.gain.connect(this.ctx.destination);
+                
+                this.gain.gain.value = 0;
+                this.osc.start();
+                this.isPlaying = true;
             },
-            playSwoosh: function() {
-                if(!this.ctx) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.frequency.setValueAtTime(200, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 1);
-                gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 1);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start();
-                osc.stop(this.ctx.currentTime + 1);
+
+            warp: function(active) {
+                if(!this.isPlaying) return;
+                const time = this.ctx.currentTime;
+                if(active) {
+                    // Ramp up pitch and volume (Turbo Mode)
+                    this.osc.frequency.setTargetAtTime(100, time, 0.5);
+                    this.filter.frequency.setTargetAtTime(2000, time, 0.5);
+                    this.gain.gain.setTargetAtTime(0.5, time, 0.1);
+                } else {
+                    // Slow down (Idle Mode)
+                    this.osc.frequency.setTargetAtTime(50, time, 1.0);
+                    this.filter.frequency.setTargetAtTime(200, time, 1.0);
+                    this.gain.gain.setTargetAtTime(0.1, time, 0.5);
+                }
             }
         };
 
-        // --- 2. DATA (STORY) ---
-        const timeline = [
-            { id: 0, title: "THE BEGINNING", sub: "SCROLL TO START", z: 0, color: 0xffffff },
-            { id: 1, title: "ALMABETTER", sub: "Full Stack Data Science (2025-Present)", z: -50, color: 0x00f3ff },
-            { id: 2, title: "NOVUSFACE AI", sub: "DeepFake Engine // Python // PyTorch", z: -100, color: 0xff0055 },
+        // --- 2. GAME STATE ---
+        const Game = {
+            speed: 0,
+            targetSpeed: 0,
+            distance: 0,
+            stage: 0,
+            isHolding: false,
+            mouseX: 0,
+            mouseY: 0
+        };
+
+        // The "Story" Milestones
+        const MILESTONES = [
+            { dist: 500, text: "NIKHIL SINGH", color: 0xffffff },
+            { dist: 1500, text: "ALMABETTER", sub: "FULL STACK DATA SCIENCE", color: 0x00f3ff },
+            { dist: 3000, text: "NOVUSFACE AI", sub: "DEEPFAKE ENGINE", color: 0xff0055 },
+            { dist: 4500, text: "TUBEMAN", sub: "VIDEO PIPELINE", color: 0x00ff00 },
+            { dist: 6000, text: "SEOMAN PRO", sub: "RANKING BOT", color: 0xffff00 },
+            { dist: 8000, text: "HIRE ME", sub: "AVAILABLE FOR DEPLOYMENT", color: 0xbc13fe }
+        ];
+
+        // --- 3. THREE.JS ENGINE ---
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x000000, 0.002);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 2000);
+        camera.position.z = 50;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        document.body.appendChild(renderer.domElement);
+
+        // --- 4. PROCEDURAL WORLD GENERATION (INSTANCING) ---
+        // Creates 2000 "Widgets" (Data Shards) using a single draw call for max performance
+        const shardCount = 2000;
+        const shardGeo = new THREE.TetrahedronGeometry(1, 0);
+        const shardMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff, wireframe: true });
+        const shardMesh = new THREE.InstancedMesh(shardGeo, shardMat, shardCount);
+        
+        const dummy = new THREE.Object3D();
+        const shardsData = []; // Store positions to reset them
+
+        for(let i=0; i<shardCount; i++) {
+            resetShard(i, true);
+        }
+        scene.add(shardMesh);
+
+        function resetShard(i, randomZ) {
+            const x = (Math.random() - 0.5) * 200; // Wide tunnel
+            const y = (Math.random() - 0.5) * 200;
+            const z = randomZ ? (Math.random() * -2000) : -2000; // Spawn far ahead
+            
+            dummy.position.set(x, y, z);
+            dummy.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, 0);
+            
+            // Scale varies
+            const s = Math.random() * 2 + 0.5;
+            dummy.scale.set(s, s, s);
+            
+            dummy.updateMatrix();
+            shardMesh.setMatrixAt(i, dummy.matrix);
+            
+            // Store data for animation loop
+            shardsData[i] = { x, y, z, rotX: Math.random()*0.02, rotY: Math.random()*0.02 };
+        }
+
+        // --- 5. TEXT GENERATION (CANVAS TEXTURES) ---
+        // Creates 3D text billboards without external fonts
+        function createText(text, sub, color) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1024; canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            
+            // Main Text
+            ctx.font = "bold 100px Courier New";
+            ctx.fillStyle = "#" + color.toString(16);
+            ctx.textAlign = "center";
+            ctx.fillText(text, 512, 200);
+            
+            // Sub Text
+            if(sub) {
+                ctx.font = "50px Courier New";
+                ctx.fillStyle = "#ffffff";
+                ctx.fillText(sub, 512, 300);
+            }
+
+            // Glow Border
+            ctx.strokeStyle = "#" + color.toString(16);
+            ctx.lineWidth = 10;
+            ctx.strokeRect(100, 50, 824, 400);
+
+            const tex = new THREE.CanvasTexture(canvas);
+            const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+            const sprite = new THREE.Sprite(mat);
+            sprite.scale.set(60, 30, 1);
+            return sprite;
+        }
+
+        const storyGroup = new THREE.Group();
+        scene.add(storyGroup);
+
+        MILESTONES.forEach(m => {
+            const sprite = createText(m.text, m.sub, m.color);
+            sprite.position.z = -m.dist;
+            storyGroup.add(sprite);
+        });
+
+        // --- 6. POST PROCESSING (BLOOM + WARP) ---
+        const composer = new THREE.EffectComposer(renderer);
+        const renderPass = new THREE.RenderPass(scene, camera);
+        composer.addPass(renderPass);
+
+        const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+        bloomPass.threshold = 0;
+        bloomPass.strength = 1.5; // High Glow
+        bloomPass.radius = 0.5;
+        composer.addPass(bloomPass);
+
+        // --- 7. INPUT HANDLING ---
+        function onDown() {
+            Game.isHolding = true;
+            Game.targetSpeed = 10; // WARP SPEED
+            AudioSys.warp(true);
+            document.getElementById('hud-info').style.opacity = 1;
+        }
+        function onUp() {
+            Game.isHolding = false;
+            Game.targetSpeed = 1; // IDLE SPEED
+            AudioSys.warp(false);
+        }
+        function onMove(x, y) {
+            Game.mouseX = (x / window.innerWidth) * 2 - 1;
+            Game.mouseY = -(y / window.innerHeight) * 2 + 1;
+        }
+
+        window.addEventListener('mousedown', onDown);
+        window.addEventListener('mouseup', onUp);
+        window.addEventListener('touchstart', (e) => { e.preventDefault(); onDown(); });
+        window.addEventListener('touchend', onUp);
+        window.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
+        window.addEventListener('touchmove', e => onMove(e.touches[0].clientX, e.touches[0].clientY));
+
+        // --- 8. MAIN LOOP ---
+        let time = 0;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.01;
+
+            // 1. Acceleration Physics
+            Game.speed += (Game.targetSpeed - Game.speed) * 0.05;
+            Game.distance += Game.speed;
+
+            // 2. Camera Shake (Increases with speed)
+            const shake = Game.speed * 0.02;
+            camera.position.x += (Math.random() - 0.5) * shake + (Game.mouseX * 10 - camera.position.x) * 0.05;
+            camera.position.y += (Math.random() - 0.5) * shake + (Game.mouseY * 10 - camera.position.y) * 0.05;
+
+            // 3. Move Shards (The Infinite Tunnel)
+            for(let i=0; i<shardCount; i++) {
+                const d = shardsData[i];
+                d.z += Game.speed * 2; // Shards move towards camera
+                
+                // If shard passes camera, respawn far away
+                if(d.z > 50) {
+                    d.z = -2000;
+                    d.x = (Math.random() - 0.5) * 200;
+                    d.y = (Math.random() - 0.5) * 200;
+                }
+
+                dummy.position.set(d.x, d.y, d.z);
+                
+                // Rotate Shards
+                dummy.rotation.x += d.rotX;
+                dummy.rotation.y += d.rotY;
+                dummy.scale.setScalar(1); // Reset scale
+                
+                dummy.updateMatrix();
+                shardMesh.setMatrixAt(i, dummy.matrix);
+            }
+            shardMesh.instanceMatrix.needsUpdate = true;
+
+            // 4. Move Story Text
+            storyGroup.children.forEach(child => {
+                child.position.z += Game.speed;
+                // Fade effect based on distance
+                // (Done via fog automatically)
+            });
+
+            // 5. Progress Bar
+            const maxDist = 8000;
+            const progress = Math.min((Game.distance / maxDist) * 100, 100);
+            document.getElementById('progress-fill').style.width = progress + '%';
+
+            // 6. Reset World if end reached (Loop)
+            if(Game.distance > maxDist + 1000) {
+                Game.distance = 0;
+                storyGroup.children.forEach((child, i) => {
+                    child.position.z = -MILESTONES[i].dist;
+                });
+            }
+
+            composer.render();
+        }
+
+        // --- 9. STARTUP ---
+        window.engageSystem = function() {
+            document.getElementById('start-btn').style.display = 'none';
+            document.getElementById('progress-container').style.display = 'block';
+            AudioSys.init();
+            Game.targetSpeed = 1; // Start moving slowly
+            animate();
+        };
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+    </script>
+</body>
+</html>
             { id: 3, title: "SEOMAN AI", sub: "360 SEO Analyzer // Automation", z: -150, color: 0x00ff00 },
             { id: 4, title: "CERTIFIED", sub: "ChatGPT Expert // Be10x", z: -200, color: 0xffff00 },
             { id: 5, title: "CONTACT", sub: "LINKEDIN: Nikhil Singh", z: -250, color: 0xbc13fe }
