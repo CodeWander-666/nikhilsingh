@@ -2,551 +2,458 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>NIKHIL SINGH | CYBER_ASCENSION_PROTOCOL</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NIKHIL SINGH | TITAN ENGINE v9</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; font-family: 'Courier New', monospace; user-select: none; }
-        
-        /* CINEMATIC START SCREEN */
-        #ui-layer {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 100; pointer-events: none;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-        }
-        
-        #start-btn {
-            pointer-events: auto;
-            background: transparent;
-            color: #00f3ff;
-            border: 2px solid #00f3ff;
-            padding: 20px 50px;
-            font-size: 1.5rem;
-            letter-spacing: 5px;
-            text-transform: uppercase;
-            cursor: pointer;
-            box-shadow: 0 0 30px #00f3ff;
-            transition: 0.3s;
-            background: rgba(0, 0, 0, 0.8);
-        }
-        #start-btn:hover { background: #00f3ff; color: #000; box-shadow: 0 0 80px #00f3ff; transform: scale(1.1); }
-        
-        #hud-info {
-            position: absolute; bottom: 30px; width: 100%; text-align: center;
-            color: rgba(255, 255, 255, 0.5); font-size: 0.8rem; letter-spacing: 2px;
-            opacity: 0; transition: opacity 1s;
+        /* --- CORE CSS --- */
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@500;900&display=swap');
+
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff0055;
+            --neon-gold: #ffd700;
+            --void-bg: #050508;
         }
 
-        /* PROGRESS BAR (Your "Level") */
-        #progress-container {
-            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-            width: 300px; height: 4px; background: rgba(255,255,255,0.1);
-            display: none;
+        body { 
+            margin: 0; overflow: hidden; background: var(--void-bg); 
+            font-family: 'Share Tech Mono', monospace; 
+            user-select: none; -webkit-touch-callout: none;
         }
-        #progress-fill {
-            width: 0%; height: 100%; background: #00f3ff;
-            box-shadow: 0 0 20px #00f3ff;
+
+        canvas { display: block; width: 100vw; height: 100vh; }
+
+        /* --- UI OVERLAY LAYER --- */
+        #ui-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 100;
+            display: flex; flex-direction: column; justify-content: space-between;
         }
+
+        /* START SCREEN */
+        #start-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 5, 8, 0.95);
+            backdrop-filter: blur(10px);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            pointer-events: auto; z-index: 200;
+            transition: opacity 1s ease-out;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif; font-size: 3rem; color: #fff;
+            text-transform: uppercase; letter-spacing: 5px;
+            text-shadow: 0 0 20px var(--neon-blue); margin-bottom: 10px; text-align: center;
+        }
+
+        .subtitle {
+            color: var(--neon-blue); font-size: 1rem; letter-spacing: 8px; margin-bottom: 50px;
+        }
+
+        #init-btn {
+            background: transparent; color: var(--neon-blue);
+            border: 2px solid var(--neon-blue);
+            padding: 20px 60px; font-size: 1.2rem; font-family: 'Orbitron';
+            cursor: pointer; position: relative; overflow: hidden;
+            transition: 0.3s;
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.2);
+        }
+        #init-btn:hover {
+            background: var(--neon-blue); color: #000;
+            box-shadow: 0 0 60px var(--neon-blue); transform: scale(1.05);
+        }
+        
+        #loading-text {
+            margin-top: 20px; color: #555; font-size: 0.8rem;
+        }
+
+        /* HUD ELEMENTS (Visible during game) */
+        #hud-top {
+            display: flex; justify-content: space-between; padding: 30px;
+            opacity: 0; transition: opacity 1s;
+        }
+        .stat-box {
+            text-align: center;
+        }
+        .stat-val { font-size: 1.5rem; color: #fff; font-weight: bold; }
+        .stat-label { font-size: 0.8rem; color: var(--neon-blue); letter-spacing: 2px; }
+
+        #hud-bottom {
+            text-align: center; padding-bottom: 50px;
+            opacity: 0; transition: opacity 1s;
+        }
+        .hint-text {
+            font-size: 1rem; color: #fff; animation: pulse 2s infinite;
+            text-shadow: 0 0 10px var(--neon-pink);
+        }
+
+        #speed-bar-container {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 5px; background: #222;
+        }
+        #speed-bar {
+            width: 0%; height: 100%; background: var(--neon-blue);
+            box-shadow: 0 0 20px var(--neon-blue); transition: width 0.1s;
+        }
+
+        @keyframes pulse { 0%,100% { opacity: 0.6; } 50% { opacity: 1; } }
 
     </style>
 </head>
 <body>
 
     <div id="ui-layer">
-        <button id="start-btn" onclick="engageSystem()">INITIALIZE LINK</button>
-        <div id="progress-container"><div id="progress-fill"></div></div>
-        <div id="hud-info">HOLD SCREEN TO WARP // DRAG TO STEER</div>
+        
+        <div id="hud-top">
+            <div class="stat-box">
+                <div class="stat-val" id="dist-display">0</div>
+                <div class="stat-label">LIGHT YEARS</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-val" id="speed-display">IDLE</div>
+                <div class="stat-label">VELOCITY</div>
+            </div>
+        </div>
+
+        <div id="hud-bottom">
+            <div class="hint-text">HOLD SCREEN TO WARP // DRAG TO STEER</div>
+        </div>
+
+        <div id="speed-bar-container"><div id="speed-bar"></div></div>
+    </div>
+
+    <div id="start-screen">
+        <h1>Nikhil Singh</h1>
+        <div class="subtitle">SYSTEM V.9.0 // READY</div>
+        <button id="init-btn" onclick="System.initialize()">INITIALIZE NEURAL LINK</button>
+        <div id="loading-text">AUDIO SYSTEM DETECTED</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
     <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
     <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
-    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/GlitchPass.js"></script>
     <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
 
     <script>
-        // --- 1. AUDIO SYNC ENGINE (BASS DRIVER) ---
-        const AudioSys = {
+        /**
+         * =============================================================================
+         * SYSTEM CORE: AUDIO ENGINE
+         * =============================================================================
+         * Generates cinematic bass drones using WebAudio API oscillators.
+         */
+        const AudioEngine = {
             ctx: null,
-            osc: null,
-            gain: null,
-            filter: null,
-            isPlaying: false,
-
+            masterGain: null,
+            oscillators: [],
+            
             init: function() {
-                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                this.osc = this.ctx.createOscillator();
-                this.gain = this.ctx.createGain();
-                this.filter = this.ctx.createBiquadFilter();
-
-                // Dark Synth Setup
-                this.osc.type = 'sawtooth';
-                this.osc.frequency.value = 50; // Deep bass
-                this.filter.type = 'lowpass';
-                this.filter.frequency.value = 200;
+                // Create Audio Context immediately on click
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AudioContext();
+                this.masterGain = this.ctx.createGain();
+                this.masterGain.gain.value = 0.5;
+                this.masterGain.connect(this.ctx.destination);
                 
-                this.osc.connect(this.filter);
-                this.filter.connect(this.gain);
-                this.gain.connect(this.ctx.destination);
+                // Create Base Drone (Deep Sawtooth)
+                this.createOscillator(50, 'sawtooth', 0.1);
+                // Create Harmony Drone (Sine)
+                this.createOscillator(100, 'sine', 0.05);
                 
-                this.gain.gain.value = 0;
-                this.osc.start();
-                this.isPlaying = true;
+                // Resume logic for Chrome autoplay policy
+                if(this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
             },
 
-            warp: function(active) {
-                if(!this.isPlaying) return;
-                const time = this.ctx.currentTime;
-                if(active) {
-                    // Ramp up pitch and volume (Turbo Mode)
-                    this.osc.frequency.setTargetAtTime(100, time, 0.5);
-                    this.filter.frequency.setTargetAtTime(2000, time, 0.5);
-                    this.gain.gain.setTargetAtTime(0.5, time, 0.1);
-                } else {
-                    // Slow down (Idle Mode)
-                    this.osc.frequency.setTargetAtTime(50, time, 1.0);
-                    this.filter.frequency.setTargetAtTime(200, time, 1.0);
-                    this.gain.gain.setTargetAtTime(0.1, time, 0.5);
-                }
-            }
-        };
-
-        // --- 2. GAME STATE ---
-        const Game = {
-            speed: 0,
-            targetSpeed: 0,
-            distance: 0,
-            stage: 0,
-            isHolding: false,
-            mouseX: 0,
-            mouseY: 0
-        };
-
-        // The "Story" Milestones
-        const MILESTONES = [
-            { dist: 500, text: "NIKHIL SINGH", color: 0xffffff },
-            { dist: 1500, text: "ALMABETTER", sub: "FULL STACK DATA SCIENCE", color: 0x00f3ff },
-            { dist: 3000, text: "NOVUSFACE AI", sub: "DEEPFAKE ENGINE", color: 0xff0055 },
-            { dist: 4500, text: "TUBEMAN", sub: "VIDEO PIPELINE", color: 0x00ff00 },
-            { dist: 6000, text: "SEOMAN PRO", sub: "RANKING BOT", color: 0xffff00 },
-            { dist: 8000, text: "HIRE ME", sub: "AVAILABLE FOR DEPLOYMENT", color: 0xbc13fe }
-        ];
-
-        // --- 3. THREE.JS ENGINE ---
-        const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x000000, 0.002);
-
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 2000);
-        camera.position.z = 50;
-
-        const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        document.body.appendChild(renderer.domElement);
-
-        // --- 4. PROCEDURAL WORLD GENERATION (INSTANCING) ---
-        // Creates 2000 "Widgets" (Data Shards) using a single draw call for max performance
-        const shardCount = 2000;
-        const shardGeo = new THREE.TetrahedronGeometry(1, 0);
-        const shardMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff, wireframe: true });
-        const shardMesh = new THREE.InstancedMesh(shardGeo, shardMat, shardCount);
-        
-        const dummy = new THREE.Object3D();
-        const shardsData = []; // Store positions to reset them
-
-        for(let i=0; i<shardCount; i++) {
-            resetShard(i, true);
-        }
-        scene.add(shardMesh);
-
-        function resetShard(i, randomZ) {
-            const x = (Math.random() - 0.5) * 200; // Wide tunnel
-            const y = (Math.random() - 0.5) * 200;
-            const z = randomZ ? (Math.random() * -2000) : -2000; // Spawn far ahead
-            
-            dummy.position.set(x, y, z);
-            dummy.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, 0);
-            
-            // Scale varies
-            const s = Math.random() * 2 + 0.5;
-            dummy.scale.set(s, s, s);
-            
-            dummy.updateMatrix();
-            shardMesh.setMatrixAt(i, dummy.matrix);
-            
-            // Store data for animation loop
-            shardsData[i] = { x, y, z, rotX: Math.random()*0.02, rotY: Math.random()*0.02 };
-        }
-
-        // --- 5. TEXT GENERATION (CANVAS TEXTURES) ---
-        // Creates 3D text billboards without external fonts
-        function createText(text, sub, color) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 1024; canvas.height = 512;
-            const ctx = canvas.getContext('2d');
-            
-            // Main Text
-            ctx.font = "bold 100px Courier New";
-            ctx.fillStyle = "#" + color.toString(16);
-            ctx.textAlign = "center";
-            ctx.fillText(text, 512, 200);
-            
-            // Sub Text
-            if(sub) {
-                ctx.font = "50px Courier New";
-                ctx.fillStyle = "#ffffff";
-                ctx.fillText(sub, 512, 300);
-            }
-
-            // Glow Border
-            ctx.strokeStyle = "#" + color.toString(16);
-            ctx.lineWidth = 10;
-            ctx.strokeRect(100, 50, 824, 400);
-
-            const tex = new THREE.CanvasTexture(canvas);
-            const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
-            const sprite = new THREE.Sprite(mat);
-            sprite.scale.set(60, 30, 1);
-            return sprite;
-        }
-
-        const storyGroup = new THREE.Group();
-        scene.add(storyGroup);
-
-        MILESTONES.forEach(m => {
-            const sprite = createText(m.text, m.sub, m.color);
-            sprite.position.z = -m.dist;
-            storyGroup.add(sprite);
-        });
-
-        // --- 6. POST PROCESSING (BLOOM + WARP) ---
-        const composer = new THREE.EffectComposer(renderer);
-        const renderPass = new THREE.RenderPass(scene, camera);
-        composer.addPass(renderPass);
-
-        const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-        bloomPass.threshold = 0;
-        bloomPass.strength = 1.5; // High Glow
-        bloomPass.radius = 0.5;
-        composer.addPass(bloomPass);
-
-        // --- 7. INPUT HANDLING ---
-        function onDown() {
-            Game.isHolding = true;
-            Game.targetSpeed = 10; // WARP SPEED
-            AudioSys.warp(true);
-            document.getElementById('hud-info').style.opacity = 1;
-        }
-        function onUp() {
-            Game.isHolding = false;
-            Game.targetSpeed = 1; // IDLE SPEED
-            AudioSys.warp(false);
-        }
-        function onMove(x, y) {
-            Game.mouseX = (x / window.innerWidth) * 2 - 1;
-            Game.mouseY = -(y / window.innerHeight) * 2 + 1;
-        }
-
-        window.addEventListener('mousedown', onDown);
-        window.addEventListener('mouseup', onUp);
-        window.addEventListener('touchstart', (e) => { e.preventDefault(); onDown(); });
-        window.addEventListener('touchend', onUp);
-        window.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
-        window.addEventListener('touchmove', e => onMove(e.touches[0].clientX, e.touches[0].clientY));
-
-        // --- 8. MAIN LOOP ---
-        let time = 0;
-
-        function animate() {
-            requestAnimationFrame(animate);
-            time += 0.01;
-
-            // 1. Acceleration Physics
-            Game.speed += (Game.targetSpeed - Game.speed) * 0.05;
-            Game.distance += Game.speed;
-
-            // 2. Camera Shake (Increases with speed)
-            const shake = Game.speed * 0.02;
-            camera.position.x += (Math.random() - 0.5) * shake + (Game.mouseX * 10 - camera.position.x) * 0.05;
-            camera.position.y += (Math.random() - 0.5) * shake + (Game.mouseY * 10 - camera.position.y) * 0.05;
-
-            // 3. Move Shards (The Infinite Tunnel)
-            for(let i=0; i<shardCount; i++) {
-                const d = shardsData[i];
-                d.z += Game.speed * 2; // Shards move towards camera
+            createOscillator: function(freq, type, vol) {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
                 
-                // If shard passes camera, respawn far away
-                if(d.z > 50) {
-                    d.z = -2000;
-                    d.x = (Math.random() - 0.5) * 200;
-                    d.y = (Math.random() - 0.5) * 200;
-                }
-
-                dummy.position.set(d.x, d.y, d.z);
+                osc.type = type;
+                osc.frequency.value = freq;
+                gain.gain.value = vol;
                 
-                // Rotate Shards
-                dummy.rotation.x += d.rotX;
-                dummy.rotation.y += d.rotY;
-                dummy.scale.setScalar(1); // Reset scale
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+                osc.start();
                 
-                dummy.updateMatrix();
-                shardMesh.setMatrixAt(i, dummy.matrix);
-            }
-            shardMesh.instanceMatrix.needsUpdate = true;
+                this.oscillators.push({ osc, gain, baseFreq: freq, baseVol: vol });
+            },
 
-            // 4. Move Story Text
-            storyGroup.children.forEach(child => {
-                child.position.z += Game.speed;
-                // Fade effect based on distance
-                // (Done via fog automatically)
-            });
-
-            // 5. Progress Bar
-            const maxDist = 8000;
-            const progress = Math.min((Game.distance / maxDist) * 100, 100);
-            document.getElementById('progress-fill').style.width = progress + '%';
-
-            // 6. Reset World if end reached (Loop)
-            if(Game.distance > maxDist + 1000) {
-                Game.distance = 0;
-                storyGroup.children.forEach((child, i) => {
-                    child.position.z = -MILESTONES[i].dist;
+            // Updates audio based on game speed (The "Warp" Effect)
+            update: function(speedRatio) {
+                if(!this.ctx) return;
+                
+                this.oscillators.forEach(o => {
+                    // Pitch shifts up as you go faster
+                    const targetFreq = o.baseFreq * (1 + speedRatio * 1.5); 
+                    o.osc.frequency.setTargetAtTime(targetFreq, this.ctx.currentTime, 0.1);
+                    
+                    // Volume increases
+                    const targetVol = o.baseVol * (1 + speedRatio);
+                    o.gain.gain.setTargetAtTime(targetVol, this.ctx.currentTime, 0.1);
                 });
             }
-
-            composer.render();
-        }
-
-        // --- 9. STARTUP ---
-        window.engageSystem = function() {
-            document.getElementById('start-btn').style.display = 'none';
-            document.getElementById('progress-container').style.display = 'block';
-            AudioSys.init();
-            Game.targetSpeed = 1; // Start moving slowly
-            animate();
         };
 
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            composer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-    </script>
-</body>
-</html>
-            { id: 3, title: "SEOMAN AI", sub: "360 SEO Analyzer // Automation", z: -150, color: 0x00ff00 },
-            { id: 4, title: "CERTIFIED", sub: "ChatGPT Expert // Be10x", z: -200, color: 0xffff00 },
-            { id: 5, title: "CONTACT", sub: "LINKEDIN: Nikhil Singh", z: -250, color: 0xbc13fe }
-        ];
-
-        // --- 3. 3D ENGINE ---
-        const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x000000, 0.015);
-
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.toneMapping = THREE.ReinhardToneMapping;
-        document.body.appendChild(renderer.domElement);
-
-        // --- 4. ASSETS GENERATION (Procedural 3D Text) ---
-        // Since we can't load external fonts easily without CORS, we use Canvas textures for text sprites
-        function createTextSprite(text, color, size) {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = 1024; 
-            canvas.height = 256;
-            ctx.fillStyle = color;
-            ctx.font = 'bold 80px Courier New';
-            ctx.textAlign = 'center';
-            ctx.fillText(text, 512, 128);
+        /**
+         * =============================================================================
+         * SYSTEM CORE: VISUAL ENGINE
+         * =============================================================================
+         * Handles Three.js scene, camera, and post-processing.
+         */
+        const VisualEngine = {
+            scene: null,
+            camera: null,
+            renderer: null,
+            composer: null,
             
-            const tex = new THREE.CanvasTexture(canvas);
-            const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
-            const sprite = new THREE.Sprite(mat);
-            sprite.scale.set(size, size * 0.25, 1);
-            return sprite;
-        }
+            init: function() {
+                this.scene = new THREE.Scene();
+                this.scene.fog = new THREE.FogExp2(0x050508, 0.0015);
 
-        // --- 5. BUILD THE WORLD ---
-        
-        // A. Infinite Tunnel
-        const tunnelGeo = new THREE.CylinderGeometry(10, 10, 1000, 32, 100, true);
-        const tunnelMat = new THREE.MeshBasicMaterial({ 
-            color: 0x111111, 
-            wireframe: true, 
-            transparent: true, 
-            opacity: 0.1 
-        });
-        const tunnel = new THREE.Mesh(tunnelGeo, tunnelMat);
-        tunnel.rotation.x = -Math.PI / 2;
-        tunnel.position.z = -250;
-        scene.add(tunnel);
+                this.camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 3000);
+                this.camera.position.z = 100;
 
-        // B. Timeline Markers
-        const markers = [];
-        timeline.forEach(item => {
-            const group = new THREE.Group();
-            group.position.set(0, 0, item.z);
+                this.renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                document.body.appendChild(this.renderer.domElement);
 
-            // Title
-            const title = createTextSprite(item.title, '#' + item.color.toString(16), 20);
-            title.position.y = 2;
-            group.add(title);
+                // --- POST PROCESSING (BLOOM) ---
+                this.composer = new THREE.EffectComposer(this.renderer);
+                const renderPass = new THREE.RenderPass(this.scene, this.camera);
+                this.composer.addPass(renderPass);
 
-            // Subtitle
-            const sub = createTextSprite(item.sub, '#ffffff', 10);
-            sub.position.y = 1;
-            group.add(sub);
+                const bloomPass = new THREE.UnrealBloomPass(
+                    new THREE.Vector2(window.innerWidth, window.innerHeight),
+                    1.5, 0.4, 0.85
+                );
+                bloomPass.threshold = 0;
+                bloomPass.strength = 1.2; // High intensity neon glow
+                bloomPass.radius = 0.5;
+                this.composer.addPass(bloomPass);
 
-            // The "Artifact" (Visual Representation)
-            const geo = new THREE.IcosahedronGeometry(1.5, 0);
-            const mat = new THREE.MeshStandardMaterial({ 
-                color: item.color, 
-                emissive: item.color,
-                emissiveIntensity: 0.5,
-                roughness: 0.2,
-                metalness: 0.8,
-                wireframe: true
-            });
-            const mesh = new THREE.Mesh(geo, mat);
-            group.add(mesh);
-            
-            // Rotating Rings
-            const ringGeo = new THREE.TorusGeometry(3, 0.05, 16, 100);
-            const ringMat = new THREE.MeshBasicMaterial({ color: item.color });
-            const ring = new THREE.Mesh(ringGeo, ringMat);
-            group.add(ring);
+                // Handle Resize
+                window.addEventListener('resize', () => {
+                    this.camera.aspect = window.innerWidth / window.innerHeight;
+                    this.camera.updateProjectionMatrix();
+                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                    this.composer.setSize(window.innerWidth, window.innerHeight);
+                });
+            },
 
-            scene.add(group);
-            markers.push({ group: group, mesh: mesh, ring: ring, z: item.z });
-        });
-
-        // C. Particle Starfield (Speed Lines)
-        const starsGeo = new THREE.BufferGeometry();
-        const starsCount = 5000;
-        const posArray = new Float32Array(starsCount * 3);
-        for(let i=0; i<starsCount*3; i++) {
-            posArray[i] = (Math.random() - 0.5) * 200; // Spread wide
-        }
-        starsGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-        const starsMat = new THREE.PointsMaterial({ size: 0.2, color: 0xffffff });
-        const starField = new THREE.Points(starsGeo, starsMat);
-        scene.add(starField);
-
-        // --- 6. POST PROCESSING (GLOW) ---
-        const composer = new THREE.EffectComposer(renderer);
-        const renderPass = new THREE.RenderPass(scene, camera);
-        composer.addPass(renderPass);
-
-        const bloomPass = new THREE.UnrealBloomPass(
-            new THREE.Vector2(window.innerWidth, window.innerHeight),
-            1.5, 0.4, 0.85
-        );
-        bloomPass.threshold = 0;
-        bloomPass.strength = 1.2; // High intensity
-        bloomPass.radius = 0;
-        composer.addPass(bloomPass);
-
-        // --- 7. INTERACTION LOGIC (SCROLL TO FLY) ---
-        let targetZ = 0;
-        let currentZ = 0;
-        let maxZ = (timeline.length - 1) * -50;
-        
-        window.addEventListener('wheel', (e) => {
-            targetZ += e.deltaY * -0.1;
-            // Clamp
-            if(targetZ > 0) targetZ = 0;
-            if(targetZ < maxZ) targetZ = maxZ;
-        });
-
-        // Touch support for mobile
-        let touchStartY = 0;
-        window.addEventListener('touchstart', e => touchStartY = e.touches[0].clientY);
-        window.addEventListener('touchmove', e => {
-            const deltaY = e.touches[0].clientY - touchStartY;
-            targetZ += deltaY * 0.2;
-            if(targetZ > 0) targetZ = 0;
-            if(targetZ < maxZ) targetZ = maxZ;
-            touchStartY = e.touches[0].clientY;
-        });
-
-        // --- 8. INITIALIZATION SEQUENCE ---
-        window.initExperience = function() {
-            const overlay = document.getElementById('start-overlay');
-            overlay.style.opacity = 0;
-            setTimeout(() => overlay.remove(), 1000);
-            
-            AudioSys.init();
-            AudioSys.playDrone();
-            
-            // Camera Intro Animation
-            camera.position.z = 100;
-            gsap.to(camera.position, { z: 5, duration: 3, ease: "power2.out", onComplete: () => {
-                document.getElementById('interaction-layer').style.opacity = 1;
-            }});
-        };
-
-        // --- 9. ANIMATION LOOP ---
-        let time = 0;
-
-        function animate() {
-            requestAnimationFrame(animate);
-            time += 0.01;
-
-            // Smooth Camera Movement
-            currentZ += (targetZ - currentZ) * 0.05; // Lerp
-            camera.position.z = currentZ + 10; // Camera trails slightly behind
-
-            // Animate Markers
-            markers.forEach((m, index) => {
-                // Rotate Artifacts
-                m.mesh.rotation.x += 0.01;
-                m.mesh.rotation.y += 0.02;
-                m.ring.rotation.x = Math.sin(time) * 0.5;
-                m.ring.rotation.y = time * 0.5;
-
-                // Scale effect based on proximity to camera
-                const dist = Math.abs(currentZ - m.z);
-                const scale = Math.max(0.5, 2 - (dist / 20)); // Grow when close
-                m.group.scale.setScalar(scale);
-                
-                // Sound effect when passing a marker
-                if(dist < 5 && !m.playedSound) {
-                    AudioSys.playSwoosh();
-                    m.playedSound = true; // Play once
-                } else if (dist > 20) {
-                    m.playedSound = false; // Reset
-                }
-            });
-
-            // Warp Speed Effect on Stars
-            const positions = starField.geometry.attributes.position.array;
-            for(let i=2; i<positions.length; i+=3) {
-                positions[i] += (currentZ - targetZ) * 0.5; // Stars move opposite to camera
-                if(positions[i] > 100) positions[i] -= 400;
-                if(positions[i] < -300) positions[i] += 400;
+            render: function() {
+                this.composer.render();
             }
-            starField.geometry.attributes.position.needsUpdate = true;
+        };
 
-            // Camera Shake based on speed
-            const speed = Math.abs(targetZ - currentZ);
-            camera.position.x = (Math.random() - 0.5) * speed * 0.01;
-            camera.position.y = (Math.random() - 0.5) * speed * 0.01;
+        /**
+         * =============================================================================
+         * SYSTEM CORE: WORLD GENERATOR
+         * =============================================================================
+         * Creates infinite data shards and story text.
+         */
+        const World = {
+            shards: [],
+            texts: [],
+            group: new THREE.Group(),
+            
+            init: function() {
+                VisualEngine.scene.add(this.group);
+                
+                // 1. Create Data Shards (Instanced Mesh for Performance)
+                const geometry = new THREE.TetrahedronGeometry(2);
+                const material = new THREE.MeshBasicMaterial({ color: 0x00f3ff, wireframe: true });
+                
+                for(let i=0; i<1500; i++) {
+                    const mesh = new THREE.Mesh(geometry, material);
+                    
+                    // Random positions in a tunnel shape
+                    const angle = Math.random() * Math.PI * 2;
+                    const radius = 50 + Math.random() * 200;
+                    
+                    mesh.position.set(
+                        Math.cos(angle) * radius,
+                        Math.sin(angle) * radius,
+                        (Math.random() * -8000) // Spread deep into Z
+                    );
+                    
+                    mesh.rotation.set(Math.random()*3, Math.random()*3, Math.random()*3);
+                    
+                    // Store initial Z for looping
+                    mesh.userData = { 
+                        zBase: mesh.position.z, 
+                        rotSpeed: (Math.random()-0.5) * 0.05 
+                    };
+                    
+                    this.group.add(mesh);
+                    this.shards.push(mesh);
+                }
 
-            composer.render();
-        }
-        animate();
+                // 2. Create Story Milestones
+                this.addMilestone(500, "NIKHIL SINGH", "DATA SCIENTIST", 0xffffff);
+                this.addMilestone(2000, "ALMABETTER", "FULL STACK AI", 0x00f3ff);
+                this.addMilestone(4000, "NOVUSFACE AI", "DEEPFAKE ENGINE", 0xff0055);
+                this.addMilestone(6000, "TUBEMAN", "VIDEO PIPELINE", 0x00ff00);
+                this.addMilestone(8000, "SEOMAN AI", "RANKING BOT", 0xffff00);
+            },
 
-        // Resize Handling
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            composer.setSize(window.innerWidth, window.innerHeight);
-        });
+            // Helper to create 3D Text via Canvas Sprite
+            addMilestone: function(dist, title, sub, color) {
+                const canvas = document.createElement('canvas');
+                canvas.width = 1024; canvas.height = 512;
+                const ctx = canvas.getContext('2d');
+                
+                ctx.font = "bold 90px Arial";
+                ctx.fillStyle = "#" + color.toString(16);
+                ctx.textAlign = "center";
+                ctx.shadowColor = "#" + color.toString(16);
+                ctx.shadowBlur = 20;
+                ctx.fillText(title, 512, 200);
+                
+                ctx.font = "40px Courier New";
+                ctx.fillStyle = "#ffffff";
+                ctx.fillText(sub, 512, 280);
+
+                const tex = new THREE.CanvasTexture(canvas);
+                const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+                const sprite = new THREE.Sprite(mat);
+                sprite.scale.set(80, 40, 1);
+                sprite.position.set(0, 10, -dist);
+                
+                this.group.add(sprite);
+                this.texts.push({ sprite, dist });
+            },
+
+            update: function(speed) {
+                // Move Shards
+                this.shards.forEach(s => {
+                    s.position.z += speed;
+                    s.rotation.x += s.userData.rotSpeed;
+                    s.rotation.y += s.userData.rotSpeed;
+
+                    // Infinite Loop
+                    if(s.position.z > 100) {
+                        s.position.z = -4000;
+                    }
+                });
+
+                // Move Text
+                this.texts.forEach(t => {
+                    t.sprite.position.z += speed;
+                    // Reset if passed
+                    if(t.sprite.position.z > 200) {
+                        t.sprite.position.z = -8000;
+                    }
+                });
+            }
+        };
+
+        /**
+         * =============================================================================
+         * SYSTEM CORE: GAME LOOP
+         * =============================================================================
+         */
+        const System = {
+            speed: 0,
+            targetSpeed: 0.5, // Idle speed
+            distance: 0,
+            mouseX: 0,
+            mouseY: 0,
+            isRunning: false,
+
+            initialize: function() {
+                // UI Transition
+                document.getElementById('start-screen').style.opacity = 0;
+                setTimeout(() => {
+                    document.getElementById('start-screen').style.display = 'none';
+                    document.getElementById('hud-top').style.opacity = 1;
+                    document.getElementById('hud-bottom').style.opacity = 1;
+                }, 1000);
+
+                // Start Engines
+                AudioEngine.init();
+                VisualEngine.init();
+                World.init();
+                
+                // Input Listeners
+                this.setupInputs();
+                
+                this.isRunning = true;
+                this.animate();
+            },
+
+            setupInputs: function() {
+                const handleDown = (e) => {
+                    e.preventDefault();
+                    this.targetSpeed = 8.0; // WARP SPEED
+                    document.body.style.cursor = 'grabbing';
+                };
+
+                const handleUp = (e) => {
+                    e.preventDefault();
+                    this.targetSpeed = 0.5; // IDLE SPEED
+                    document.body.style.cursor = 'default';
+                };
+
+                const handleMove = (x, y) => {
+                    this.mouseX = (x / window.innerWidth) * 2 - 1;
+                    this.mouseY = -(y / window.innerHeight) * 2 + 1;
+                };
+
+                window.addEventListener('mousedown', handleDown);
+                window.addEventListener('mouseup', handleUp);
+                window.addEventListener('touchstart', handleDown, {passive: false});
+                window.addEventListener('touchend', handleUp, {passive: false});
+                
+                window.addEventListener('mousemove', e => handleMove(e.clientX, e.clientY));
+                window.addEventListener('touchmove', e => handleMove(e.touches[0].clientX, e.touches[0].clientY), {passive: false});
+            },
+
+            animate: function() {
+                requestAnimationFrame(() => this.animate());
+                if(!this.isRunning) return;
+
+                // 1. Physics (Smooth Acceleration)
+                this.speed += (this.targetSpeed - this.speed) * 0.05;
+                this.distance += this.speed;
+
+                // 2. Update World
+                World.update(this.speed);
+                AudioEngine.update(this.speed / 8.0);
+
+                // 3. Camera Movement (Steering + Shake)
+                const cam = VisualEngine.camera;
+                const shake = this.speed * 0.05;
+                
+                // Steering
+                cam.position.x += (this.mouseX * 30 - cam.position.x) * 0.05;
+                cam.position.y += (this.mouseY * 30 - cam.position.y) * 0.05;
+                
+                // Warp Shake
+                cam.position.x += (Math.random() - 0.5) * shake;
+                cam.position.y += (Math.random() - 0.5) * shake;
+                
+                // FOV widen effect
+                cam.fov = 70 + (this.speed * 2);
+                cam.updateProjectionMatrix();
+
+                // 4. Update HUD
+                document.getElementById('dist-display').innerText = Math.floor(this.distance);
+                
+                let stateText = "IDLE";
+                if(this.speed > 6) stateText = "HYPER-DRIVE";
+                else if(this.speed > 2) stateText = "ACCELERATING";
+                document.getElementById('speed-display').innerText = stateText;
+
+                const barWidth = Math.min((this.speed / 8) * 100, 100);
+                document.getElementById('speed-bar').style.width = barWidth + '%';
+
+                // 5. Render
+                VisualEngine.render();
+            }
+        };
 
     </script>
 </body>
