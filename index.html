@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nikhil Singh | Insight Engine</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        /* CORE ATMOSPHERE */
+        body {
+            background-color: #050505;
+            color: #e0e0e0;
+            font-family: 'Courier Prime', monospace;
+            cursor: none; /* Hides default cursor for our custom one */
+            overflow-x: hidden;
+        }
+
+        /* THE TACTICAL GRID BACKGROUND */
+        .grid-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* NEON GLOW UTILITIES */
+        .text-neon { color: #00f3ff; text-shadow: 0 0 10px rgba(0, 243, 255, 0.5); }
+        .border-neon { border-color: #00f3ff; box-shadow: 0 0 10px rgba(0, 243, 255, 0.2); }
+        .bg-neon-dim { background-color: rgba(0, 243, 255, 0.05); }
+
+        /* CUSTOM CURSOR */
+        #cursor {
+            position: fixed;
+            top: 0; left: 0;
+            width: 20px; height: 20px;
+            border: 1px solid #00f3ff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+            transition: width 0.2s, height 0.2s;
+            mix-blend-mode: difference;
+        }
+        #cursor-dot {
+            position: fixed;
+            top: 0; left: 0;
+            width: 4px; height: 4px;
+            background: #00f3ff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* ANIMATIONS */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .skill-bar-fill { width: 0%; transition: width 1.5s ease-out; }
+        
+        /* HOVER EFFECTS */
+        .data-card:hover { border-color: #00f3ff; background: rgba(0, 243, 255, 0.03); }
+    </style>
+</head>
+<body class="selection:bg-cyan-500/30 selection:text-white">
+
+    <div id="cursor"></div>
+    <div id="cursor-dot"></div>
+
+    <div class="grid-bg"></div>
+
+    <div class="fixed top-0 left-0 w-full p-6 flex justify-between items-start pointer-events-none z-50 text-[10px] md:text-xs text-cyan-900 font-bold tracking-widest">
+        <div class="flex items-center gap-2">
+            <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+            LIVE_FEED :: SECURE_CONNECTION
+        </div>
+        <div class="text-right">
+            <div>SYS_OPERATOR: NIKHIL_SINGH</div>
+            <div>LOC: KARNATAKA_IN</div>
+        </div>
+    </div>
+
+    <div class="fixed left-6 top-0 h-full w-[1px] bg-gray-900 z-40 hidden md:block">
+        <div id="scroll-line" class="w-full bg-cyan-500 shadow-[0_0_10px_#00f3ff]" style="height: 0%"></div>
+    </div>
+
+    <main class="max-w-4xl mx-auto px-6 py-24 md:pl-24 relative z-10">
+
+        <section class="min-h-[90vh] flex flex-col justify-center reveal active">
+            <p class="text-cyan-500 text-sm tracking-widest mb-2">> INITIALIZING PROFILE...</p>
+            <h1 class="text-5xl md:text-8xl font-bold text-white tracking-tighter mb-4">
+                NIKHIL <br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600">SINGH</span>
+            </h1>
+            <div class="h-[1px] w-24 bg-cyan-500 mb-6"></div>
+            <p class="text-xl md:text-2xl text-gray-400 max-w-2xl leading-relaxed">
+                DATA ANALYST // FULL STACK SCIENTIST <br>
+                <span class="text-sm text-gray-500">Turning Raw Data into Actionable Intelligence.</span>
+            </p>
+
+            <div class="flex gap-4 mt-10 pointer-events-auto">
+                <a href="https://www.linkedin.com/in/nikhil-singh" target="_blank" class="px-8 py-3 bg-cyan-600 text-black font-bold hover:bg-white transition-all border border-cyan-500">
+                    LINKEDIN_UPLINK
+                </a>
+                <a href="https://github.com/wander-666" target="_blank" class="px-8 py-3 border border-cyan-500 text-cyan-500 font-bold hover:bg-cyan-500/10 transition-all">
+                    GITHUB_REPO
+                </a>
+            </div>
+        </section>
+
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-24 reveal">
+            <div class="p-4 border border-gray-800 bg-gray-900/30 text-center">
+                <div class="text-2xl font-bold text-white">888</div>
+                <div class="text-[10px] text-cyan-500 tracking-widest mt-1">FOLLOWERS</div>
+            </div>
+            <div class="p-4 border border-gray-800 bg-gray-900/30 text-center">
+                <div class="text-2xl font-bold text-white">225+</div>
+                <div class="text-[10px] text-cyan-500 tracking-widest mt-1">IMPRESSIONS</div>
+            </div>
+            <div class="p-4 border border-gray-800 bg-gray-900/30 text-center">
+                <div class="text-2xl font-bold text-white">313</div>
+                <div class="text-[10px] text-cyan-500 tracking-widest mt-1">PROFILE_VIEWS</div>
+            </div>
+            <div class="p-4 border border-gray-800 bg-gray-900/30 text-center">
+                <div class="text-2xl font-bold text-white">100%</div>
+                <div class="text-[10px] text-cyan-500 tracking-widest mt-1">UPTIME</div>
+            </div>
+        </section>
+
+        <section class="mb-32 reveal">
+            <h2 class="text-3xl font-bold text-white mb-8 flex items-center gap-3">
+                <span class="text-cyan-500">01.</span> CORE_MODULES
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <div class="flex justify-between text-xs mb-2 text-cyan-400"><span>PYTHON</span><span>95%</span></div>
+                    <div class="h-1 w-full bg-gray-800"><div class="skill-bar-fill h-full bg-yellow-400 shadow-[0_0_10px_orange]" data-width="95%"></div></div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-xs mb-2 text-cyan-400"><span>SQL & DATABASES</span><span>90%</span></div>
+                    <div class="h-1 w-full bg-gray-800"><div class="skill-bar-fill h-full bg-blue-500 shadow-[0_0_10px_blue]" data-width="90%"></div></div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-xs mb-2 text-cyan-400"><span>GEN_AI & LLMs</span><span>85%</span></div>
+                    <div class="h-1 w-full bg-gray-800"><div class="skill-bar-fill h-full bg-purple-500 shadow-[0_0_10px_purple]" data-width="85%"></div></div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-xs mb-2 text-cyan-400"><span>MACHINE LEARNING</span><span>80%</span></div>
+                    <div class="h-1 w-full bg-gray-800"><div class="skill-bar-fill h-full bg-red-500 shadow-[0_0_10px_red]" data-width="80%"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-32 reveal">
+            <h2 class="text-3xl font-bold text-white mb-8 flex items-center gap-3">
+                <span class="text-cyan-500">02.</span> DEPLOYED_MISSIONS
+            </h2>
+            
+            <div class="data-card border border-gray-800 bg-gray-900/20 p-8 mb-8 transition-all relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-2 bg-blue-900/20 text-blue-400 text-[10px] font-bold border-l border-b border-blue-900">ANALYTICS_ENGINE</div>
+                <h3 class="text-2xl font-bold text-white mb-2 group-hover:text-cyan-400 transition-colors">SEOMAN AI</h3>
+                <p class="text-gray-400 mb-4 text-sm leading-relaxed">
+                    Advanced 360-degree SEO Analyzer with real-time traffic forecasting, security audits, and mobile optimization checks.
+                </p>
+                <div class="flex gap-2 flex-wrap">
+                    <span class="px-2 py-1 bg-gray-800 text-[10px] text-cyan-200 border border-gray-700">REACT</span>
+                    <span class="px-2 py-1 bg-gray-800 text-[10px] text-cyan-200 border border-gray-700">AI INTEGRATION</span>
+                    <span class="px-2 py-1 bg-gray-800 text-[10px] text-cyan-200 border border-gray-700">ANALYTICS</span>
+                </div>
+                <a href="https://seoman-ai.vercel.app" target="_blank" class="mt-6 inline-block text-xs text-cyan-500 hover:text-white border-b border-cyan-500 pb-1">VIEW_DEPLOYMENT ></a>
+            </div>
+
+            <div class="data-card border border-gray-800 bg-gray-900/20 p-8 transition-all relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-2 bg-purple-900/20 text-purple-400 text-[10px] font-bold border-l border-b border-purple-900">COMPUTER_VISION</div>
+                <h3 class="text-2xl font-bold text-white mb-2 group-hover:text-cyan-400 transition-colors">NOVUSFACE AI</h3>
+                <p class="text-gray-400 mb-4 text-sm leading-relaxed">
+                    Biometric Face Regeneration & Swapping Engine. 100% Free, No Sign-up required. Features quantum-accelerated reconstruction.
+                </p>
+                <div class="flex gap-2 flex-wrap">
+                    <span class="px-2 py-1 bg-gray-800 text-[10px] text-purple-200 border border-gray-700">GEN_AI</span>
+                    <span class="px-2 py-1 bg-gray-800 text-[10px] text-purple-200 border border-gray-700">PYTHON</span>
+                    <span class="px-2 py-1 bg-gray-800 text-[10px] text-purple-200 border border-gray-700">DEEPFAKE</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-32 reveal">
+            <h2 class="text-3xl font-bold text-white mb-8 flex items-center gap-3">
+                <span class="text-cyan-500">03.</span> EXECUTION_LOGS
+            </h2>
+
+            <div class="border-l border-gray-800 ml-3 space-y-12">
+                <div class="pl-8 relative">
+                    <div class="absolute -left-[5px] top-2 w-2.5 h-2.5 bg-cyan-500 rounded-full shadow-[0_0_10px_#00f3ff]"></div>
+                    <h4 class="text-xl font-bold text-white">Data Analyst Trainee</h4>
+                    <div class="text-sm text-cyan-600 mb-2 font-bold">ALMABETTER • AUG 2025 - PRESENT</div>
+                    <p class="text-sm text-gray-400">
+                        Full Stack Data Science & AI Program. Introductory Python, Data Types, and complex dataset handling.
+                    </p>
+                </div>
+
+                <div class="pl-8 relative">
+                    <div class="absolute -left-[5px] top-2 w-2.5 h-2.5 bg-gray-600 rounded-full border border-gray-500"></div>
+                    <h4 class="text-xl font-bold text-white">Sales & Marketing Intern</h4>
+                    <div class="text-sm text-gray-500 mb-2 font-bold">SG GURUKUL • AUG 2023 - OCT 2023</div>
+                    <p class="text-sm text-gray-400">
+                        Lead generation, outbound telesales, and education counseling.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <footer class="py-12 border-t border-gray-900 text-center text-xs text-gray-600">
+            <p>THE INSIGHT ENGINE v3.0</p>
+            <p class="mt-2 text-cyan-900">SYSTEM_ID: WANDER-666</p>
+        </footer>
+
+    </main>
+
+    <script>
+        // A. Custom Cursor Logic
+        const cursor = document.getElementById('cursor');
+        const cursorDot = document.getElementById('cursor-dot');
+
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            cursorDot.style.left = e.clientX + 'px';
+            cursorDot.style.top = e.clientY + 'px';
+        });
+
+        document.addEventListener('mousedown', () => {
+            cursor.style.transform = 'translate(-50%, -50%) scale(0.8)';
+            cursor.style.backgroundColor = 'rgba(0, 243, 255, 0.2)';
+        });
+
+        document.addEventListener('mouseup', () => {
+            cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+            cursor.style.backgroundColor = 'transparent';
+        });
+
+        // B. Scroll Animation Logic (Intersection Observer)
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    
+                    // Trigger Skill Bars if visible
+                    const skillBars = entry.target.querySelectorAll('.skill-bar-fill');
+                    skillBars.forEach(bar => {
+                        bar.style.width = bar.getAttribute('data-width');
+                    });
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+        // C. Scroll Line Progress
+        window.addEventListener('scroll', () => {
+            const scrolled = window.scrollY;
+            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollPercent = (scrolled / maxScroll) * 100;
+            document.getElementById('scroll-line').style.height = scrollPercent + '%';
+        });
+    </script>
+</body>
+</html>
