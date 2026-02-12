@@ -2,38 +2,393 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NIKHIL SINGH | QUANTUM SIMULATION</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NIKHIL SINGH | DATA RUNNER</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    
     <style>
-        :root {
-            --neon-blue: #00f3ff;
-            --neon-purple: #bc13fe;
-            --glass-bg: rgba(10, 10, 20, 0.6);
-            --glass-border: rgba(255, 255, 255, 0.1);
+        /* CORE MOBILE SETTINGS */
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background: #050505; 
+            touch-action: none; /* Prevents scrolling */
+            font-family: 'Courier New', Courier, monospace; 
+            user-select: none; /* Prevents text selection */
+            -webkit-user-select: none;
         }
-
-        body {
-            margin: 0;
-            background-color: #030305;
-            background-image: 
-                radial-gradient(circle at 50% 50%, rgba(0, 243, 255, 0.05) 0%, transparent 50%),
-                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 100% 100%, 30px 30px, 30px 30px;
+        
+        /* UI OVERLAY */
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+        
+        /* SCOREBOARD */
+        #score-box {
+            position: absolute; top: 5%; left: 50%; transform: translateX(-50%);
+            text-align: center;
             color: white;
-            font-family: 'Rajdhani', sans-serif;
-            height: 100vh;
-            overflow: hidden;
-            perspective: 2000px; /* The Key to Optical Illusion */
+            text-shadow: 0 0 10px #00f3ff;
+            width: 100%;
+        }
+        #score-val { font-size: 10vw; font-weight: bold; line-height: 1; }
+        #score-label { font-size: 3vw; letter-spacing: 2px; color: #00f3ff; }
+
+        /* MODAL (Popups) */
+        #modal {
+            display: none;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 85%; max-width: 400px;
+            background: rgba(10, 10, 15, 0.98);
+            border: 2px solid #00f3ff;
+            box-shadow: 0 0 50px rgba(0, 243, 255, 0.3);
+            padding: 20px;
+            text-align: center;
+            color: white;
+            pointer-events: auto;
+            border-radius: 10px;
+            z-index: 100;
+        }
+        
+        .btn {
+            background: #00f3ff; color: black; border: none; 
+            padding: 15px 30px; font-size: 1.2rem;
+            font-weight: bold; cursor: pointer; margin-top: 15px;
+            text-transform: uppercase; letter-spacing: 1px;
+            border-radius: 5px; width: 100%;
+            touch-action: manipulation;
+        }
+        .btn:active { background: white; transform: scale(0.95); }
+
+        /* START SCREEN */
+        #start-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            pointer-events: auto; z-index: 20;
+            padding: 20px;
+        }
+        
+        /* MOBILE INSTRUCTIONS */
+        .instruction-icon {
+            width: 50px; height: 50px;
+            border: 2px dashed #00f3ff;
+            border-radius: 50%;
+            margin: 20px auto;
+            position: relative;
+        }
+        .instruction-icon::after {
+            content: ''; position: absolute; top: 50%; left: 50%;
+            width: 10px; height: 10px; background: #00f3ff;
+            border-radius: 50%; transform: translate(-50%, -50%);
+            animation: touchMove 1.5s infinite;
+        }
+        @keyframes touchMove {
+            0% { transform: translate(-50%, -50%); opacity: 1; }
+            50% { transform: translate(100%, -150%); opacity: 0.5; }
+            100% { transform: translate(-50%, -50%); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="game"></canvas>
+
+    <div id="ui-layer">
+        <div id="score-box">
+            <div id="score-val">0</div>
+            <div id="score-label">DATA PROCESSED</div>
+        </div>
+    </div>
+
+    <div id="start-screen">
+        <h1 class="text-4xl md:text-6xl font-bold text-white mb-2 text-center" style="text-shadow: 0 0 20px #00f3ff;">
+            NIKHIL'S<br><span style="color:#00f3ff">DATA RUNNER</span>
+        </h1>
+        
+        <div class="instruction-icon"></div>
+        <p class="text-gray-400 mb-8 text-center text-sm">
+            DRAG TO MOVE.<br>
+            COLLECT <span style="color:#00f3ff">SKILLS</span>.<br>
+            AVOID <span style="color:#ff0055">RED BUGS</span>.
+        </p>
+        
+        <button class="btn" onclick="startGame()">START MISSION</button>
+    </div>
+
+    <div id="modal">
+        <h2 id="m-title" class="text-2xl font-bold mb-1 text-cyan-400">TITLE</h2>
+        <div id="m-tag" class="text-[10px] bg-gray-800 inline-block px-2 py-1 mb-3 rounded border border-cyan-500/50">TAG</div>
+        <p id="m-desc" class="text-sm text-gray-300 mb-4 leading-relaxed">Description...</p>
+        <a id="m-link" href="#" target="_blank" class="block text-center text-sm text-cyan-400 border-b border-cyan-400/50 pb-2 mb-4">OPEN LINK</a>
+        <button class="btn" onclick="closeModal()">RESUME</button>
+    </div>
+
+    <script>
+        // --- SETUP ---
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score-val');
+        const modal = document.getElementById('modal');
+        const startScreen = document.getElementById('start-screen');
+
+        let width, height;
+        
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // --- GAME DATA ---
+        const ITEMS = [
+            { type: 'SKILL', name: 'PYTHON', desc: 'Core language for Data Science. Pandas, NumPy, Scikit-learn.', color: '#FFD700', points: 100 },
+            { type: 'SKILL', name: 'SQL', desc: 'Expert in complex queries, schema design, and data extraction.', color: '#00BFFF', points: 100 },
+            { type: 'SKILL', name: 'GEN-AI', desc: 'LLM Integration, Prompt Engineering, RAG Systems.', color: '#bc13fe', points: 150 },
+            { type: 'PROJECT', name: 'SEOMAN AI', desc: 'Full-stack AI SEO Analyzer with Traffic Forecasting.', link: 'https://seoman-ai.vercel.app', color: '#00FF7F', points: 500 },
+            { type: 'PROJECT', name: 'NOVUSFACE', desc: 'Biometric Face Regeneration & Swapping Engine.', link: '#', color: '#FF1493', points: 500 },
+            { type: 'EXP', name: 'ALMABETTER', desc: 'Data Analyst Apprentice (2025-Present).', color: '#FFFFFF', points: 300 }
+        ];
+
+        // --- STATE ---
+        let gameRunning = false;
+        let score = 0;
+        let player = { x: width/2, y: height/2, size: 25 }; // Larger player for mobile visibility
+        let entities = [];
+        let particles = [];
+        let enemies = [];
+        let inputPos = { x: width/2, y: height/2 };
+
+        // --- MOBILE INPUT HANDLING ---
+        function handleInput(x, y) {
+            inputPos.x = x;
+            inputPos.y = y;
+            // Keep input within bounds
+            if (inputPos.x < 0) inputPos.x = 0;
+            if (inputPos.x > width) inputPos.x = width;
+            if (inputPos.y < 0) inputPos.y = 0;
+            if (inputPos.y > height) inputPos.y = height;
         }
 
-        /* THE 3D STAGE */
-        #scene {
-            width: 100%;
-            height: 100%;
+        window.addEventListener('mousemove', e => handleInput(e.clientX, e.clientY));
+        
+        // Touch events (Prevent default to stop scrolling)
+        canvas.addEventListener('touchstart', e => {
+            e.preventDefault();
+            handleInput(e.touches[0].clientX, e.touches[0].clientY);
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', e => {
+            e.preventDefault();
+            handleInput(e.touches[0].clientX, e.touches[0].clientY);
+        }, { passive: false });
+
+        // --- CLASSES ---
+        class Entity {
+            constructor(data) {
+                this.data = data;
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * (width - 40) + 20;
+                this.y = Math.random() * (height - 40) + 20;
+                this.vx = (Math.random() - 0.5) * 1.5; // Slower speed for mobile readability
+                this.vy = (Math.random() - 0.5) * 1.5;
+                this.size = 20; // Larger hitboxes
+                this.pulse = 0;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if(this.x < 0 || this.x > width) this.vx *= -1;
+                if(this.y < 0 || this.y > height) this.vy *= -1;
+                this.pulse += 0.08;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size + Math.sin(this.pulse)*2, 0, Math.PI*2);
+                ctx.fillStyle = this.data.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.data.color;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                
+                // Simplified text for mobile performance
+                ctx.fillStyle = "white";
+                ctx.font = "bold 10px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText(this.data.type, this.x, this.y - 30);
+            }
+        }
+
+        class Enemy {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                if(Math.abs(this.x - player.x) < 150) this.x += 200; // Safer spawn distance
+                this.vx = (Math.random() - 0.5) * 3;
+                this.vy = (Math.random() - 0.5) * 3;
+                this.size = 12; // Smaller enemies
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if(this.x < 0 || this.x > width) this.vx *= -1;
+                if(this.y < 0 || this.y > height) this.vy *= -1;
+            }
+            draw() {
+                ctx.beginPath();
+                for(let i=0; i<3; i++) { // Triangle shape (faster to render)
+                    ctx.lineTo(this.x + Math.cos((i*120)*Math.PI/180)*12, this.y + Math.sin((i*120)*Math.PI/180)*12);
+                }
+                ctx.fillStyle = "#ff0055";
+                ctx.fill();
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x; this.y = y;
+                this.vx = (Math.random() - 0.5) * 8;
+                this.vy = (Math.random() - 0.5) * 8;
+                this.life = 1;
+                this.color = color;
+            }
+            update() { this.x += this.vx; this.y += this.vy; this.life -= 0.04; }
+            draw() {
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, 4, 4);
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        // --- FUNCTIONS ---
+        function startGame() {
+            startScreen.style.display = 'none';
+            // Init player position to center
+            player.x = width/2; 
+            player.y = height/2;
+            inputPos.x = width/2;
+            inputPos.y = height/2;
+            
+            gameRunning = true;
+            entities = [];
+            ITEMS.forEach(item => entities.push(new Entity(item)));
+            enemies = [];
+            for(let i=0; i<12; i++) enemies.push(new Enemy());
+            animate();
+        }
+
+        function checkCollision(a, b, dist) {
+            const dx = a.x - b.x;
+            const dy = a.y - b.y;
+            return (dx*dx + dy*dy) < (dist*dist); // Squared distance is faster
+        }
+
+        function openModal(data) {
+            gameRunning = false;
+            modal.style.display = 'block';
+            document.getElementById('m-title').innerText = data.name;
+            document.getElementById('m-title').style.color = data.color;
+            const tag = document.getElementById('m-tag');
+            tag.innerText = data.type;
+            tag.style.borderColor = data.color;
+            tag.style.color = data.color;
+            document.getElementById('m-desc').innerText = data.desc;
+            
+            const link = document.getElementById('m-link');
+            if(data.link) {
+                link.style.display = 'block';
+                link.href = data.link;
+                link.style.color = data.color;
+            } else {
+                link.style.display = 'none';
+            }
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+            gameRunning = true;
+            // Reset input pos to avoid instant jump
+            inputPos.x = player.x;
+            inputPos.y = player.y;
+            animate();
+        }
+
+        function animate() {
+            if(!gameRunning) return;
+
+            ctx.fillStyle = 'rgba(5, 5, 5, 0.25)'; // Higher opacity for less trail (better performance)
+            ctx.fillRect(0, 0, width, height);
+
+            // 1. MOVE PLAYER (Direct follow for instant response)
+            // Linear interpolation for slight smoothness but fast response
+            player.x += (inputPos.x - player.x) * 0.15;
+            player.y += (inputPos.y - player.y) * 0.15;
+
+            // Draw Player
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.size, 0, Math.PI*2);
+            ctx.strokeStyle = "#00f3ff"; ctx.lineWidth = 2; ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, 8, 0, Math.PI*2);
+            ctx.fillStyle = "#00f3ff"; ctx.fill();
+
+            // 2. ITEMS
+            for(let i=entities.length-1; i>=0; i--) {
+                const e = entities[i];
+                e.update();
+                e.draw();
+
+                if(checkCollision(player, e, player.size + e.size)) {
+                    // Spawn particles
+                    for(let k=0; k<10; k++) particles.push(new Particle(e.x, e.y, e.data.color));
+                    
+                    score += e.data.points;
+                    scoreEl.innerText = score;
+                    openModal(e.data);
+                    entities.splice(i, 1);
+                }
+            }
+
+            // 3. ENEMIES
+            enemies.forEach(e => {
+                e.update();
+                e.draw();
+                if(checkCollision(player, e, player.size + e.size)) {
+                    score = Math.max(0, score - 5); // Less harsh penalty
+                    scoreEl.innerText = score;
+                    scoreEl.style.color = "red";
+                    setTimeout(() => scoreEl.style.color = "white", 200);
+                    // Knockback
+                    const angle = Math.atan2(player.y - e.y, player.x - e.x);
+                    player.x += Math.cos(angle) * 20;
+                    player.y += Math.sin(angle) * 20;
+                    inputPos.x = player.x; inputPos.y = player.y; // Sync input
+                }
+            });
+
+            // 4. PARTICLES
+            for(let i=particles.length-1; i>=0; i--) {
+                const p = particles[i];
+                p.update();
+                p.draw();
+                if(p.life <= 0) particles.splice(i, 1);
+            }
+
+            // WIN STATE
+            if(entities.length === 0) {
+                ctx.fillStyle = "white";
+                ctx.font = "bold 8vw Courier New";
+                ctx.textAlign = "center";
+                ctx.fillText("MISSION COMPLETE", width/2, height/2);
+                return;
+            }
+
+            requestAnimationFrame(animate);
+        }
+    </script>
+</body>
+</html>
             display: flex;
             align-items: center;
             justify-content: center;
