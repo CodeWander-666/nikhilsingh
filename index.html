@@ -17,13 +17,12 @@
             left: 20px;
             color: #ccc;
             background: rgba(20,20,30,0.8);
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 8px;
             backdrop-filter: blur(5px);
             border: 1px solid #444;
             font-size: 14px;
             z-index: 100;
-            transition: opacity 1s;
             pointer-events: none;
         }
         #loading {
@@ -119,12 +118,26 @@
             pointer-events: none;
             white-space: nowrap;
         }
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            transform: translate(-50%, -50%);
+            border: 2px solid rgba(255,255,255,0.7);
+            border-radius: 50%;
+            z-index: 100;
+            pointer-events: none;
+            box-shadow: 0 0 10px rgba(90,158,255,0.5);
+        }
         @media (max-width: 768px) {
             .hint { font-size: 14px; padding: 8px 16px; }
             #joystick { display: block; }
+            #crosshair { width: 16px; height: 16px; }
         }
     </style>
-    <!-- Load Google Font -->
+    <!-- Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <!-- Three.js core & addons -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -144,16 +157,17 @@
         <div id="progress-bar" style="width:0%"></div>
     </div>
     <div id="error"></div>
-    <div class="hint" id="tutorial">👆 CLICK TO LOCK · WASD TO MOVE · WALK TO A DOOR AND CLICK TO ENTER</div>
-    <div id="info"></div>
+    <div class="hint" id="tutorial">👆 CLICK TO LOCK · WASD + JOYSTICK · AIM & DOUBLE‑CLICK DOOR</div>
+    <div id="info">📍 HUB</div>
     <div id="fps">FPS: --</div>
     <div id="joystick"><div id="joystick-thumb"></div></div>
+    <div id="crosshair"></div>
 
     <script>
         (function() {
             "use strict";
 
-            // --- Embedded Portfolio Data (same as before) ---
+            // --- PORTFOLIO DATA ---
             const PORTFOLIO_DATA = {
                 name: "NIKHIL SINGH",
                 role: "DATA ANALYST // FULL STACK SCIENTIST",
@@ -179,6 +193,100 @@
                 }
             };
 
+            // --- WIDGET FACTORY (premium panels) ---
+            const Widgets = {
+                createSkillPanel: (skill, index) => {
+                    const div = document.createElement('div');
+                    div.style.cssText = `
+                        font-family: 'Inter', sans-serif;
+                        background: rgba(30,30,40,0.8);
+                        backdrop-filter: blur(10px);
+                        border: 1px solid #444;
+                        border-radius: 12px;
+                        padding: 20px;
+                        color: white;
+                        width: 260px;
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                        border-left: 4px solid ${skill.color};
+                    `;
+                    div.innerHTML = `
+                        <div style="font-size:1.4rem; font-weight:600; margin-bottom:8px; color:${skill.color};">${skill.name}</div>
+                        <div style="font-size:0.9rem; color:#aaa; margin-bottom:16px;">${skill.description}</div>
+                        <div style="height:6px; background:#222; border-radius:3px;">
+                            <div style="height:100%; width:${skill.level}%; background:${skill.color}; border-radius:3px;"></div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-top:8px; color:#ccc;">
+                            <span>Proficiency</span><span>${skill.level}%</span>
+                        </div>
+                    `;
+                    return new THREE.CSS2DObject(div);
+                },
+                createProjectPanel: (proj, index) => {
+                    const div = document.createElement('div');
+                    div.style.cssText = `
+                        font-family: 'Inter', sans-serif;
+                        background: rgba(30,30,40,0.8);
+                        backdrop-filter: blur(10px);
+                        border: 1px solid #444;
+                        border-radius: 12px;
+                        padding: 20px;
+                        color: white;
+                        width: 280px;
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                    `;
+                    const tags = proj.tags.map(t => `<span style="background:#2a2a3a; padding:4px 8px; border-radius:16px; font-size:0.8rem; margin-right:6px;">${t}</span>`).join('');
+                    div.innerHTML = `
+                        <div style="font-size:1.4rem; font-weight:600; margin-bottom:4px; color:${proj.color};">${proj.title}</div>
+                        <div style="font-size:0.9rem; color:#aaa; margin-bottom:16px;">${proj.description}</div>
+                        <div style="margin-bottom:16px;">${tags}</div>
+                        ${proj.link !== '#' ? `<a href="${proj.link}" target="_blank" style="color:#5a9eff; text-decoration:none; border:1px solid #5a9eff; padding:6px 12px; border-radius:6px; display:inline-block;">VIEW PROJECT</a>` : ''}
+                    `;
+                    return new THREE.CSS2DObject(div);
+                },
+                createExperiencePanel: (exp, index) => {
+                    const div = document.createElement('div');
+                    div.style.cssText = `
+                        font-family: 'Inter', sans-serif;
+                        background: rgba(30,30,40,0.8);
+                        backdrop-filter: blur(10px);
+                        border: 1px solid #444;
+                        border-radius: 12px;
+                        padding: 20px;
+                        color: white;
+                        width: 280px;
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                    `;
+                    div.innerHTML = `
+                        <div style="font-size:1.3rem; font-weight:600; color:#ddd;">${exp.company}</div>
+                        <div style="font-size:1rem; color:#5a9eff; margin:4px 0;">${exp.role}</div>
+                        <div style="font-size:0.8rem; color:#888; margin-bottom:12px;">${exp.period}</div>
+                        <div style="font-size:0.9rem; color:#ccc;">${exp.description}</div>
+                    `;
+                    return new THREE.CSS2DObject(div);
+                },
+                createContactPanel: () => {
+                    const div = document.createElement('div');
+                    div.style.cssText = `
+                        font-family: 'Inter', sans-serif;
+                        background: rgba(30,30,40,0.8);
+                        backdrop-filter: blur(10px);
+                        border: 1px solid #444;
+                        border-radius: 12px;
+                        padding: 24px;
+                        color: white;
+                        width: 260px;
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                        text-align: center;
+                    `;
+                    div.innerHTML = `
+                        <div style="font-size:1.6rem; margin-bottom:20px;">📬</div>
+                        <div style="margin-bottom:12px;"><a href="${PORTFOLIO_DATA.socials.linkedin}" target="_blank" style="color:#5a9eff; text-decoration:none;">LinkedIn</a></div>
+                        <div><a href="${PORTFOLIO_DATA.socials.github}" target="_blank" style="color:#5a9eff; text-decoration:none;">GitHub</a></div>
+                    `;
+                    return new THREE.CSS2DObject(div);
+                }
+            };
+
             // --- UI Elements ---
             const loadingDiv = document.getElementById('loading');
             const errorDiv = document.getElementById('error');
@@ -201,46 +309,19 @@
                 setTimeout(() => { loadingDiv.style.display = 'none'; }, 500);
             }
 
-            // --- Fetch and execute widgets.html ---
-            async function loadWidgets() {
-                try {
-                    const response = await fetch('widgets.html');
-                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                    const html = await response.text();
-                    const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/i);
-                    if (!scriptMatch) throw new Error('No script tag in widgets.html');
-                    const scriptContent = scriptMatch[1];
-                    const func = new Function(scriptContent);
-                    func.call(window);
-                    if (!window.Widgets) throw new Error('Widgets not defined');
-                    console.log('Widgets loaded successfully');
-                } catch (e) {
-                    console.error('Failed to load widgets:', e);
-                    throw e;
-                }
-            }
-
-            // --- Main initialization after widgets are ready ---
-            async function start() {
-                try {
-                    setProgress(30, 'Loading widgets...');
-                    await loadWidgets();
-                    setProgress(60, 'Building world...');
-                    // Simulate a bit of delay
+            // Simulate loading
+            setProgress(20, 'Building hub...');
+            setTimeout(() => {
+                setProgress(60, 'Crafting rooms...');
+                setTimeout(() => {
+                    setProgress(100, 'Ready!');
+                    loadingDiv.style.opacity = '0';
                     setTimeout(() => {
-                        setProgress(100, 'Ready!');
-                        loadingDiv.style.opacity = '0';
-                        setTimeout(() => {
-                            loadingDiv.style.display = 'none';
-                            initThree();
-                        }, 500);
-                    }, 400);
-                } catch (e) {
-                    showError('Failed to load widgets: ' + e.message);
-                }
-            }
-
-            start();
+                        loadingDiv.style.display = 'none';
+                        initThree();
+                    }, 500);
+                }, 400);
+            }, 400);
 
             // --- FPS Counter ---
             let frameCount = 0;
@@ -257,7 +338,7 @@
                 }
             }
 
-            // --- Mobile Joystick (simplified) ---
+            // --- Mobile Joystick ---
             let joystickActive = false;
             let joystickVector = { x: 0, y: 0 };
             const joystickDiv = document.getElementById('joystick');
@@ -295,7 +376,7 @@
                 }
             }
 
-            // --- THREE.JS INIT (adapted from previous version, using Widgets) ---
+            // --- THREE.JS INIT ---
             function initThree() {
                 try {
                     const scene = new THREE.Scene();
@@ -320,9 +401,11 @@
                     labelRenderer.domElement.style.pointerEvents = 'none';
                     document.body.appendChild(labelRenderer.domElement);
 
+                    // Controls (PointerLock) - we want mouse look, but we'll also allow interaction without locking? Actually, we'll keep lock for FPS feel.
                     const controls = new THREE.PointerLockControls(camera, document.body);
                     scene.add(controls.getObject());
 
+                    // Lock on canvas click, hide tutorial
                     renderer.domElement.addEventListener('click', () => {
                         if (!controls.isLocked) controls.lock();
                     });
@@ -353,7 +436,7 @@
                     fillLight.position.set(-3, 2, 4);
                     scene.add(fillLight);
 
-                    // --- Hub and Doors (same as before) ---
+                    // --- HUB: Central platform and surrounding islands with doors ---
                     const hubGroup = new THREE.Group();
 
                     // Central platform
@@ -367,59 +450,83 @@
 
                     // Door positions
                     const doorPositions = [
-                        { angle: 0, radius: 7, type: 'skills', label: 'SKILLS' },
-                        { angle: Math.PI/2, radius: 7, type: 'projects', label: 'PROJECTS' },
-                        { angle: Math.PI, radius: 7, type: 'experience', label: 'EXPERIENCE' },
-                        { angle: 3*Math.PI/2, radius: 7, type: 'contact', label: 'CONTACT' }
+                        { angle: 0, radius: 7, type: 'skills', label: 'SKILLS', color: '#FFD700' },
+                        { angle: Math.PI/2, radius: 7, type: 'projects', label: 'PROJECTS', color: '#00FF7F' },
+                        { angle: Math.PI, radius: 7, type: 'experience', label: 'EXPERIENCE', color: '#5a9eff' },
+                        { angle: 3*Math.PI/2, radius: 7, type: 'contact', label: 'CONTACT', color: '#ffaa00' }
                     ];
 
+                    // Improved door model with panels and realistic handle
                     function createDoor(color, label) {
                         const doorGroup = new THREE.Group();
 
-                        const frameMat = new THREE.MeshStandardMaterial({ color: 0x5a4a3a, roughness: 0.4 });
-                        const leftPost = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.2, 0.3), frameMat);
+                        // Frame (dark wood)
+                        const frameMat = new THREE.MeshStandardMaterial({ color: 0x5a4a3a, roughness: 0.7 });
+                        const leftPost = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.2, 0.2), frameMat);
                         leftPost.position.set(-1, 1.1, 0);
                         doorGroup.add(leftPost);
-                        const rightPost = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.2, 0.3), frameMat);
+                        const rightPost = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.2, 0.2), frameMat);
                         rightPost.position.set(1, 1.1, 0);
                         doorGroup.add(rightPost);
-                        const topBeam = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.3, 0.3), frameMat);
+                        const topBeam = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.2, 0.2), frameMat);
                         topBeam.position.set(0, 2.2, 0);
                         doorGroup.add(topBeam);
 
-                        const doorMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6 });
-                        const doorLeaf = new THREE.Mesh(new THREE.BoxGeometry(1.8, 2.0, 0.2), doorMat);
-                        doorLeaf.position.set(0, 1.0, 0.1);
+                        // Door leaf with panels
+                        const doorMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.5, metalness: 0.1 });
+                        const doorLeaf = new THREE.Mesh(new THREE.BoxGeometry(1.8, 2.0, 0.1), doorMat);
+                        doorLeaf.position.set(0, 1.0, 0.05);
                         doorLeaf.castShadow = true;
                         doorLeaf.receiveShadow = true;
                         doorGroup.add(doorLeaf);
 
-                        const handleMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.2, metalness: 0.8 });
-                        const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.4, 8), handleMat);
-                        handle.rotation.z = Math.PI/2;
-                        handle.position.set(0.6, 1.0, 0.3);
-                        doorGroup.add(handle);
+                        // Panels (recessed squares)
+                        const panelMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
+                        const panel1 = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.05), panelMat);
+                        panel1.position.set(-0.5, 1.3, 0.12);
+                        doorGroup.add(panel1);
+                        const panel2 = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.05), panelMat);
+                        panel2.position.set(0.5, 1.3, 0.12);
+                        doorGroup.add(panel2);
+                        const panel3 = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.05), panelMat);
+                        panel3.position.set(-0.5, 0.7, 0.12);
+                        doorGroup.add(panel3);
+                        const panel4 = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.05), panelMat);
+                        panel4.position.set(0.5, 0.7, 0.12);
+                        doorGroup.add(panel4);
 
-                        // Label (CSS2D) above door
-                        const labelDiv = document.createElement('div');
-                        labelDiv.style.color = 'white';
-                        labelDiv.style.background = 'rgba(30,30,40,0.9)';
-                        labelDiv.style.padding = '4px 12px';
-                        labelDiv.style.borderRadius = '20px';
-                        labelDiv.style.border = '1px solid #888';
-                        labelDiv.style.fontSize = '14px';
-                        labelDiv.style.fontWeight = 'bold';
-                        labelDiv.style.backdropFilter = 'blur(4px)';
-                        labelDiv.innerText = label;
-                        const labelObj = new THREE.CSS2DObject(labelDiv);
-                        labelObj.position.set(0, 3.0, 0);
-                        doorGroup.add(labelObj);
+                        // Handle (more realistic: curved bar)
+                        const handleMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.3, metalness: 0.8 });
+                        const handleBar = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.4, 8), handleMat);
+                        handleBar.rotation.z = Math.PI/2;
+                        handleBar.position.set(0.6, 1.0, 0.15);
+                        doorGroup.add(handleBar);
+                        const handleKnob = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8), handleMat);
+                        handleKnob.position.set(0.8, 1.0, 0.15);
+                        doorGroup.add(handleKnob);
+
+                        // Nameplate (CSS2D) above door
+                        const nameDiv = document.createElement('div');
+                        nameDiv.style.color = 'white';
+                        nameDiv.style.background = 'rgba(20,20,30,0.9)';
+                        nameDiv.style.padding = '6px 16px';
+                        nameDiv.style.borderRadius = '20px';
+                        nameDiv.style.border = '1px solid ' + color;
+                        nameDiv.style.fontSize = '16px';
+                        nameDiv.style.fontWeight = 'bold';
+                        nameDiv.style.backdropFilter = 'blur(4px)';
+                        nameDiv.style.boxShadow = '0 4px 10px rgba(0,0,0,0.5)';
+                        nameDiv.innerText = label;
+                        const nameLabel = new THREE.CSS2DObject(nameDiv);
+                        nameLabel.position.set(0, 3.0, 0);
+                        doorGroup.add(nameLabel);
 
                         return doorGroup;
                     }
 
                     // Build islands and doors
                     doorPositions.forEach(pos => {
+                        // Island base
                         const islandBase = new THREE.Mesh(
                             new THREE.CylinderGeometry(2.5, 3, 0.8, 16),
                             new THREE.MeshStandardMaterial({ color: 0x3a4a5a, roughness: 0.6 })
@@ -429,8 +536,8 @@
                         islandBase.castShadow = true;
                         scene.add(islandBase);
 
-                        const doorColor = pos.type === 'skills' ? '#FFD700' : pos.type === 'projects' ? '#00FF7F' : pos.type === 'experience' ? '#5a9eff' : '#ffaa00';
-                        const door = createDoor(doorColor, pos.label);
+                        // Door
+                        const door = createDoor(pos.color, pos.label);
                         door.position.set(Math.cos(pos.angle)*pos.radius, 0.5, Math.sin(pos.angle)*pos.radius);
                         door.rotation.y = -pos.angle;
                         scene.add(door);
@@ -452,7 +559,7 @@
 
                     scene.add(hubGroup);
 
-                    // --- Rooms (initially invisible) ---
+                    // --- Rooms (groups) ---
                     const rooms = {
                         skills: new THREE.Group(),
                         projects: new THREE.Group(),
@@ -485,9 +592,8 @@
                     rightWall.receiveShadow = true;
                     skillsRoom.add(rightWall);
 
-                    // Place skill panels using Widgets
                     PORTFOLIO_DATA.skills.forEach((skill, i) => {
-                        const panel = window.Widgets.createSkillPanel(skill, i);
+                        const panel = Widgets.createSkillPanel(skill);
                         panel.position.set(-4 + i*2, 2.5, -4.5);
                         skillsRoom.add(panel);
                     });
@@ -504,7 +610,7 @@
                     pBack.castShadow = true;
                     projectsRoom.add(pBack);
                     PORTFOLIO_DATA.projects.forEach((proj, i) => {
-                        const panel = window.Widgets.createProjectPanel(proj, i);
+                        const panel = Widgets.createProjectPanel(proj);
                         panel.position.set(-2 + i*4, 2.5, -4.5);
                         projectsRoom.add(panel);
                     });
@@ -521,7 +627,7 @@
                     eBack.castShadow = true;
                     expRoom.add(eBack);
                     PORTFOLIO_DATA.experience.forEach((exp, i) => {
-                        const panel = window.Widgets.createExperiencePanel(exp, i);
+                        const panel = Widgets.createExperiencePanel(exp);
                         panel.position.set(-3 + i*6, 2.5, -4.5);
                         expRoom.add(panel);
                     });
@@ -537,17 +643,17 @@
                     cBack.position.set(0, 2, -5);
                     cBack.castShadow = true;
                     contactRoom.add(cBack);
-                    const contactPanel = window.Widgets.createContactPanel();
+                    const contactPanel = Widgets.createContactPanel();
                     contactPanel.position.set(0, 2.5, -4.5);
                     contactRoom.add(contactPanel);
 
-                    // Hide all rooms initially
+                    // Hide rooms initially
                     for (let key in rooms) {
                         rooms[key].visible = false;
                         scene.add(rooms[key]);
                     }
 
-                    // --- Particles ---
+                    // --- Particles (subtle) ---
                     const particleCount = 800;
                     const particlesGeo = new THREE.BufferGeometry();
                     const particlesPos = new Float32Array(particleCount * 3);
@@ -561,18 +667,14 @@
                     const particles = new THREE.Points(particlesGeo, particlesMat);
                     scene.add(particles);
 
-                    // --- Raycaster for door clicks ---
+                    // --- Interaction: Double-click (or tap) to enter door ---
                     const raycaster = new THREE.Raycaster();
-                    const mouse = new THREE.Vector2();
+                    const center = new THREE.Vector2(0, 0); // center of screen
 
-                    function onClick(event) {
-                        if (!controls.isLocked) return;
+                    function interact() {
+                        if (!controls.isLocked) return; // require lock for FPS
 
-                        const rect = renderer.domElement.getBoundingClientRect();
-                        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-                        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-                        raycaster.setFromCamera(mouse, camera);
+                        raycaster.setFromCamera(center, camera);
                         const intersects = raycaster.intersectObjects(scene.children, true);
 
                         for (let hit of intersects) {
@@ -584,10 +686,10 @@
                                     for (let key in rooms) {
                                         rooms[key].visible = (key === roomType);
                                     }
-                                    // Position player inside room
+                                    // Place player inside room
                                     controls.getObject().position.set(0, 2, 3);
                                     controls.getObject().lookAt(0, 2, 0);
-                                    infoDiv.innerText = `📍 In ${roomType.toUpperCase()} room · Click door to return (not yet implemented)`;
+                                    infoDiv.innerText = `📍 In ${roomType.toUpperCase()} room · Double-click door to return (not yet)`;
                                     return;
                                 }
                                 obj = obj.parent;
@@ -595,12 +697,14 @@
                         }
                     }
 
-                    renderer.domElement.addEventListener('click', onClick);
+                    // Double-click on desktop
+                    renderer.domElement.addEventListener('dblclick', interact);
+
+                    // Single tap on mobile (since double-tap is hard)
                     renderer.domElement.addEventListener('touchstart', (e) => {
                         e.preventDefault();
                         if (controls.isLocked) {
-                            const touch = e.touches[0];
-                            onClick({ clientX: touch.clientX, clientY: touch.clientY });
+                            interact(); // treat as single tap
                         }
                     });
 
