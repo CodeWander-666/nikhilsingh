@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+Put your HTML text here<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NIKHIL SINGH · PORTFOLIO</title>
+    <title>NIKHIL SINGH · DREAM HUB · PREMIUM</title>
     <style>
         body {
             margin: 0;
@@ -160,10 +160,10 @@
 
             // --- POST-PROCESSING (Bloom) ---
             const renderScene = new RenderPass(scene, camera);
-            const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.0, 0.2, 0.3);
-            bloomPass.threshold = 0.1;
-            bloomPass.strength = 0.8;
-            bloomPass.radius = 0.2;
+            const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0, 0, 0);
+            bloomPass.threshold = 0.0;
+            bloomPass.strength = 0.0;
+            bloomPass.radius = 0.0;
 
             const composer = new EffectComposer(renderer);
             composer.addPass(renderScene);
