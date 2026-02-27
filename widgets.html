@@ -2,242 +2,183 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Widget Templates</title>
+    <title>Premium Widgets</title>
     <style>
-        .widget {
-            font-family: 'Courier New', monospace;
-            background: rgba(10, 10, 20, 0.85);
+        /* Global widget styles – used inside each panel */
+        .widget-panel {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: rgba(30, 35, 45, 0.9);
             backdrop-filter: blur(8px);
-            border: 1px solid rgba(0, 243, 255, 0.3);
-            border-radius: 8px;
-            padding: 16px;
-            color: white;
-            box-shadow: 0 0 30px rgba(0, 243, 255, 0.2);
-            max-width: 280px;
-            pointer-events: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            color: #fff;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+            width: 280px;
             transition: transform 0.2s, box-shadow 0.2s;
-            transform-style: preserve-3d;
+            line-height: 1.5;
         }
-        .widget:hover {
-            transform: scale(1.02) rotateX(2deg) rotateY(2deg);
-            border-color: #00f3ff;
-            box-shadow: 0 0 40px #00f3ff, 0 10px 20px rgba(0,0,0,0.5);
+        .widget-panel:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
         }
-        .widget-header {
-            font-size: 1.2rem;
-            font-weight: bold;
+        .widget-title {
+            font-size: 1.5rem;
+            font-weight: 600;
             margin-bottom: 8px;
-            border-bottom: 1px dashed #00f3ff;
-            padding-bottom: 4px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            letter-spacing: -0.01em;
         }
-        .widget-header .icon {
-            width: 24px;
-            height: 24px;
-            background: currentColor;
-            mask-size: contain;
-            -webkit-mask-size: contain;
-        }
-        .widget-body {
+        .widget-subtitle {
             font-size: 0.9rem;
-            color: #ccc;
-            line-height: 1.4;
+            color: #aaa;
+            margin-bottom: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 8px;
         }
-        .widget-footer {
-            margin-top: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .widget-content {
+            font-size: 0.95rem;
+            color: #ddd;
         }
-        .widget-link {
-            color: #00f3ff;
-            text-decoration: none;
-            border-bottom: 1px solid transparent;
-            transition: border-color 0.2s;
+        .skill-bar {
+            height: 6px;
+            background: #2a2a3a;
+            border-radius: 3px;
+            margin: 12px 0;
+            overflow: hidden;
         }
-        .widget-link:hover {
-            border-bottom-color: #00f3ff;
-        }
-        .skill-level {
-            display: inline-block;
-            background: rgba(0,243,255,0.2);
-            border-radius: 10px;
-            padding: 2px 8px;
-            font-size: 0.8rem;
-            color: #00f3ff;
+        .skill-fill {
+            height: 100%;
+            border-radius: 3px;
         }
         .tag {
             display: inline-block;
+            background: rgba(90, 158, 255, 0.2);
+            border: 1px solid rgba(90, 158, 255, 0.3);
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            margin-right: 6px;
+            margin-bottom: 6px;
+            color: #5a9eff;
+        }
+        .link-button {
+            display: inline-block;
+            background: transparent;
+            border: 1px solid #5a9eff;
+            color: #5a9eff;
+            padding: 8px 16px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            margin-top: 12px;
+        }
+        .link-button:hover {
+            background: #5a9eff;
+            color: #000;
+        }
+        .divider {
+            height: 1px;
             background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(0,243,255,0.3);
-            border-radius: 12px;
-            padding: 2px 8px;
-            font-size: 0.7rem;
-            margin-right: 4px;
-            margin-bottom: 4px;
-        }
-        .progress-bar {
-            width: 100%;
-            height: 4px;
-            background: #333;
-            margin: 8px 0;
-            border-radius: 2px;
-            overflow: hidden;
-        }
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #00f3ff, #ff00aa);
-            width: 0%;
-            transition: width 0.3s;
-        }
-        .glowing-text {
-            text-shadow: 0 0 8px currentColor;
-        }
-        .chart {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            height: 40px;
-            margin: 10px 0;
-        }
-        .bar {
-            width: 8px;
-            background: #00f3ff;
-            border-radius: 2px 2px 0 0;
-            transition: height 0.3s;
+            margin: 16px 0;
         }
     </style>
 </head>
 <body>
     <script>
-        window.Widgets = (function() {
-            try {
-                function createCSS2D(htmlString, className = 'widget') {
-                    const div = document.createElement('div');
-                    div.className = className;
-                    div.innerHTML = htmlString;
-                    return new THREE.CSS2DObject(div);
-                }
-
-                // Random chart data for visual flair
-                function randomChart() {
-                    return [30, 70, 50, 90, 40, 60, 80].map(v => v * Math.random()).map(h => Math.floor(h));
-                }
-
-                return {
-                    createSkillWidget: function(skill) {
-                        const chartBars = randomChart().map(h => `<div class="bar" style="height:${h}%"></div>`).join('');
-                        const html = `
-                            <div class="widget-header" style="color: ${skill.color};">
-                                <span class="icon" style="background: ${skill.color}; mask: url(data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/%3E%3C/svg%3E); -webkit-mask: url(data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/%3E%3C/svg%3E);"></span>
-                                ${skill.name}
-                            </div>
-                            <div class="widget-body">
-                                <p>${skill.description}</p>
-                                <div class="chart">${chartBars}</div>
-                                <div class="progress-bar"><div class="progress-fill" style="width:${skill.level}%"></div></div>
-                                <div class="widget-footer">
-                                    <span class="skill-level">${skill.level}%</span>
-                                    <span class="glowing-text" style="color:#00f3ff;">⚡ +100 XP</span>
-                                </div>
-                            </div>
-                        `;
-                        return createCSS2D(html, 'widget skill-widget');
-                    },
-
-                    createProjectWidget: function(project) {
-                        const tagsHtml = project.tags.map(t => `<span class="tag">${t}</span>`).join('');
-                        const linkHtml = project.link && project.link !== '#' 
-                            ? `<a href="${project.link}" target="_blank" class="widget-link">🚀 VISIT PROJECT</a>` 
-                            : '<span style="color:#888;">🔒 coming soon</span>';
-                        const html = `
-                            <div class="widget-header" style="color: ${project.color};">
-                                <span class="icon" style="background: ${project.color}; mask: url(data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M20 9V7c0-1.1-.9-2-2-2h-4c0-1.66-1.34-3-3-3S8 3.34 8 5H4c-1.1 0-2 .9-2 2v2c0 1.66 1.34 3 3 3 1.66 0 3-1.34 3-3H6v2c0 .55.45 1 1 1h10c.55 0 1-.45 1-1v-2h-2c0 1.66 1.34 3 3 3s3-1.34 3-3z'/%3E%3C/svg%3E); -webkit-mask: url(data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M20 9V7c0-1.1-.9-2-2-2h-4c0-1.66-1.34-3-3-3S8 3.34 8 5H4c-1.1 0-2 .9-2 2v2c0 1.66 1.34 3 3 3 1.66 0 3-1.34 3-3H6v2c0 .55.45 1 1 1h10c.55 0 1-.45 1-1v-2h-2c0 1.66 1.34 3 3 3s3-1.34 3-3z'/%3E%3C/svg%3E);"></span>
-                                ${project.title}
-                            </div>
-                            <div class="widget-body">
-                                <p>${project.description}</p>
-                                <div style="margin: 8px 0;">${tagsHtml}</div>
-                                <div class="widget-footer">
-                                    ${linkHtml}
-                                    <span style="color:#ffaa00;">⚡ +500 XP</span>
-                                </div>
-                            </div>
-                        `;
-                        return createCSS2D(html, 'widget project-widget');
-                    },
-
-                    createExperienceWidget: function(exp) {
-                        const html = `
-                            <div class="widget-header" style="color: #aaa;">
-                                <span class="icon" style="background: #aaa; mask: url(data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M20 6h-4V4c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM10 4h4v2h-4V4z'/%3E%3C/svg%3E); -webkit-mask: url(data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M20 6h-4V4c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM10 4h4v2h-4V4z'/%3E%3C/svg%3E);"></span>
-                                ${exp.company}
-                            </div>
-                            <div class="widget-body">
-                                <div style="color:#00f3ff; font-size:0.9rem;">${exp.role}</div>
-                                <div style="color:#888; font-size:0.7rem; margin:4px 0;">${exp.period}</div>
-                                <p>${exp.description}</p>
-                                <div class="progress-bar"><div class="progress-fill" style="width:${Math.floor(Math.random()*30+70)}%"></div></div>
-                            </div>
-                        `;
-                        return createCSS2D(html, 'widget exp-widget');
-                    },
-
-                    createContactWidget: function(socials) {
-                        const linkedinLink = socials.linkedin ? `<a href="${socials.linkedin}" target="_blank" class="widget-link">LinkedIn</a>` : '';
-                        const githubLink = socials.github ? `<a href="${socials.github}" target="_blank" class="widget-link">GitHub</a>` : '';
-                        const html = `
-                            <div class="widget-header" style="color: #ffaa00;">
-                                <span class="icon" style="background: #ffaa00; mask: url(data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E); -webkit-mask: url(data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E);"></span>
-                                📡 ESTABLISH UPLINK
-                            </div>
-                            <div class="widget-body">
-                                <div style="display:flex; justify-content:space-around; margin:12px 0;">
-                                    ${linkedinLink}
-                                    ${githubLink}
-                                </div>
-                                <p style="text-align:center; font-size:0.7rem; color:#888;">direct messages open</p>
-                                <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
-                            </div>
-                        `;
-                        return createCSS2D(html, 'widget contact-widget');
-                    },
-
-                    // Generic knowledge fragment – used to create 50+ widgets
-                    createKnowledgeFragment: function(id) {
-                        const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD', '#D4A5A5', '#9B59B6', '#3498DB', '#E67E22', '#2ECC71'];
-                        const color = colors[id % colors.length];
-                        const value = Math.floor(Math.random() * 100);
-                        const chartBars = [30,70,50,90,40,60,80].map(h => h * Math.random()).map(h => `<div class="bar" style="height:${h}%; background:${color};"></div>`).join('');
-                        const html = `
-                            <div class="widget-header" style="color: ${color};">
-                                <span class="icon" style="background: ${color}; mask: url(data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M21 6h-7.59l3.29-3.29L16 2l-4 4-4-4-.71.71L10.59 6H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z'/%3E%3C/svg%3E); -webkit-mask: url(data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M21 6h-7.59l3.29-3.29L16 2l-4 4-4-4-.71.71L10.59 6H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z'/%3E%3C/svg%3E);"></span>
-                                NODE #${id}
-                            </div>
-                            <div class="widget-body">
-                                <div class="chart">${chartBars}</div>
-                                <div class="progress-bar"><div class="progress-fill" style="width:${value}%; background:${color};"></div></div>
-                                <div class="widget-footer">
-                                    <span class="skill-level">${value}%</span>
-                                    <span style="color:${color};">⚡ +${Math.floor(value/2)} XP</span>
-                                </div>
-                            </div>
-                        `;
-                        return createCSS2D(html, 'widget knowledge-widget');
-                    }
-                };
-            } catch (error) {
-                console.error("Widget creation failed:", error);
-                return {
-                    createSkillWidget: () => new THREE.CSS2DObject(document.createElement('div')),
-                    createProjectWidget: () => new THREE.CSS2DObject(document.createElement('div')),
-                    createExperienceWidget: () => new THREE.CSS2DObject(document.createElement('div')),
-                    createContactWidget: () => new THREE.CSS2DObject(document.createElement('div')),
-                    createKnowledgeFragment: () => new THREE.CSS2DObject(document.createElement('div'))
-                };
+        (function() {
+            "use strict";
+            // Ensure THREE is available (it should be, as widgets are loaded after Three)
+            if (typeof THREE === 'undefined') {
+                console.error('THREE not found. Widgets cannot create CSS2DObjects.');
+                window.Widgets = null;
+                return;
             }
+
+            // Helper to create a CSS2DObject from a div
+            function createPanel(htmlContent, additionalClass = '') {
+                const div = document.createElement('div');
+                div.className = 'widget-panel' + (additionalClass ? ' ' + additionalClass : '');
+                div.innerHTML = htmlContent;
+                return new THREE.CSS2DObject(div);
+            }
+
+            // Expose Widgets factory
+            window.Widgets = {
+                // Skill panel
+                createSkillPanel: function(skill, index) {
+                    const html = `
+                        <div class="widget-title" style="color: ${skill.color};">${skill.name}</div>
+                        <div class="widget-subtitle">SKILL #${index+1}</div>
+                        <div class="widget-content">${skill.description}</div>
+                        <div class="skill-bar">
+                            <div class="skill-fill" style="width: ${skill.level}%; background: ${skill.color};"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; color: #ccc; font-size:0.9rem;">
+                            <span>Proficiency</span><span>${skill.level}%</span>
+                        </div>
+                    `;
+                    return createPanel(html);
+                },
+
+                // Project panel
+                createProjectPanel: function(proj, index) {
+                    const tagsHtml = proj.tags.map(t => `<span class="tag">${t}</span>`).join('');
+                    const linkHtml = proj.link && proj.link !== '#' 
+                        ? `<a href="${proj.link}" target="_blank" class="link-button">VIEW PROJECT</a>`
+                        : '';
+                    const html = `
+                        <div class="widget-title" style="color: ${proj.color};">${proj.title}</div>
+                        <div class="widget-subtitle">PROJECT #${index+1}</div>
+                        <div class="widget-content">${proj.description}</div>
+                        <div style="margin: 16px 0;">${tagsHtml}</div>
+                        ${linkHtml}
+                    `;
+                    return createPanel(html);
+                },
+
+                // Experience panel
+                createExperiencePanel: function(exp, index) {
+                    const html = `
+                        <div class="widget-title" style="color: #ddd;">${exp.company}</div>
+                        <div class="widget-subtitle">${exp.role}</div>
+                        <div style="color: #5a9eff; font-size:0.85rem; margin-bottom:12px;">${exp.period}</div>
+                        <div class="widget-content">${exp.description}</div>
+                    `;
+                    return createPanel(html);
+                },
+
+                // Contact panel
+                createContactPanel: function() {
+                    const html = `
+                        <div style="text-align: center;">
+                            <div style="font-size:3rem; margin-bottom:16px;">📬</div>
+                            <div class="widget-title" style="color:#ffaa00;">CONNECT</div>
+                            <div class="divider"></div>
+                            <div style="margin: 16px 0;">
+                                <a href="https://linkedin.com/in/nikhil-singh" target="_blank" class="link-button" style="margin-right:8px;">LinkedIn</a>
+                                <a href="https://github.com/wander-666" target="_blank" class="link-button">GitHub</a>
+                            </div>
+                            <div style="color:#aaa; font-size:0.85rem;">Direct messages open</div>
+                        </div>
+                    `;
+                    return createPanel(html);
+                },
+
+                // Generic knowledge fragment (if needed, but not used in current index)
+                createKnowledgeFragment: function(id) {
+                    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'];
+                    const color = colors[id % colors.length];
+                    const html = `
+                        <div style="text-align: center;">
+                            <div style="font-size:2rem; margin-bottom:8px;">🧬</div>
+                            <div class="widget-title" style="color:${color};">NODE #${id}</div>
+                            <div class="skill-bar"><div class="skill-fill" style="width:${Math.floor(Math.random()*100)}%; background:${color};"></div></div>
+                        </div>
+                    `;
+                    return createPanel(html);
+                }
+            };
         })();
     </script>
 </body>
