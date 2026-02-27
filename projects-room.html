@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Projects Room</title>
+    <style>
+        .project-panel {
+            font-family: 'Inter', sans-serif;
+            background: rgba(20,25,35,0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0,255,127,0.3);
+            border-radius: 16px;
+            padding: 24px;
+            color: white;
+            width: 300px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            transition: 0.2s;
+        }
+        .project-panel:hover {
+            border-color: #00FF7F;
+            box-shadow: 0 30px 50px rgba(0,0,0,0.8), 0 0 20px rgba(0,255,127,0.2);
+        }
+        .project-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .project-desc {
+            color: #ccc;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+        .project-tags {
+            margin-bottom: 20px;
+        }
+        .tag {
+            display: inline-block;
+            background: #2a2a3a;
+            border: 1px solid #444;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.8rem;
+            margin-right: 6px;
+            margin-bottom: 6px;
+            color: #aaa;
+        }
+        .project-link {
+            color: #5a9eff;
+            text-decoration: none;
+            border: 1px solid #5a9eff;
+            padding: 8px 20px;
+            border-radius: 30px;
+            display: inline-block;
+            transition: 0.2s;
+        }
+        .project-link:hover {
+            background: #5a9eff;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+<!-- ROOM_CONTENT -->
+<div class="project-panel" style="border-color:#00FF7F;">
+    <div class="project-title" style="color:#00FF7F;">SEOMAN AI</div>
+    <div class="project-desc">Full‑stack AI SEO Analyzer with traffic forecasting, security audits, and mobile optimization.</div>
+    <div class="project-tags">
+        <span class="tag">REACT</span>
+        <span class="tag">AI</span>
+        <span class="tag">ANALYTICS</span>
+    </div>
+    <a href="https://seoman-ai.vercel.app" target="_blank" class="project-link">VIEW PROJECT</a>
+</div>
+<div class="project-panel" style="border-color:#FF1493;">
+    <div class="project-title" style="color:#FF1493;">NOVUSFACE AI</div>
+    <div class="project-desc">Biometric Face Regeneration & Swapping Engine. 100% free, no sign‑up required.</div>
+    <div class="project-tags">
+        <span class="tag">GEN‑AI</span>
+        <span class="tag">PYTHON</span>
+        <span class="tag">DEEPFAKE</span>
+    </div>
+    <span style="color:#888;">(coming soon)</span>
+</div>
+<!-- /ROOM_CONTENT -->
+</body>
+</html>
