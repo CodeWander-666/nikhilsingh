@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Portfolio Data</title>
+</head>
+<body>
+    <script>
+        // GLOBAL PORTFOLIO DATA – used by the main 3D engine
+        window.PORTFOLIO_DATA = (function() {
+            try {
+                return {
+                    name: "NIKHIL SINGH",
+                    role: "DATA ANALYST // FULL STACK SCIENTIST",
+                    about: "Turning raw data into actionable intelligence. Specializing in Python, AI, and full‑stack data science.",
+                    skills: [
+                        { name: "PYTHON", level: 95, color: "#FFD700", description: "Core language for Data Science. Pandas, NumPy, Scikit‑learn." },
+                        { name: "SQL", level: 90, color: "#00BFFF", description: "Expert in complex queries, schema design, and data extraction." },
+                        { name: "GEN‑AI", level: 85, color: "#bc13fe", description: "LLM Integration, Prompt Engineering, RAG Systems." },
+                        { name: "MACHINE LEARNING", level: 80, color: "#FF4500", description: "Regression, classification, clustering, model deployment." },
+                        { name: "COMPUTER VISION", level: 75, color: "#20B2AA", description: "OpenCV, YOLO, face recognition, image processing." }
+                    ],
+                    projects: [
+                        { title: "SEOMAN AI", description: "Full‑stack AI SEO Analyzer with Traffic Forecasting.", link: "https://seoman-ai.vercel.app", color: "#00FF7F", tags: ["REACT", "AI", "ANALYTICS"] },
+                        { title: "NOVUSFACE AI", description: "Biometric Face Regeneration & Swapping Engine (free, no login).", link: "#", color: "#FF1493", tags: ["GEN‑AI", "PYTHON", "DEEPFAKE"] }
+                    ],
+                    experience: [
+                        { company: "ALMABETTER", role: "Data Analyst Apprentice", period: "2025 – Present", description: "Full Stack Data Science & AI program. Python, data types, complex datasets." },
+                        { company: "SG GURUKUL", role: "Sales & Marketing Intern", period: "Aug 2023 – Oct 2023", description: "Lead generation, outbound telesales, education counseling." }
+                    ],
+                    socials: {
+                        linkedin: "https://linkedin.com/in/nikhil-singh",
+                        github: "https://github.com/wander-666"
+                    },
+                    stats: {
+                        followers: 888,
+                        impressions: "225+",
+                        profileViews: 313,
+                        uptime: "100%"
+                    }
+                };
+            } catch (error) {
+                console.error("Failed to load portfolio data:", error);
+                // Fallback minimal data
+                return {
+                    name: "NIKHIL SINGH",
+                    role: "DATA ANALYST",
+                    skills: [],
+                    projects: [],
+                    experience: [],
+                    socials: {}
+                };
+            }
+        })();
+    </script>
+</body>
+</html>
