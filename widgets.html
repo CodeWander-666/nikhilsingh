@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Widget Templates</title>
+    <style>
+        /* Base widget styles – glassmorphism, neon borders */
+        .widget {
+            font-family: 'Courier New', monospace;
+            background: rgba(10, 10, 20, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            color: white;
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.2);
+            max-width: 260px;
+            pointer-events: auto;
+            transition: transform 0.2s;
+        }
+        .widget:hover {
+            transform: scale(1.02);
+            border-color: #00f3ff;
+            box-shadow: 0 0 40px #00f3ff;
+        }
+        .widget-header {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+            border-bottom: 1px dashed #00f3ff;
+            padding-bottom: 4px;
+        }
+        .widget-body {
+            font-size: 0.9rem;
+            color: #ccc;
+            line-height: 1.4;
+        }
+        .widget-footer {
+            margin-top: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .widget-link {
+            color: #00f3ff;
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+        .widget-link:hover {
+            border-bottom-color: #00f3ff;
+        }
+        .skill-level {
+            display: inline-block;
+            background: rgba(0,243,255,0.2);
+            border-radius: 10px;
+            padding: 2px 8px;
+            font-size: 0.8rem;
+            color: #00f3ff;
+        }
+        .tag {
+            display: inline-block;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(0,243,255,0.3);
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            margin-right: 4px;
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        // Widget factory – creates CSS2DObject or HTML string
+        window.Widgets = (function() {
+            try {
+                // Helper to create a CSS2DObject from an HTML string
+                function createCSS2D(htmlString, className = 'widget') {
+                    const div = document.createElement('div');
+                    div.className = className;
+                    div.innerHTML = htmlString;
+                    return new THREE.CSS2DObject(div);
+                }
+
+                return {
+                    // Skill widget
+                    createSkillWidget: function(skill) {
+                        const html = `
+                            <div class="widget-header" style="color: ${skill.color};">${skill.name}</div>
+                            <div class="widget-body">
+                                <p>${skill.description}</p>
+                                <div class="widget-footer">
+                                    <span class="skill-level">${skill.level}%</span>
+                                    <span style="color:#00f3ff;">▲ +100 XP</span>
+                                </div>
+                            </div>
+                        `;
+                        return createCSS2D(html, 'widget skill-widget');
+                    },
+
+                    // Project widget
+                    createProjectWidget: function(project) {
+                        const tagsHtml = project.tags.map(t => `<span class="tag">${t}</span>`).join('');
+                        const linkHtml = project.link && project.link !== '#' 
+                            ? `<a href="${project.link}" target="_blank" class="widget-link">VISIT PROJECT</a>` 
+                            : '<span style="color:#888;">(coming soon)</span>';
+                        const html = `
+                            <div class="widget-header" style="color: ${project.color};">${project.title}</div>
+                            <div class="widget-body">
+                                <p>${project.description}</p>
+                                <div style="margin: 8px 0;">${tagsHtml}</div>
+                                <div class="widget-footer">
+                                    ${linkHtml}
+                                    <span style="color:#ffaa00;">⚡ +500 XP</span>
+                                </div>
+                            </div>
+                        `;
+                        return createCSS2D(html, 'widget project-widget');
+                    },
+
+                    // Experience widget
+                    createExperienceWidget: function(exp) {
+                        const html = `
+                            <div class="widget-header">${exp.company}</div>
+                            <div class="widget-body">
+                                <div style="color:#00f3ff; font-size:0.8rem;">${exp.role}</div>
+                                <div style="color:#888; font-size:0.7rem; margin:4px 0;">${exp.period}</div>
+                                <p>${exp.description}</p>
+                            </div>
+                        `;
+                        return createCSS2D(html, 'widget exp-widget');
+                    },
+
+                    // Contact widget (combined socials)
+                    createContactWidget: function(socials) {
+                        const linkedinLink = socials.linkedin ? `<a href="${socials.linkedin}" target="_blank" class="widget-link">LinkedIn</a>` : '';
+                        const githubLink = socials.github ? `<a href="${socials.github}" target="_blank" class="widget-link">GitHub</a>` : '';
+                        const html = `
+                            <div class="widget-header">📡 ESTABLISH UPLINK</div>
+                            <div class="widget-body">
+                                <div style="display:flex; justify-content:space-around; margin:12px 0;">
+                                    ${linkedinLink}
+                                    ${githubLink}
+                                </div>
+                                <p style="text-align:center; font-size:0.7rem; color:#888;">direct messages open</p>
+                            </div>
+                        `;
+                        return createCSS2D(html, 'widget contact-widget');
+                    },
+
+                    // Generic widget for stats (if needed)
+                    createStatWidget: function(label, value) {
+                        const html = `
+                            <div class="widget-header">${label}</div>
+                            <div class="widget-body" style="font-size:2rem; text-align:center;">${value}</div>
+                        `;
+                        return createCSS2D(html, 'widget stat-widget');
+                    }
+                };
+            } catch (error) {
+                console.error("Widget creation failed:", error);
+                // Fallback empty factory
+                return {
+                    createSkillWidget: () => new THREE.CSS2DObject(document.createElement('div')),
+                    createProjectWidget: () => new THREE.CSS2DObject(document.createElement('div')),
+                    createExperienceWidget: () => new THREE.CSS2DObject(document.createElement('div')),
+                    createContactWidget: () => new THREE.CSS2DObject(document.createElement('div')),
+                };
+            }
+        })();
+    </script>
+</body>
+</html>
