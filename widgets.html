@@ -2,588 +2,398 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PREMIUM ROOM · FREE CAMERA · PERSISTENT UPLOADS</title>
+    <title>Portfolio Widgets </title>
     <style>
-        body {
-            margin: 0;
-            overflow: hidden;
+        /* Base widget styles – shared by all panels */
+        .widget {
             font-family: 'Inter', 'Segoe UI', sans-serif;
-            touch-action: none;
-        }
-        #info {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
+            background: rgba(15, 20, 30, 0.75);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid rgba(90, 158, 255, 0.3);
+            border-radius: 24px;
+            padding: 24px;
             color: #fff;
-            background: rgba(0,0,0,0.7);
-            padding: 10px 20px;
-            border-radius: 30px;
-            backdrop-filter: blur(8px);
-            border: 1px solid #5a9eff;
-            font-size: 14px;
-            z-index: 100;
-            pointer-events: none;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(90, 158, 255, 0.1) inset;
+            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.1), box-shadow 0.3s ease, border-color 0.2s;
+            max-width: 320px;
+            pointer-events: auto;
+            transform: translateZ(0); /* force GPU layer */
+            will-change: transform, box-shadow, border-color;
+            animation: widget-appear 0.5s ease-out;
         }
-        #loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            background: rgba(0,0,0,0.9);
-            padding: 30px;
-            border-radius: 20px;
-            border: 2px solid #5a9eff;
-            box-shadow: 0 0 50px #5a9eff;
-            text-align: center;
-            z-index: 200;
-            backdrop-filter: blur(10px);
-            transition: opacity 0.5s;
+        .widget:hover {
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), 0 0 0 2px rgba(90, 158, 255, 0.6) inset;
+            border-color: #5a9eff;
         }
-        #error {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #ff8888;
-            background: rgba(30,0,0,0.95);
-            padding: 30px;
-            border: 2px solid #ff5555;
+
+        @keyframes widget-appear {
+            0% { opacity: 0; transform: scale(0.9) translateY(10px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .widget-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #fff, #aaccff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 2px 10px rgba(90, 158, 255, 0.3);
+        }
+        .widget-subtitle {
+            font-size: 0.9rem;
+            color: #aaccff;
+            margin-bottom: 16px;
+            border-bottom: 1px solid rgba(90, 158, 255, 0.3);
+            padding-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .widget-content {
+            font-size: 0.95rem;
+            color: #ddd;
+            line-height: 1.6;
+        }
+
+        /* Skill bars */
+        .skill-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.1);
             border-radius: 12px;
-            z-index: 300;
-            display: none;
-            max-width: 80%;
-            text-align: center;
+            margin: 12px 0;
+            overflow: hidden;
+            position: relative;
         }
-        #crosshair {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 20px;
-            height: 20px;
-            transform: translate(-50%, -50%);
-            border: 2px solid rgba(255,255,255,0.9);
-            border-radius: 50%;
-            z-index: 100;
-            pointer-events: none;
+        .skill-fill {
+            height: 100%;
+            border-radius: 12px;
+            background: linear-gradient(90deg, #5a9eff, #aaccff);
             box-shadow: 0 0 15px #5a9eff;
+            width: 0%; /* set inline */
+            transition: width 1s ease-out;
+            animation: skill-pulse 2s infinite;
         }
-        #file-input {
-            display: none;
+        @keyframes skill-pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
         }
-        @media (max-width: 768px) {
-            #crosshair { width: 16px; height: 16px; }
+
+        /* Tags */
+        .tag {
+            display: inline-block;
+            background: rgba(90, 158, 255, 0.15);
+            border: 1px solid rgba(90, 158, 255, 0.4);
+            border-radius: 40px;
+            padding: 4px 12px;
+            font-size: 0.8rem;
+            margin-right: 6px;
+            margin-bottom: 6px;
+            color: #aaccff;
+            transition: 0.2s;
+        }
+        .tag:hover {
+            background: rgba(90, 158, 255, 0.3);
+            border-color: #5a9eff;
+            transform: scale(1.05);
+        }
+
+        /* Buttons */
+        .widget-button {
+            display: inline-block;
+            background: transparent;
+            border: 1px solid #5a9eff;
+            color: #5a9eff;
+            padding: 8px 20px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin-top: 12px;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(90,158,255,0.2);
+        }
+        .widget-button:hover {
+            background: #5a9eff;
+            color: #000;
+            box-shadow: 0 0 20px #5a9eff;
+        }
+
+        /* Divider */
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #5a9eff, transparent);
+            margin: 16px 0;
+        }
+
+        /* Stat display */
+        .stat-grid {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #5a9eff;
+            text-shadow: 0 0 15px #5a9eff;
+            line-height: 1;
+        }
+        .stat-label {
+            font-size: 0.7rem;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Chart bar (for visual flair) */
+        .chart {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            height: 50px;
+            margin: 16px 0;
+        }
+        .bar {
+            width: 8px;
+            background: linear-gradient(180deg, #5a9eff, #2a4a8a);
+            border-radius: 4px 4px 0 0;
+            transition: height 0.3s;
+            box-shadow: 0 0 8px #5a9eff;
+        }
+
+        /* Icon */
+        .widget-icon {
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 0 15px #5a9eff);
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div id="loading">
-        <div style="font-size:28px; margin-bottom:16px;">🚪 LOADING ROOM</div>
-        <div id="progress-bar" style="width:0%; height:6px; background:#5a9eff; margin-top:20px; border-radius:3px;"></div>
-    </div>
-    <div id="error"></div>
-    <div id="info">📍 SKILLS ROOM · Free camera (inside) · Zoom & orbit · Double‑click surface to upload</div>
-    <div id="crosshair"></div>
-    <input type="file" id="file-input" accept="image/*">
+    <script>
+        (function() {
+            "use strict";
 
-    <!-- Three.js and dependencies -->
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
-            }
-        }
-    </script>
-
-    <script type="module">
-        import * as THREE from 'three';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
-
-        // --- UI Elements ---
-        const loadingDiv = document.getElementById('loading');
-        const errorDiv = document.getElementById('error');
-        const infoDiv = document.getElementById('info');
-        const fileInput = document.getElementById('file-input');
-        const progressBar = document.getElementById('progress-bar');
-
-        function showError(msg) {
-            console.error(msg);
-            if (errorDiv) {
-                errorDiv.style.display = 'block';
-                errorDiv.innerText = 'ERROR: ' + msg;
-            }
-            if (loadingDiv) loadingDiv.style.display = 'none';
-        }
-
-        // --- IndexedDB for persistent storage ---
-        let db;
-        const DB_NAME = 'WallImagesDB';
-        const STORE_NAME = 'images';
-
-        function openDB() {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open(DB_NAME, 1);
-                request.onerror = () => reject(request.error);
-                request.onsuccess = () => {
-                    db = request.result;
-                    resolve();
-                };
-                request.onupgradeneeded = (event) => {
-                    const db = event.target.result;
-                    if (!db.objectStoreNames.contains(STORE_NAME)) {
-                        db.createObjectStore(STORE_NAME, { keyPath: 'wallName' });
-                    }
-                };
-            });
-        }
-
-        async function saveImageToDB(wallName, imageDataUrl) {
-            if (!db) await openDB();
-            return new Promise((resolve, reject) => {
-                const tx = db.transaction(STORE_NAME, 'readwrite');
-                const store = tx.objectStore(STORE_NAME);
-                const request = store.put({ wallName, imageDataUrl });
-                request.onsuccess = () => resolve();
-                request.onerror = () => reject(request.error);
-            });
-        }
-
-        async function loadImagesFromDB() {
-            if (!db) await openDB();
-            return new Promise((resolve, reject) => {
-                const tx = db.transaction(STORE_NAME, 'readonly');
-                const store = tx.objectStore(STORE_NAME);
-                const request = store.getAll();
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            });
-        }
-
-        try {
-            // --- SCENE ---
-            const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0a0a1a);
-
-            // --- CAMERA ---
-            const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 200);
-            camera.position.set(15, 10, 25); // start inside
-
-            // --- RENDERER ---
-            const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 1.5;
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            document.body.appendChild(renderer.domElement);
-
-            // --- CSS2 RENDERER (for door label) ---
-            const labelRenderer = new CSS2DRenderer();
-            labelRenderer.setSize(window.innerWidth, window.innerHeight);
-            labelRenderer.domElement.style.position = 'absolute';
-            labelRenderer.domElement.style.top = '0px';
-            labelRenderer.domElement.style.left = '0px';
-            labelRenderer.domElement.style.pointerEvents = 'none';
-            document.body.appendChild(labelRenderer.domElement);
-
-            // --- SIMPLE LIGHTING ---
-            const ambient = new THREE.AmbientLight(0xffffff, 0.8);
-            scene.add(ambient);
-
-            const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
-            keyLight.position.set(10, 20, 10);
-            keyLight.castShadow = true;
-            keyLight.receiveShadow = true;
-            keyLight.shadow.mapSize.width = 2048;
-            keyLight.shadow.mapSize.height = 2048;
-            keyLight.shadow.camera.near = 1;
-            keyLight.shadow.camera.far = 50;
-            keyLight.shadow.camera.left = -30;
-            keyLight.shadow.camera.right = 30;
-            keyLight.shadow.camera.top = 30;
-            keyLight.shadow.camera.bottom = -30;
-            scene.add(keyLight);
-
-            const fillLight = new THREE.DirectionalLight(0xffffff, 0.6);
-            fillLight.position.set(-10, 10, -10);
-            scene.add(fillLight);
-
-            // --- ROOM DIMENSIONS ---
-            const roomWidth = 60;
-            const roomDepth = 60;
-            const roomHeight = 20;
-            const roomCenter = new THREE.Vector3(0, roomHeight/2, 0);
-
-            // Camera bounds (keep camera strictly inside)
-            const cameraMargin = 0.5; // small margin from walls
-            const bounds = {
-                minX: -roomWidth/2 + cameraMargin,
-                maxX: roomWidth/2 - cameraMargin,
-                minY: cameraMargin,
-                maxY: roomHeight - cameraMargin,
-                minZ: -roomDepth/2 + cameraMargin,
-                maxZ: roomDepth/2 - cameraMargin
-            };
-
-            // --- ORBIT CONTROLS (target at room center) ---
-            const controls = new OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.dampingFactor = 0.06;
-            controls.maxPolarAngle = Math.PI; // allow full vertical look (including straight up)
-            controls.minDistance = 1;          // zoom in as close as you want
-            controls.maxDistance = 100;        // will be clamped by bounds anyway
-            controls.target.copy(roomCenter);
-            controls.update();
-
-            // --- DISTINCT WALL COLORS ---
-            const wallColors = {
-                back: 0x4a6fa5, // blue
-                front: 0xb24c4c, // red
-                left: 0x4ca64c,  // green
-                right: 0xd4a14a, // gold
-                ceiling: 0xa0a0a0 // gray
-            };
-
-            function createWall(name, width, height, pos, rot, color) {
-                const geometry = new THREE.PlaneGeometry(width, height);
-                const material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.5, metalness: 0.0 });
-                const mesh = new THREE.Mesh(geometry, material);
-                mesh.position.set(pos.x, pos.y, pos.z);
-                mesh.rotation.set(rot.x, rot.y, rot.z);
-                mesh.castShadow = true;
-                mesh.receiveShadow = true;
-                mesh.userData = { name, width, height };
-                scene.add(mesh);
-                return mesh;
+            // Ensure THREE is available (will be loaded before this script)
+            if (typeof THREE === 'undefined') {
+                console.error('THREE not found. Widgets cannot create CSS2DObjects.');
+                window.Widgets = null;
+                return;
             }
 
-            // Floor with grid texture
-            const gridCanvas = document.createElement('canvas');
-            gridCanvas.width = 1024;
-            gridCanvas.height = 1024;
-            const ctx = gridCanvas.getContext('2d');
-            ctx.fillStyle = '#2a2a2a';
-            ctx.fillRect(0, 0, 1024, 1024);
-            ctx.strokeStyle = '#5a9eff';
-            ctx.lineWidth = 4;
-            for (let i = 0; i <= 1024; i += 128) {
-                ctx.beginPath();
-                ctx.moveTo(i, 0);
-                ctx.lineTo(i, 1024);
-                ctx.strokeStyle = '#888888';
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(0, i);
-                ctx.lineTo(1024, i);
-                ctx.stroke();
-            }
-            ctx.strokeStyle = '#5a9eff';
-            ctx.lineWidth = 6;
-            ctx.beginPath(); ctx.moveTo(512, 0); ctx.lineTo(512, 1024); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(0, 512); ctx.lineTo(1024, 512); ctx.stroke();
-            const gridTexture = new THREE.CanvasTexture(gridCanvas);
-
-            const floorMat = new THREE.MeshStandardMaterial({ map: gridTexture, roughness: 0.7 });
-            const floor = new THREE.Mesh(new THREE.PlaneGeometry(roomWidth, roomDepth), floorMat);
-            floor.rotation.x = -Math.PI/2;
-            floor.position.y = 0;
-            floor.receiveShadow = true;
-            floor.userData = { name: 'floor', width: roomWidth, height: roomDepth };
-            scene.add(floor);
-
-            // Ceiling
-            createWall('ceiling', roomWidth, roomDepth,
-                { x: 0, y: roomHeight, z: 0 }, { x: Math.PI/2, y: 0, z: 0 }, wallColors.ceiling);
-
-            // Walls
-            createWall('back', roomWidth, roomHeight,
-                { x: 0, y: roomHeight/2, z: roomDepth/2 }, { x: 0, y: Math.PI, z: 0 }, wallColors.back);
-            createWall('front', roomWidth, roomHeight,
-                { x: 0, y: roomHeight/2, z: -roomDepth/2 }, { x: 0, y: 0, z: 0 }, wallColors.front);
-            createWall('left', roomDepth, roomHeight,
-                { x: -roomWidth/2, y: roomHeight/2, z: 0 }, { x: 0, y: Math.PI/2, z: 0 }, wallColors.left);
-            createWall('right', roomDepth, roomHeight,
-                { x: roomWidth/2, y: roomHeight/2, z: 0 }, { x: 0, y: -Math.PI/2, z: 0 }, wallColors.right);
-
-            // --- RETURN DOOR ---
-            function createDoor() {
-                const doorGroup = new THREE.Group();
-                const frameMat = new THREE.MeshStandardMaterial({ color: 0x8b6b4d, roughness: 0.7 });
-                const leftPost = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.2, 0.2), frameMat);
-                leftPost.position.set(-1, 1.1, 0);
-                doorGroup.add(leftPost);
-                const rightPost = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.2, 0.2), frameMat);
-                rightPost.position.set(1, 1.1, 0);
-                doorGroup.add(rightPost);
-                const topBeam = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.2, 0.2), frameMat);
-                topBeam.position.set(0, 2.2, 0);
-                doorGroup.add(topBeam);
-
-                const doorMat = new THREE.MeshStandardMaterial({ color: 0x5a9eff, roughness: 0.5, metalness: 0.1 });
-                const doorLeaf = new THREE.Mesh(new THREE.BoxGeometry(1.8, 2.0, 0.1), doorMat);
-                doorLeaf.position.set(0, 1.0, 0.05);
-                doorLeaf.castShadow = true;
-                doorLeaf.receiveShadow = true;
-                doorGroup.add(doorLeaf);
-
-                const handleMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.3, metalness: 0.8 });
-                const handleBar = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.4, 8), handleMat);
-                handleBar.rotation.z = Math.PI/2;
-                handleBar.position.set(0.6, 1.0, 0.15);
-                doorGroup.add(handleBar);
-                const handleKnob = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8), handleMat);
-                handleKnob.position.set(0.8, 1.0, 0.15);
-                doorGroup.add(handleKnob);
-
-                const labelDiv = document.createElement('div');
-                labelDiv.style.color = 'white';
-                labelDiv.style.background = 'rgba(0,0,0,0.8)';
-                labelDiv.style.padding = '6px 16px';
-                labelDiv.style.borderRadius = '20px';
-                labelDiv.style.border = '1px solid #5a9eff';
-                labelDiv.style.fontSize = '16px';
-                labelDiv.style.fontWeight = 'bold';
-                labelDiv.style.backdropFilter = 'blur(4px)';
-                labelDiv.innerText = 'BACK TO HUB (E)';
-                const labelObj = new CSS2DObject(labelDiv);
-                labelObj.position.set(0, 3.0, 0);
-                doorGroup.add(labelObj);
-
-                return doorGroup;
-            }
-
-            const door = createDoor();
-            door.position.set(0, 0.5, roomDepth/2 - 0.5);
-            door.rotation.y = 0;
-            scene.add(door);
-
-            // --- PERSISTENT STORAGE SETUP ---
-            await openDB().catch(err => console.warn('IndexedDB open failed, uploads will not persist', err));
-
-            // --- WALL INTERACTION (image upload) ---
-            const wallMeshes = scene.children.filter(obj => obj.isMesh && obj.userData.name);
-            const raycaster = new THREE.Raycaster();
-            const mouse = new THREE.Vector2();
-            const WALL_PASSWORD = '1234';
-            let pendingWall = null;
-
-            function enhanceImage(img) {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                ctx.drawImage(img, 0, 0);
-
-                // Simple sharpening (same as before)
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const data = imageData.data;
-                const w = canvas.width, h = canvas.height;
-                const output = ctx.createImageData(w, h);
-                const outData = output.data;
-
-                const kernel = [0, -1, 0, -1, 5, -1, 0, -1, 0];
-                for (let y = 1; y < h-1; y++) {
-                    for (let x = 1; x < w-1; x++) {
-                        let r=0,g=0,b=0;
-                        for (let ky = -1; ky <=1; ky++) {
-                            for (let kx = -1; kx <=1; kx++) {
-                                const px = x + kx;
-                                const py = y + ky;
-                                const idx = (py * w + px) * 4;
-                                const weight = kernel[(ky+1)*3 + (kx+1)];
-                                r += data[idx] * weight;
-                                g += data[idx+1] * weight;
-                                b += data[idx+2] * weight;
-                            }
-                        }
-                        const idxOut = (y * w + x) * 4;
-                        outData[idxOut] = Math.min(255, Math.max(0, r));
-                        outData[idxOut+1] = Math.min(255, Math.max(0, g));
-                        outData[idxOut+2] = Math.min(255, Math.max(0, b));
-                        outData[idxOut+3] = data[idxOut+3];
-                    }
-                }
-                // Copy edges
-                for (let i = 0; i < w*h; i++) {
-                    if (i < w || i >= (h-1)*w || i % w === 0 || i % w === w-1) {
-                        const idx = i*4;
-                        outData[idx] = data[idx];
-                        outData[idx+1] = data[idx+1];
-                        outData[idx+2] = data[idx+2];
-                        outData[idx+3] = data[idx+3];
-                    }
-                }
-                // Contrast boost
-                for (let i = 0; i < outData.length; i+=4) {
-                    outData[i] = Math.min(255, outData[i] * 1.05);
-                    outData[i+1] = Math.min(255, outData[i+1] * 1.05);
-                    outData[i+2] = Math.min(255, outData[i+2] * 1.05);
-                }
-                ctx.putImageData(output, 0, 0);
-
-                const tex = new THREE.CanvasTexture(canvas);
-                tex.minFilter = THREE.LinearMipmapLinearFilter;
-                tex.magFilter = THREE.LinearFilter;
-                tex.anisotropy = 16;
-                tex.wrapS = THREE.ClampToEdgeWrapping;
-                tex.wrapT = THREE.ClampToEdgeWrapping;
-                return { tex, dataUrl: canvas.toDataURL() };
-            }
-
-            function applyTextureToSurface(mesh, tex, imgAspect, imageDataUrl) {
-                if (!mesh || !tex) return false;
-
-                // Dispose old textures
-                if (mesh.material.map) mesh.material.map.dispose();
-
-                const newMaterial = new THREE.MeshStandardMaterial({
-                    color: 0xffffff,
-                    roughness: 0.4,
-                    metalness: 0.0,
-                    map: tex
-                });
-
-                const w = mesh.userData.width;
-                const h = mesh.userData.height;
-                const surfaceAspect = w / h;
-
-                let repeatX, repeatY, offsetX, offsetY;
-
-                if (imgAspect > surfaceAspect) {
-                    repeatX = 1;
-                    repeatY = surfaceAspect / imgAspect;
-                    offsetX = 0;
-                    offsetY = (1 - repeatY) / 2;
-                } else {
-                    repeatX = imgAspect / surfaceAspect;
-                    repeatY = 1;
-                    offsetX = (1 - repeatX) / 2;
-                    offsetY = 0;
-                }
-
-                tex.repeat.set(repeatX, repeatY);
-                tex.offset.set(offsetX, offsetY);
-                tex.needsUpdate = true;
-
-                newMaterial.map = tex;
-                mesh.material = newMaterial;
-
-                // Save to IndexedDB if imageDataUrl provided
-                if (imageDataUrl) {
-                    saveImageToDB(mesh.userData.name, imageDataUrl).catch(err => console.warn('Failed to save image', err));
-                }
-                return true;
-            }
-
-            // Load saved images on startup
-            (async () => {
+            // Helper to create a CSS2DObject from an HTML string with given class
+            function createPanel(htmlContent, additionalClass = '') {
                 try {
-                    const savedImages = await loadImagesFromDB();
-                    for (const { wallName, imageDataUrl } of savedImages) {
-                        const wall = wallMeshes.find(m => m.userData.name === wallName);
-                        if (!wall) continue;
-                        const img = new Image();
-                        img.onload = () => {
-                            const tex = enhanceImage(img).tex;
-                            applyTextureToSurface(wall, tex, img.width / img.height);
-                        };
-                        img.src = imageDataUrl;
-                    }
-                } catch (err) {
-                    console.warn('Could not load saved images', err);
+                    const div = document.createElement('div');
+                    div.className = 'widget' + (additionalClass ? ' ' + additionalClass : '');
+                    div.innerHTML = htmlContent;
+                    return new THREE.CSS2DObject(div);
+                } catch (e) {
+                    console.error('Failed to create CSS2DObject:', e);
+                    // Return a simple fallback div
+                    const fallbackDiv = document.createElement('div');
+                    fallbackDiv.style.cssText = 'color:white; background:black; padding:10px;';
+                    fallbackDiv.innerText = 'Widget error';
+                    return new THREE.CSS2DObject(fallbackDiv);
                 }
-            })();
-
-            renderer.domElement.addEventListener('dblclick', (e) => {
-                const rect = renderer.domElement.getBoundingClientRect();
-                mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-                mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
-                raycaster.setFromCamera(mouse, camera);
-                const intersects = raycaster.intersectObjects(wallMeshes);
-
-                if (intersects.length > 0) {
-                    const wall = intersects[0].object;
-                    const password = prompt('Enter admin password:');
-                    if (password === WALL_PASSWORD) {
-                        pendingWall = wall;
-                        fileInput.click();
-                    } else {
-                        alert('Incorrect password.');
-                    }
-                }
-            });
-
-            fileInput.addEventListener('change', (event) => {
-                const file = event.target.files[0];
-                if (!file || !pendingWall) return;
-
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const { tex, dataUrl } = enhanceImage(img);
-                        applyTextureToSurface(pendingWall, tex, img.width / img.height, dataUrl);
-                        infoDiv.innerHTML = `✅ Image applied to ${pendingWall.userData.name} wall`;
-                        pendingWall = null;
-                        fileInput.value = '';
-                    };
-                    img.src = ev.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
-
-            // Hide loading after a short delay
-            setTimeout(() => {
-                if (loadingDiv) {
-                    loadingDiv.style.opacity = '0';
-                    setTimeout(() => { loadingDiv.style.display = 'none'; }, 500);
-                }
-            }, 1000);
-
-            // --- DOOR INTERACTION (E key) ---
-            window.addEventListener('keydown', (e) => {
-                if (e.code === 'KeyE') {
-                    const distToDoor = camera.position.distanceTo(door.position);
-                    if (distToDoor < 5.0) {
-                        window.location.href = 'index.html';
-                    }
-                }
-            });
-
-            // --- ANIMATION LOOP with camera clamping ---
-            function animate() {
-                requestAnimationFrame(animate);
-                controls.update(); // damping
-
-                // Clamp camera position to stay inside room
-                const pos = camera.position;
-                pos.x = Math.max(bounds.minX, Math.min(bounds.maxX, pos.x));
-                pos.y = Math.max(bounds.minY, Math.min(bounds.maxY, pos.y));
-                pos.z = Math.max(bounds.minZ, Math.min(bounds.maxZ, pos.z));
-
-                renderer.render(scene, camera);
-                labelRenderer.render(scene, camera);
             }
-            animate();
 
-            // --- RESIZE ---
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-                labelRenderer.setSize(window.innerWidth, window.innerHeight);
-            });
+            // Random chart data for variety
+            function randomChart() {
+                return [30, 70, 50, 90, 40, 60, 80].map(v => v * Math.random()).map(h => Math.floor(h));
+            }
 
-        } catch (err) {
-            showError(err.message);
-        }
+            // Expose the Widgets factory
+            window.Widgets = {
+                /**
+                 * Create a skill panel.
+                 * @param {Object} skill - { name, level, color, description }
+                 * @param {number} index - for ordering
+                 * @returns {THREE.CSS2DObject}
+                 */
+                createSkillPanel: function(skill, index) {
+                    try {
+                        const chartBars = randomChart().map(h => `<div class="bar" style="height:${h}%"></div>`).join('');
+                        const html = `
+                            <div class="widget-icon" style="color: ${skill.color || '#5a9eff'};">⚡</div>
+                            <div class="widget-title" style="color: ${skill.color || '#fff'};">${skill.name}</div>
+                            <div class="widget-subtitle">SKILL #${index+1}</div>
+                            <div class="widget-content">${skill.description || 'No description'}</div>
+                            <div class="chart">${chartBars}</div>
+                            <div class="skill-bar">
+                                <div class="skill-fill" style="width:${skill.level || 0}%; background: ${skill.color || '#5a9eff'};"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; color: #ccc; font-size:0.9rem;">
+                                <span>Proficiency</span><span>${skill.level || 0}%</span>
+                            </div>
+                        `;
+                        return createPanel(html);
+                    } catch (e) {
+                        console.error('createSkillPanel error:', e);
+                        return createPanel('<div>Skill panel error</div>');
+                    }
+                },
+
+                /**
+                 * Create a project panel.
+                 * @param {Object} proj - { title, description, link, color, tags }
+                 * @param {number} index
+                 * @returns {THREE.CSS2DObject}
+                 */
+                createProjectPanel: function(proj, index) {
+                    try {
+                        const tagsHtml = (proj.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
+                        const linkHtml = proj.link && proj.link !== '#' 
+                            ? `<a href="${proj.link}" target="_blank" class="widget-button">🚀 VIEW PROJECT</a>`
+                            : '<span style="color:#888;">🔒 Coming soon</span>';
+                        const html = `
+                            <div class="widget-icon" style="color: ${proj.color || '#5a9eff'};">📁</div>
+                            <div class="widget-title" style="color: ${proj.color || '#fff'};">${proj.title}</div>
+                            <div class="widget-subtitle">PROJECT #${index+1}</div>
+                            <div class="widget-content">${proj.description || ''}</div>
+                            <div style="margin: 16px 0;">${tagsHtml}</div>
+                            ${linkHtml}
+                        `;
+                        return createPanel(html);
+                    } catch (e) {
+                        console.error('createProjectPanel error:', e);
+                        return createPanel('<div>Project panel error</div>');
+                    }
+                },
+
+                /**
+                 * Create an experience panel.
+                 * @param {Object} exp - { company, role, period, description }
+                 * @param {number} index
+                 * @returns {THREE.CSS2DObject}
+                 */
+                createExperiencePanel: function(exp, index) {
+                    try {
+                        const html = `
+                            <div class="widget-icon">💼</div>
+                            <div class="widget-title">${exp.company || ''}</div>
+                            <div class="widget-subtitle">${exp.role || ''}</div>
+                            <div style="color: #5a9eff; font-size:0.85rem; margin-bottom:12px;">${exp.period || ''}</div>
+                            <div class="widget-content">${exp.description || ''}</div>
+                            <div class="divider"></div>
+                            <div class="stat-grid">
+                                <div class="stat-item">
+                                    <div class="stat-value">${Math.floor(Math.random()*3+2)}</div>
+                                    <div class="stat-label">years</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">${Math.floor(Math.random()*10+5)}</div>
+                                    <div class="stat-label">projects</div>
+                                </div>
+                            </div>
+                        `;
+                        return createPanel(html);
+                    } catch (e) {
+                        console.error('createExperiencePanel error:', e);
+                        return createPanel('<div>Experience panel error</div>');
+                    }
+                },
+
+                /**
+                 * Create a contact panel.
+                 * @param {Object} socials - { linkedin, github, email? }
+                 * @returns {THREE.CSS2DObject}
+                 */
+                createContactPanel: function(socials) {
+                    try {
+                        const linkedinLink = socials.linkedin ? `<a href="${socials.linkedin}" target="_blank" class="widget-button">LinkedIn</a>` : '';
+                        const githubLink = socials.github ? `<a href="${socials.github}" target="_blank" class="widget-button">GitHub</a>` : '';
+                        const html = `
+                            <div class="widget-icon">📬</div>
+                            <div class="widget-title">CONNECT</div>
+                            <div class="divider"></div>
+                            <div style="display: flex; justify-content: center; gap: 10px; margin: 16px 0;">
+                                ${linkedinLink}
+                                ${githubLink}
+                            </div>
+                            <div style="color:#aaa; font-size:0.85rem; text-align:center;">Direct messages open</div>
+                        `;
+                        return createPanel(html);
+                    } catch (e) {
+                        console.error('createContactPanel error:', e);
+                        return createPanel('<div>Contact panel error</div>');
+                    }
+                },
+
+                /**
+                 * Create a generic info panel with custom content.
+                 * @param {string} title
+                 * @param {string} content
+                 * @param {string} icon (emoji or HTML)
+                 * @returns {THREE.CSS2DObject}
+                 */
+                createInfoPanel: function(title, content, icon = 'ℹ️') {
+                    try {
+                        const html = `
+                            <div class="widget-icon">${icon}</div>
+                            <div class="widget-title">${title}</div>
+                            <div class="divider"></div>
+                            <div class="widget-content">${content}</div>
+                        `;
+                        return createPanel(html);
+                    } catch (e) {
+                        console.error('createInfoPanel error:', e);
+                        return createPanel('<div>Info panel error</div>');
+                    }
+                },
+
+                /**
+                 * Create a statistics panel with multiple stats.
+                 * @param {Array} stats - [{ label, value }]
+                 * @returns {THREE.CSS2DObject}
+                 */
+                createStatsPanel: function(stats) {
+                    try {
+                        const items = stats.map(s => `
+                            <div class="stat-item">
+                                <div class="stat-value">${s.value}</div>
+                                <div class="stat-label">${s.label}</div>
+                            </div>
+                        `).join('');
+                        const html = `
+                            <div class="widget-icon">📊</div>
+                            <div class="widget-title">STATISTICS</div>
+                            <div class="divider"></div>
+                            <div class="stat-grid">${items}</div>
+                        `;
+                        return createPanel(html);
+                    } catch (e) {
+                        console.error('createStatsPanel error:', e);
+                        return createPanel('<div>Stats panel error</div>');
+                    }
+                },
+
+                /**
+                 * Create a custom widget from raw HTML (advanced use).
+                 * @param {string} html
+                 * @returns {THREE.CSS2DObject}
+                 */
+                createCustomWidget: function(html) {
+                    try {
+                        return createPanel(html);
+                    } catch (e) {
+                        console.error('createCustomWidget error:', e);
+                        return createPanel('<div>Custom widget error</div>');
+                    }
+                }
+            };
+        })();
     </script>
 </body>
 </html>
