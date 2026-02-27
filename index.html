@@ -131,10 +131,28 @@
             pointer-events: none;
             box-shadow: 0 0 10px rgba(90,158,255,0.5);
         }
+        #door-prompt {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            border: 2px solid #5a9eff;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 200;
+            display: none;
+            pointer-events: none;
+            backdrop-filter: blur(5px);
+        }
         @media (max-width: 768px) {
             .hint { font-size: 14px; padding: 8px 16px; }
             #joystick { display: block; }
             #crosshair { width: 16px; height: 16px; }
+            #door-prompt { font-size: 16px; bottom: 80px; }
         }
     </style>
     <!-- Google Font -->
@@ -157,135 +175,16 @@
         <div id="progress-bar" style="width:0%"></div>
     </div>
     <div id="error"></div>
-    <div class="hint" id="tutorial">👆 CLICK TO LOCK · WASD + JOYSTICK · AIM & DOUBLE‑CLICK DOOR</div>
+    <div class="hint" id="tutorial">👆 CLICK TO LOCK · WASD + JOYSTICK · APPROACH DOOR & PRESS E</div>
     <div id="info">📍 HUB</div>
     <div id="fps">FPS: --</div>
     <div id="joystick"><div id="joystick-thumb"></div></div>
     <div id="crosshair"></div>
+    <div id="door-prompt">PRESS E TO ENTER</div>
 
     <script>
         (function() {
             "use strict";
-
-            // --- PORTFOLIO DATA ---
-            const PORTFOLIO_DATA = {
-                name: "NIKHIL SINGH",
-                role: "DATA ANALYST // FULL STACK SCIENTIST",
-                about: "Turning raw data into actionable intelligence.",
-                skills: [
-                    { name: "PYTHON", level: 95, color: "#FFD700", description: "Core language for Data Science." },
-                    { name: "SQL", level: 90, color: "#00BFFF", description: "Expert in complex queries." },
-                    { name: "GEN‑AI", level: 85, color: "#bc13fe", description: "LLM Integration, RAG Systems." },
-                    { name: "MACHINE LEARNING", level: 80, color: "#FF4500", description: "Regression, classification." },
-                    { name: "COMPUTER VISION", level: 75, color: "#20B2AA", description: "OpenCV, YOLO." }
-                ],
-                projects: [
-                    { title: "SEOMAN AI", description: "Full‑stack AI SEO Analyzer with traffic forecasting.", link: "https://seoman-ai.vercel.app", color: "#00FF7F", tags: ["REACT", "AI"] },
-                    { title: "NOVUSFACE AI", description: "Biometric Face Regeneration & Swapping Engine (free).", link: "#", color: "#FF1493", tags: ["GEN‑AI", "PYTHON"] }
-                ],
-                experience: [
-                    { company: "ALMABETTER", role: "Data Analyst Apprentice", period: "2025 – Present", description: "Full Stack Data Science & AI program." },
-                    { company: "SG GURUKUL", role: "Sales & Marketing Intern", period: "Aug 2023 – Oct 2023", description: "Lead generation, outbound telesales." }
-                ],
-                socials: {
-                    linkedin: "https://linkedin.com/in/nikhil-singh",
-                    github: "https://github.com/wander-666"
-                }
-            };
-
-            // --- WIDGET FACTORY (premium panels) ---
-            const Widgets = {
-                createSkillPanel: (skill, index) => {
-                    const div = document.createElement('div');
-                    div.style.cssText = `
-                        font-family: 'Inter', sans-serif;
-                        background: rgba(30,30,40,0.8);
-                        backdrop-filter: blur(10px);
-                        border: 1px solid #444;
-                        border-radius: 12px;
-                        padding: 20px;
-                        color: white;
-                        width: 260px;
-                        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-                        border-left: 4px solid ${skill.color};
-                    `;
-                    div.innerHTML = `
-                        <div style="font-size:1.4rem; font-weight:600; margin-bottom:8px; color:${skill.color};">${skill.name}</div>
-                        <div style="font-size:0.9rem; color:#aaa; margin-bottom:16px;">${skill.description}</div>
-                        <div style="height:6px; background:#222; border-radius:3px;">
-                            <div style="height:100%; width:${skill.level}%; background:${skill.color}; border-radius:3px;"></div>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; margin-top:8px; color:#ccc;">
-                            <span>Proficiency</span><span>${skill.level}%</span>
-                        </div>
-                    `;
-                    return new THREE.CSS2DObject(div);
-                },
-                createProjectPanel: (proj, index) => {
-                    const div = document.createElement('div');
-                    div.style.cssText = `
-                        font-family: 'Inter', sans-serif;
-                        background: rgba(30,30,40,0.8);
-                        backdrop-filter: blur(10px);
-                        border: 1px solid #444;
-                        border-radius: 12px;
-                        padding: 20px;
-                        color: white;
-                        width: 280px;
-                        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-                    `;
-                    const tags = proj.tags.map(t => `<span style="background:#2a2a3a; padding:4px 8px; border-radius:16px; font-size:0.8rem; margin-right:6px;">${t}</span>`).join('');
-                    div.innerHTML = `
-                        <div style="font-size:1.4rem; font-weight:600; margin-bottom:4px; color:${proj.color};">${proj.title}</div>
-                        <div style="font-size:0.9rem; color:#aaa; margin-bottom:16px;">${proj.description}</div>
-                        <div style="margin-bottom:16px;">${tags}</div>
-                        ${proj.link !== '#' ? `<a href="${proj.link}" target="_blank" style="color:#5a9eff; text-decoration:none; border:1px solid #5a9eff; padding:6px 12px; border-radius:6px; display:inline-block;">VIEW PROJECT</a>` : ''}
-                    `;
-                    return new THREE.CSS2DObject(div);
-                },
-                createExperiencePanel: (exp, index) => {
-                    const div = document.createElement('div');
-                    div.style.cssText = `
-                        font-family: 'Inter', sans-serif;
-                        background: rgba(30,30,40,0.8);
-                        backdrop-filter: blur(10px);
-                        border: 1px solid #444;
-                        border-radius: 12px;
-                        padding: 20px;
-                        color: white;
-                        width: 280px;
-                        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-                    `;
-                    div.innerHTML = `
-                        <div style="font-size:1.3rem; font-weight:600; color:#ddd;">${exp.company}</div>
-                        <div style="font-size:1rem; color:#5a9eff; margin:4px 0;">${exp.role}</div>
-                        <div style="font-size:0.8rem; color:#888; margin-bottom:12px;">${exp.period}</div>
-                        <div style="font-size:0.9rem; color:#ccc;">${exp.description}</div>
-                    `;
-                    return new THREE.CSS2DObject(div);
-                },
-                createContactPanel: () => {
-                    const div = document.createElement('div');
-                    div.style.cssText = `
-                        font-family: 'Inter', sans-serif;
-                        background: rgba(30,30,40,0.8);
-                        backdrop-filter: blur(10px);
-                        border: 1px solid #444;
-                        border-radius: 12px;
-                        padding: 24px;
-                        color: white;
-                        width: 260px;
-                        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-                        text-align: center;
-                    `;
-                    div.innerHTML = `
-                        <div style="font-size:1.6rem; margin-bottom:20px;">📬</div>
-                        <div style="margin-bottom:12px;"><a href="${PORTFOLIO_DATA.socials.linkedin}" target="_blank" style="color:#5a9eff; text-decoration:none;">LinkedIn</a></div>
-                        <div><a href="${PORTFOLIO_DATA.socials.github}" target="_blank" style="color:#5a9eff; text-decoration:none;">GitHub</a></div>
-                    `;
-                    return new THREE.CSS2DObject(div);
-                }
-            };
 
             // --- UI Elements ---
             const loadingDiv = document.getElementById('loading');
@@ -295,6 +194,7 @@
             const fpsSpan = document.getElementById('fps');
             const tutorialDiv = document.getElementById('tutorial');
             const infoDiv = document.getElementById('info');
+            const doorPrompt = document.getElementById('door-prompt');
 
             function setProgress(percent, msg) {
                 progressBar.style.width = percent + '%';
@@ -376,6 +276,52 @@
                 }
             }
 
+            // --- Helper to fetch room content and create CSS2D objects ---
+            async function loadRoomContent(roomType) {
+                const url = `${roomType}-room.html`; // e.g., skills-room.html
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const html = await response.text();
+                    // Extract content inside <!-- ROOM_CONTENT --> markers
+                    const match = html.match(/<!-- ROOM_CONTENT -->([\s\S]*?)<!-- \/ROOM_CONTENT -->/);
+                    if (!match) throw new Error('No room content markers found');
+                    const contentHTML = match[1];
+                    // Create a temporary container to parse HTML
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = contentHTML;
+                    // Convert each child into a CSS2DObject
+                    const panels = [];
+                    tempDiv.childNodes.forEach(node => {
+                        if (node.nodeType === Node.ELEMENT_NODE) {
+                            const div = document.createElement('div');
+                            div.innerHTML = node.outerHTML;
+                            // Apply base styles
+                            div.style.position = 'absolute';
+                            div.style.transform = 'translate(-50%, -50%)';
+                            const obj = new THREE.CSS2DObject(div);
+                            panels.push(obj);
+                        }
+                    });
+                    return panels;
+                } catch (e) {
+                    console.error(`Failed to load room ${roomType}:`, e);
+                    // Return a fallback panel
+                    const fallbackDiv = document.createElement('div');
+                    fallbackDiv.style.cssText = `
+                        font-family: 'Inter', sans-serif;
+                        background: rgba(30,30,40,0.9);
+                        border: 2px solid #ff5555;
+                        border-radius: 12px;
+                        padding: 20px;
+                        color: white;
+                        text-align: center;
+                    `;
+                    fallbackDiv.innerText = `⚠️ Failed to load ${roomType} room content.`;
+                    return [new THREE.CSS2DObject(fallbackDiv)];
+                }
+            }
+
             // --- THREE.JS INIT ---
             function initThree() {
                 try {
@@ -401,11 +347,10 @@
                     labelRenderer.domElement.style.pointerEvents = 'none';
                     document.body.appendChild(labelRenderer.domElement);
 
-                    // Controls (PointerLock) - we want mouse look, but we'll also allow interaction without locking? Actually, we'll keep lock for FPS feel.
+                    // Controls
                     const controls = new THREE.PointerLockControls(camera, document.body);
                     scene.add(controls.getObject());
 
-                    // Lock on canvas click, hide tutorial
                     renderer.domElement.addEventListener('click', () => {
                         if (!controls.isLocked) controls.lock();
                     });
@@ -456,8 +401,11 @@
                         { angle: 3*Math.PI/2, radius: 7, type: 'contact', label: 'CONTACT', color: '#ffaa00' }
                     ];
 
+                    // Store doors for proximity detection
+                    const doors = [];
+
                     // Improved door model with panels and realistic handle
-                    function createDoor(color, label) {
+                    function createDoor(color, label, type) {
                         const doorGroup = new THREE.Group();
 
                         // Frame (dark wood)
@@ -521,6 +469,7 @@
                         nameLabel.position.set(0, 3.0, 0);
                         doorGroup.add(nameLabel);
 
+                        doorGroup.userData = { type: 'door', room: type, label: label, color: color };
                         return doorGroup;
                     }
 
@@ -537,11 +486,11 @@
                         scene.add(islandBase);
 
                         // Door
-                        const door = createDoor(pos.color, pos.label);
+                        const door = createDoor(pos.color, pos.label, pos.type);
                         door.position.set(Math.cos(pos.angle)*pos.radius, 0.5, Math.sin(pos.angle)*pos.radius);
                         door.rotation.y = -pos.angle;
                         scene.add(door);
-                        door.userData = { type: 'door', room: pos.type };
+                        doors.push(door);
                     });
 
                     // Decorative pillars on central platform
@@ -559,7 +508,7 @@
 
                     scene.add(hubGroup);
 
-                    // --- Rooms (groups) ---
+                    // --- Rooms (empty shells, will be populated dynamically) ---
                     const rooms = {
                         skills: new THREE.Group(),
                         projects: new THREE.Group(),
@@ -567,85 +516,60 @@
                         contact: new THREE.Group()
                     };
 
-                    // Skills Room
-                    const skillsRoom = rooms.skills;
-                    const floorMat = new THREE.MeshStandardMaterial({ color: 0x2a2a3a, roughness: 0.8 });
-                    const floor = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), floorMat);
-                    floor.rotation.x = -Math.PI/2;
-                    floor.position.y = 0;
-                    floor.receiveShadow = true;
-                    skillsRoom.add(floor);
-                    const wallMat = new THREE.MeshStandardMaterial({ color: 0x3a3a4a });
-                    const backWall = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.5), wallMat);
-                    backWall.position.set(0, 2, -5);
-                    backWall.castShadow = true;
-                    backWall.receiveShadow = true;
-                    skillsRoom.add(backWall);
-                    const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4, 10), wallMat);
-                    leftWall.position.set(-5, 2, 0);
-                    leftWall.castShadow = true;
-                    leftWall.receiveShadow = true;
-                    skillsRoom.add(leftWall);
-                    const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4, 10), wallMat);
-                    rightWall.position.set(5, 2, 0);
-                    rightWall.castShadow = true;
-                    rightWall.receiveShadow = true;
-                    skillsRoom.add(rightWall);
+                    // Generic room builder with a return door at the back
+                    function createRoomBase(type, color) {
+                        const roomGroup = new THREE.Group();
 
-                    PORTFOLIO_DATA.skills.forEach((skill, i) => {
-                        const panel = Widgets.createSkillPanel(skill);
-                        panel.position.set(-4 + i*2, 2.5, -4.5);
-                        skillsRoom.add(panel);
-                    });
+                        // Floor
+                        const floorMat = new THREE.MeshStandardMaterial({ color: 0x2a2a3a, roughness: 0.8 });
+                        const floor = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), floorMat);
+                        floor.rotation.x = -Math.PI/2;
+                        floor.position.y = 0;
+                        floor.receiveShadow = true;
+                        roomGroup.add(floor);
 
-                    // Projects Room
-                    const projectsRoom = rooms.projects;
-                    const pFloor = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), floorMat);
-                    pFloor.rotation.x = -Math.PI/2;
-                    pFloor.position.y = 0;
-                    pFloor.receiveShadow = true;
-                    projectsRoom.add(pFloor);
-                    const pBack = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.5), wallMat);
-                    pBack.position.set(0, 2, -5);
-                    pBack.castShadow = true;
-                    projectsRoom.add(pBack);
-                    PORTFOLIO_DATA.projects.forEach((proj, i) => {
-                        const panel = Widgets.createProjectPanel(proj);
-                        panel.position.set(-2 + i*4, 2.5, -4.5);
-                        projectsRoom.add(panel);
-                    });
+                        // Walls
+                        const wallMat = new THREE.MeshStandardMaterial({ color: 0x3a3a4a });
+                        const backWall = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.5), wallMat);
+                        backWall.position.set(0, 2, -5);
+                        backWall.castShadow = true;
+                        backWall.receiveShadow = true;
+                        roomGroup.add(backWall);
+                        const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4, 10), wallMat);
+                        leftWall.position.set(-5, 2, 0);
+                        leftWall.castShadow = true;
+                        leftWall.receiveShadow = true;
+                        roomGroup.add(leftWall);
+                        const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4, 10), wallMat);
+                        rightWall.position.set(5, 2, 0);
+                        rightWall.castShadow = true;
+                        rightWall.receiveShadow = true;
+                        roomGroup.add(rightWall);
+                        const frontWall = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.5), wallMat);
+                        frontWall.position.set(0, 2, 5);
+                        frontWall.castShadow = true;
+                        frontWall.receiveShadow = true;
+                        // But we need a door in the front wall? Actually we want a return door at the back.
+                        // Let's put a return door on the back wall.
+                        const returnDoor = createDoor(color, 'BACK TO HUB', 'hub');
+                        returnDoor.position.set(0, 0.5, -4.5); // in front of back wall
+                        returnDoor.rotation.y = 0; // facing forward
+                        roomGroup.add(returnDoor);
+                        doors.push(returnDoor); // add to doors array for proximity
 
-                    // Experience Room
-                    const expRoom = rooms.experience;
-                    const eFloor = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), floorMat);
-                    eFloor.rotation.x = -Math.PI/2;
-                    eFloor.position.y = 0;
-                    eFloor.receiveShadow = true;
-                    expRoom.add(eFloor);
-                    const eBack = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.5), wallMat);
-                    eBack.position.set(0, 2, -5);
-                    eBack.castShadow = true;
-                    expRoom.add(eBack);
-                    PORTFOLIO_DATA.experience.forEach((exp, i) => {
-                        const panel = Widgets.createExperiencePanel(exp);
-                        panel.position.set(-3 + i*6, 2.5, -4.5);
-                        expRoom.add(panel);
-                    });
+                        // Add a simple light
+                        const light = new THREE.PointLight(0xffffff, 0.8, 10);
+                        light.position.set(0, 3, 0);
+                        roomGroup.add(light);
 
-                    // Contact Room
-                    const contactRoom = rooms.contact;
-                    const cFloor = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), floorMat);
-                    cFloor.rotation.x = -Math.PI/2;
-                    cFloor.position.y = 0;
-                    cFloor.receiveShadow = true;
-                    contactRoom.add(cFloor);
-                    const cBack = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.5), wallMat);
-                    cBack.position.set(0, 2, -5);
-                    cBack.castShadow = true;
-                    contactRoom.add(cBack);
-                    const contactPanel = Widgets.createContactPanel();
-                    contactPanel.position.set(0, 2.5, -4.5);
-                    contactRoom.add(contactPanel);
+                        return roomGroup;
+                    }
+
+                    // Create rooms with appropriate colors
+                    rooms.skills = createRoomBase('skills', '#FFD700');
+                    rooms.projects = createRoomBase('projects', '#00FF7F');
+                    rooms.experience = createRoomBase('experience', '#5a9eff');
+                    rooms.contact = createRoomBase('contact', '#ffaa00');
 
                     // Hide rooms initially
                     for (let key in rooms) {
@@ -667,46 +591,180 @@
                     const particles = new THREE.Points(particlesGeo, particlesMat);
                     scene.add(particles);
 
-                    // --- Interaction: Double-click (or tap) to enter door ---
-                    const raycaster = new THREE.Raycaster();
-                    const center = new THREE.Vector2(0, 0); // center of screen
+                    // --- Proximity detection and door interaction ---
+                    let currentDoor = null; // door currently in range
+                    const originalEmissive = new THREE.Color(); // store
 
-                    function interact() {
-                        if (!controls.isLocked) return; // require lock for FPS
+                    function checkDoorProximity() {
+                        if (!controls.isLocked) return;
+                        const playerPos = controls.getObject().position;
+                        let closestDoor = null;
+                        let minDist = 3.0; // threshold
 
-                        raycaster.setFromCamera(center, camera);
-                        const intersects = raycaster.intersectObjects(scene.children, true);
+                        doors.forEach(door => {
+                            const dist = playerPos.distanceTo(door.position);
+                            if (dist < minDist) {
+                                minDist = dist;
+                                closestDoor = door;
+                            }
+                        });
 
-                        for (let hit of intersects) {
-                            let obj = hit.object;
-                            while (obj) {
-                                if (obj.userData && obj.userData.type === 'door') {
-                                    const roomType = obj.userData.room;
-                                    hubGroup.visible = false;
-                                    for (let key in rooms) {
-                                        rooms[key].visible = (key === roomType);
+                        if (closestDoor !== currentDoor) {
+                            // Reset previous door's glow
+                            if (currentDoor) {
+                                currentDoor.children.forEach(child => {
+                                    if (child.material && child.material.emissive) {
+                                        child.material.emissive.setHex(0x000000);
                                     }
-                                    // Place player inside room
-                                    controls.getObject().position.set(0, 2, 3);
-                                    controls.getObject().lookAt(0, 2, 0);
-                                    infoDiv.innerText = `📍 In ${roomType.toUpperCase()} room · Double-click door to return (not yet)`;
-                                    return;
-                                }
-                                obj = obj.parent;
+                                });
+                            }
+                            currentDoor = closestDoor;
+                            if (currentDoor) {
+                                // Apply glow
+                                currentDoor.children.forEach(child => {
+                                    if (child.material && child.material.emissive) {
+                                        child.material.emissive.setHex(0x333333); // subtle glow
+                                    }
+                                });
+                                doorPrompt.style.display = 'block';
+                            } else {
+                                doorPrompt.style.display = 'none';
                             }
                         }
                     }
 
-                    // Double-click on desktop
-                    renderer.domElement.addEventListener('dblclick', interact);
+                    // Key handler for E
+                    async function onKeyDown(e) {
+                        if (e.code === 'KeyE' && currentDoor) {
+                            const roomType = currentDoor.userData.room;
+                            if (roomType === 'hub') {
+                                // Return to hub
+                                hubGroup.visible = true;
+                                for (let key in rooms) {
+                                    rooms[key].visible = false;
+                                }
+                                // Remove any dynamically added content from the previous room
+                                for (let key in rooms) {
+                                    while(rooms[key].children.length > 0) {
+                                        rooms[key].remove(rooms[key].children[0]);
+                                    }
+                                }
+                                // Re-add the base room structure (the return door and lights) – but we need to keep it.
+                                // Actually we want to clear all and then rebuild the base for the next entry.
+                                // For simplicity, we'll just hide/show; the base structure (walls, floor, return door) should remain.
+                                // We need to separate base structure from content. Let's store base separately.
+                                // We'll rework: each room has a base group (walls, floor, return door) and a content group.
+                                // When loading new content, we clear the content group.
+                                // We'll implement that next.
+                                // For now, we just hide.
+                                controls.getObject().position.set(0, 2, 5);
+                                controls.getObject().lookAt(0, 2, 0);
+                                infoDiv.innerText = '📍 HUB';
+                            } else {
+                                // Enter specific room
+                                hubGroup.visible = false;
+                                for (let key in rooms) {
+                                    rooms[key].visible = (key === roomType);
+                                }
+                                // Load and display content for this room
+                                const roomGroup = rooms[roomType];
+                                // Remove any old content (keep only the base: we need to identify base objects)
+                                // We'll store base objects in userData.
+                                // For simplicity, we'll clear all children and then rebuild base + content.
+                                // But we need the base structure (walls, floor, return door). We'll recreate it.
+                                // This is a bit heavy but acceptable.
+                                // Instead, let's have a separate content group inside each room.
+                                // We'll modify the room creation to include a content group.
+                                // I'll refactor quickly.
 
-                    // Single tap on mobile (since double-tap is hard)
-                    renderer.domElement.addEventListener('touchstart', (e) => {
-                        e.preventDefault();
-                        if (controls.isLocked) {
-                            interact(); // treat as single tap
+                                // --- Refactor: each room has a base group and a content group ---
+                                // We'll clear the roomGroup, rebuild base, then load content.
+                                // But to keep code concise, I'll do it here:
+                                while(roomGroup.children.length) roomGroup.remove(roomGroup.children[0]);
+
+                                // Rebuild base
+                                const floorMat = new THREE.MeshStandardMaterial({ color: 0x2a2a3a, roughness: 0.8 });
+                                const floor = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), floorMat);
+                                floor.rotation.x = -Math.PI/2;
+                                floor.position.y = 0;
+                                floor.receiveShadow = true;
+                                roomGroup.add(floor);
+
+                                const wallMat = new THREE.MeshStandardMaterial({ color: 0x3a3a4a });
+                                const backWall = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.5), wallMat);
+                                backWall.position.set(0, 2, -5);
+                                backWall.castShadow = true;
+                                backWall.receiveShadow = true;
+                                roomGroup.add(backWall);
+                                const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4, 10), wallMat);
+                                leftWall.position.set(-5, 2, 0);
+                                leftWall.castShadow = true;
+                                leftWall.receiveShadow = true;
+                                roomGroup.add(leftWall);
+                                const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4, 10), wallMat);
+                                rightWall.position.set(5, 2, 0);
+                                rightWall.castShadow = true;
+                                rightWall.receiveShadow = true;
+                                roomGroup.add(rightWall);
+                                const frontWall = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.5), wallMat);
+                                frontWall.position.set(0, 2, 5);
+                                frontWall.castShadow = true;
+                                frontWall.receiveShadow = true;
+                                roomGroup.add(frontWall);
+
+                                // Return door
+                                const returnDoor = createDoor(currentDoor.userData.color, 'BACK TO HUB', 'hub');
+                                returnDoor.position.set(0, 0.5, -4.5);
+                                returnDoor.rotation.y = 0;
+                                roomGroup.add(returnDoor);
+                                doors.push(returnDoor);
+
+                                const light = new THREE.PointLight(0xffffff, 0.8, 10);
+                                light.position.set(0, 3, 0);
+                                roomGroup.add(light);
+
+                                // Now load content and place it
+                                try {
+                                    const panels = await loadRoomContent(roomType);
+                                    // Position panels along the walls (adjust as needed)
+                                    panels.forEach((panel, index) => {
+                                        // Example: place in a row on the back wall
+                                        panel.position.set(-4 + index * 2, 2.5, -4.5);
+                                        roomGroup.add(panel);
+                                    });
+                                } catch (err) {
+                                    console.error(err);
+                                    const fallbackDiv = document.createElement('div');
+                                    fallbackDiv.style.cssText = `
+                                        font-family: 'Inter', sans-serif;
+                                        background: rgba(30,30,40,0.9);
+                                        border: 2px solid #ff5555;
+                                        border-radius: 12px;
+                                        padding: 20px;
+                                        color: white;
+                                    `;
+                                    fallbackDiv.innerText = `⚠️ Failed to load content for ${roomType}.`;
+                                    const fallbackObj = new THREE.CSS2DObject(fallbackDiv);
+                                    fallbackObj.position.set(0, 2.5, -4.5);
+                                    roomGroup.add(fallbackObj);
+                                }
+
+                                controls.getObject().position.set(0, 2, 2);
+                                controls.getObject().lookAt(0, 2, -2);
+                                infoDiv.innerText = `📍 ${roomType.toUpperCase()} ROOM`;
+                            }
+                            doorPrompt.style.display = 'none';
+                            if (currentDoor) {
+                                currentDoor.children.forEach(child => {
+                                    if (child.material && child.material.emissive) {
+                                        child.material.emissive.setHex(0x000000);
+                                    }
+                                });
+                                currentDoor = null;
+                            }
                         }
-                    });
+                    }
+                    document.addEventListener('keydown', onKeyDown);
 
                     // --- Movement (camera-relative) ---
                     const moveState = { forward: false, backward: false, left: false, right: false };
@@ -760,6 +818,7 @@
                         particles.rotation.y += 0.0002;
 
                         updateMovement(delta);
+                        checkDoorProximity();
 
                         renderer.render(scene, camera);
                         labelRenderer.render(scene, camera);
