@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NIKHIL SINGH · DOORS OF DATA</title>
+    <title>NIKHIL SINGH · PORTFOLIO</title>
     <style>
         body {
             margin: 0;
@@ -15,15 +15,16 @@
             position: absolute;
             bottom: 20px;
             left: 20px;
-            color: #ccc;
-            background: rgba(20,20,30,0.8);
-            padding: 8px 16px;
-            border-radius: 8px;
-            backdrop-filter: blur(5px);
-            border: 1px solid #444;
+            color: #fff;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 20px;
+            border-radius: 30px;
+            backdrop-filter: blur(8px);
+            border: 1px solid #5a9eff;
             font-size: 14px;
             z-index: 100;
             pointer-events: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
         #loading {
             position: absolute;
@@ -31,14 +32,15 @@
             left: 50%;
             transform: translate(-50%, -50%);
             color: white;
-            background: rgba(10,10,20,0.95);
+            background: rgba(0,0,0,0.9);
             padding: 30px;
-            border-radius: 12px;
-            border: 1px solid #555;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            border-radius: 20px;
+            border: 2px solid #5a9eff;
+            box-shadow: 0 0 50px #5a9eff;
             text-align: center;
             z-index: 200;
             backdrop-filter: blur(10px);
+            transition: opacity 0.5s;
         }
         #error {
             position: absolute;
@@ -55,69 +57,6 @@
             max-width: 80%;
             text-align: center;
         }
-        #progress-bar {
-            width: 0%;
-            height: 4px;
-            background: #5a9eff;
-            margin-top: 20px;
-            border-radius: 2px;
-            transition: width 0.3s;
-        }
-        #fps {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            color: #aaa;
-            background: rgba(20,20,30,0.6);
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            z-index: 100;
-            backdrop-filter: blur(4px);
-            border: 1px solid #333;
-        }
-        #joystick {
-            position: absolute;
-            bottom: 40px;
-            right: 40px;
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background: rgba(30,30,40,0.7);
-            border: 2px solid #888;
-            display: none;
-            z-index: 200;
-            backdrop-filter: blur(8px);
-            touch-action: none;
-        }
-        #joystick-thumb {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #aaa;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-        }
-        .hint {
-            position: absolute;
-            top: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: white;
-            background: rgba(0,0,0,0.6);
-            padding: 12px 24px;
-            border-radius: 40px;
-            border: 1px solid #5a9eff;
-            backdrop-filter: blur(5px);
-            font-size: 16px;
-            z-index: 150;
-            transition: opacity 0.5s;
-            pointer-events: none;
-            white-space: nowrap;
-        }
         #crosshair {
             position: absolute;
             top: 50%;
@@ -125,11 +64,11 @@
             width: 20px;
             height: 20px;
             transform: translate(-50%, -50%);
-            border: 2px solid rgba(255,255,255,0.7);
+            border: 2px solid rgba(255,255,255,0.9);
             border-radius: 50%;
             z-index: 100;
             pointer-events: none;
-            box-shadow: 0 0 10px rgba(90,158,255,0.5);
+            box-shadow: 0 0 15px #5a9eff;
         }
         #door-prompt {
             position: absolute;
@@ -149,738 +88,477 @@
             backdrop-filter: blur(5px);
         }
         @media (max-width: 768px) {
-            .hint { font-size: 14px; padding: 8px 16px; }
-            #joystick { display: block; }
             #crosshair { width: 16px; height: 16px; }
             #door-prompt { font-size: 16px; bottom: 80px; }
         }
     </style>
-    <!-- Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <!-- Three.js core & addons -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
 </head>
 <body>
     <div id="loading">
-        <div style="font-size:24px; margin-bottom:16px;">🚪 DOORS OF DATA</div>
-        <div>LOADING <span id="load-status">0%</span></div>
-        <div id="progress-bar" style="width:0%"></div>
+        <div style="font-size:28px; margin-bottom:16px;">🚪 LOADING DREAM HUB</div>
+        <div id="progress-bar" style="width:0%; height:6px; background:#5a9eff; margin-top:20px; border-radius:3px;"></div>
     </div>
     <div id="error"></div>
-    <div class="hint" id="tutorial">👆 CLICK TO LOCK · WASD + JOYSTICK · APPROACH DOOR & PRESS E</div>
-    <div id="info">📍 HUB</div>
-    <div id="fps">FPS: --</div>
-    <div id="joystick"><div id="joystick-thumb"></div></div>
+    <div id="info">📍 DREAM HUB · WASD move · Space jump · Approach door & press E to enter</div>
     <div id="crosshair"></div>
     <div id="door-prompt">PRESS E TO ENTER</div>
 
-    <script>
-        (function() {
-            "use strict";
-
-            // --- UI Elements ---
-            const loadingDiv = document.getElementById('loading');
-            const errorDiv = document.getElementById('error');
-            const progressBar = document.getElementById('progress-bar');
-            const loadStatus = document.getElementById('load-status');
-            const fpsSpan = document.getElementById('fps');
-            const tutorialDiv = document.getElementById('tutorial');
-            const infoDiv = document.getElementById('info');
-            const doorPrompt = document.getElementById('door-prompt');
-
-            function setProgress(percent, msg) {
-                progressBar.style.width = percent + '%';
-                if (msg) loadStatus.innerText = msg;
+    <!-- Three.js and dependencies -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
             }
+        }
+    </script>
 
-            function showError(msg) {
-                console.error(msg);
+    <script type="module">
+        import * as THREE from 'three';
+        import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+        // --- UI Elements ---
+        const loadingDiv = document.getElementById('loading');
+        const errorDiv = document.getElementById('error');
+        const infoDiv = document.getElementById('info');
+        const doorPrompt = document.getElementById('door-prompt');
+        const progressBar = document.getElementById('progress-bar');
+
+        function showError(msg) {
+            console.error(msg);
+            if (errorDiv) {
                 errorDiv.style.display = 'block';
                 errorDiv.innerText = 'ERROR: ' + msg;
-                loadingDiv.style.opacity = '0';
-                setTimeout(() => { loadingDiv.style.display = 'none'; }, 500);
+            }
+            if (loadingDiv) loadingDiv.style.display = 'none';
+        }
+
+        try {
+            // --- SCENE ---
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a1a);
+            scene.fog = new THREE.FogExp2(0x0a0a1a, 0.002);
+
+            // --- CAMERA ---
+            const camera = new THREE.PerspectiveCamera(80, window.innerWidth / window.innerHeight, 0.1, 200);
+            camera.position.set(0, 2, 5); // start on central platform
+
+            // --- RENDERER ---
+            const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            document.body.appendChild(renderer.domElement);
+
+            // --- POST-PROCESSING (Bloom) ---
+            const renderScene = new RenderPass(scene, camera);
+            const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.0, 0.2, 0.3);
+            bloomPass.threshold = 0.1;
+            bloomPass.strength = 0.8;
+            bloomPass.radius = 0.2;
+
+            const composer = new EffectComposer(renderer);
+            composer.addPass(renderScene);
+            composer.addPass(bloomPass);
+
+            // --- CSS2 RENDERER (for door labels) ---
+            const labelRenderer = new CSS2DRenderer();
+            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.domElement.style.position = 'absolute';
+            labelRenderer.domElement.style.top = '0px';
+            labelRenderer.domElement.style.left = '0px';
+            labelRenderer.domElement.style.pointerEvents = 'none';
+            document.body.appendChild(labelRenderer.domElement);
+
+            // --- LIGHTING (rich, dynamic) ---
+            const ambient = new THREE.AmbientLight(0x404060, 0.8);
+            scene.add(ambient);
+
+            // Key light (warm)
+            const keyLight = new THREE.DirectionalLight(0xffeedd, 1.2);
+            keyLight.position.set(5, 15, 10);
+            keyLight.castShadow = true;
+            keyLight.receiveShadow = true;
+            keyLight.shadow.mapSize.width = 4096;
+            keyLight.shadow.mapSize.height = 4096;
+            keyLight.shadow.camera.near = 1;
+            keyLight.shadow.camera.far = 50;
+            keyLight.shadow.camera.left = -20;
+            keyLight.shadow.camera.right = 20;
+            keyLight.shadow.camera.top = 20;
+            keyLight.shadow.camera.bottom = -20;
+            scene.add(keyLight);
+
+            // Fill light (cool)
+            const fillLight = new THREE.DirectionalLight(0xaaccff, 0.8);
+            fillLight.position.set(-8, 8, -8);
+            scene.add(fillLight);
+
+            // Back light
+            const backLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            backLight.position.set(0, 5, -15);
+            scene.add(backLight);
+
+            // Moving point lights for atmosphere
+            const movingLight1 = new THREE.PointLight(0x5a9eff, 0.6, 30);
+            scene.add(movingLight1);
+            const movingLight2 = new THREE.PointLight(0xffaa88, 0.6, 30);
+            scene.add(movingLight2);
+
+            // --- CENTRAL PLATFORM (with glowing edges) ---
+            const platformGroup = new THREE.Group();
+
+            // Base
+            const platformGeo = new THREE.CylinderGeometry(4, 4, 0.5, 64);
+            const platformMat = new THREE.MeshStandardMaterial({ color: 0x2a2a3a, roughness: 0.4, metalness: 0.3, emissive: 0x111122 });
+            const platform = new THREE.Mesh(platformGeo, platformMat);
+            platform.position.y = -0.25;
+            platform.receiveShadow = true;
+            platform.castShadow = true;
+            platformGroup.add(platform);
+
+            // Glowing ring
+            const ringGeo = new THREE.TorusGeometry(4.2, 0.1, 16, 64);
+            const ringMat = new THREE.MeshStandardMaterial({ color: 0x5a9eff, emissive: 0x5a9eff });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.rotation.x = Math.PI/2;
+            ring.position.y = 0.1;
+            platformGroup.add(ring);
+
+            // Inner glow discs
+            const discGeo = new THREE.CylinderGeometry(3.8, 3.8, 0.1, 32);
+            const discMat = new THREE.MeshStandardMaterial({ color: 0x111122, emissive: 0x224466 });
+            const disc = new THREE.Mesh(discGeo, discMat);
+            disc.position.y = 0.2;
+            platformGroup.add(disc);
+
+            scene.add(platformGroup);
+
+            // --- SURROUNDING ISLANDS WITH DOORS ---
+            const islandRadius = 7;
+            const doorPositions = [
+                { angle: 0, label: 'SKILLS', room: 'skills', color: 0x4a6fa5 },
+                { angle: Math.PI/2, label: 'PROJECTS', room: 'projects', color: 0xb24c4c },
+                { angle: Math.PI, label: 'EXPERIENCE', room: 'experience', color: 0x4ca64c },
+                { angle: 3*Math.PI/2, label: 'CONTACT', room: 'contact', color: 0xd4a14a }
+            ];
+
+            const doors = []; // for proximity detection
+
+            // Create a fancy door with frame, leaf, handle, and CSS2D label
+            function createDoor(color, label, roomName) {
+                const doorGroup = new THREE.Group();
+
+                // Frame (dark metal)
+                const frameMat = new THREE.MeshStandardMaterial({ color: 0x5a5a6a, roughness: 0.4, metalness: 0.7 });
+                const leftPost = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.2, 0.2), frameMat);
+                leftPost.position.set(-1, 1.1, 0);
+                doorGroup.add(leftPost);
+                const rightPost = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.2, 0.2), frameMat);
+                rightPost.position.set(1, 1.1, 0);
+                doorGroup.add(rightPost);
+                const topBeam = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.2, 0.2), frameMat);
+                topBeam.position.set(0, 2.2, 0);
+                doorGroup.add(topBeam);
+
+                // Door leaf (colored, emissive)
+                const doorMat = new THREE.MeshStandardMaterial({ color: color, emissive: color, emissiveIntensity: 0.3 });
+                const doorLeaf = new THREE.Mesh(new THREE.BoxGeometry(1.8, 2.0, 0.1), doorMat);
+                doorLeaf.position.set(0, 1.0, 0.05);
+                doorLeaf.castShadow = true;
+                doorLeaf.receiveShadow = true;
+                doorGroup.add(doorLeaf);
+
+                // Handle
+                const handleMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.3, metalness: 0.8 });
+                const handleBar = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.4, 8), handleMat);
+                handleBar.rotation.z = Math.PI/2;
+                handleBar.position.set(0.6, 1.0, 0.15);
+                doorGroup.add(handleBar);
+                const handleKnob = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8), handleMat);
+                handleKnob.position.set(0.8, 1.0, 0.15);
+                doorGroup.add(handleKnob);
+
+                // CSS2 label above door
+                const labelDiv = document.createElement('div');
+                labelDiv.style.color = 'white';
+                labelDiv.style.background = 'rgba(0,0,0,0.7)';
+                labelDiv.style.padding = '6px 16px';
+                labelDiv.style.borderRadius = '20px';
+                labelDiv.style.border = '1px solid ' + new THREE.Color(color).getStyle();
+                labelDiv.style.fontSize = '16px';
+                labelDiv.style.fontWeight = 'bold';
+                labelDiv.style.backdropFilter = 'blur(4px)';
+                labelDiv.innerText = label;
+                const labelObj = new CSS2DObject(labelDiv);
+                labelObj.position.set(0, 3.0, 0);
+                doorGroup.add(labelObj);
+
+                doorGroup.userData = { type: 'door', room: roomName };
+                return doorGroup;
             }
 
-            // Simulate loading
-            setProgress(20, 'Building hub...');
-            setTimeout(() => {
-                setProgress(60, 'Crafting rooms...');
-                setTimeout(() => {
-                    setProgress(100, 'Ready!');
-                    loadingDiv.style.opacity = '0';
-                    setTimeout(() => {
-                        loadingDiv.style.display = 'none';
-                        initThree();
-                    }, 500);
-                }, 400);
-            }, 400);
+            doorPositions.forEach(pos => {
+                // Island base
+                const islandGeo = new THREE.CylinderGeometry(2.5, 3, 0.8, 32);
+                const islandMat = new THREE.MeshStandardMaterial({ color: 0x3a4a5a, roughness: 0.6, emissive: 0x112233 });
+                const island = new THREE.Mesh(islandGeo, islandMat);
+                island.position.set(Math.cos(pos.angle)*islandRadius, -0.4, Math.sin(pos.angle)*islandRadius);
+                island.receiveShadow = true;
+                island.castShadow = true;
+                scene.add(island);
 
-            // --- FPS Counter ---
-            let frameCount = 0;
-            let lastTime = performance.now();
-            function updateFPS() {
-                frameCount++;
-                const now = performance.now();
-                const delta = now - lastTime;
-                if (delta >= 1000) {
-                    const fps = Math.round((frameCount * 1000) / delta);
-                    fpsSpan.innerText = `FPS: ${fps}`;
-                    frameCount = 0;
-                    lastTime = now;
+                // Door
+                const door = createDoor(pos.color, pos.label, pos.room);
+                door.position.set(Math.cos(pos.angle)*islandRadius, 0.5, Math.sin(pos.angle)*islandRadius);
+                door.rotation.y = -pos.angle; // face inward
+                scene.add(door);
+                doors.push(door);
+            });
+
+            // --- DECORATIVE PILLARS (on central platform) ---
+            for (let i = 0; i < 8; i++) {
+                const angle = (i/8)*Math.PI*2;
+                const radius = 3.5;
+                const pillarGeo = new THREE.CylinderGeometry(0.3, 0.4, 2, 8);
+                const pillarMat = new THREE.MeshStandardMaterial({ color: 0x6a7a8a, emissive: 0x112233 });
+                const pillar = new THREE.Mesh(pillarGeo, pillarMat);
+                pillar.position.set(Math.cos(angle)*radius, 1, Math.sin(angle)*radius);
+                pillar.castShadow = true;
+                pillar.receiveShadow = true;
+                scene.add(pillar);
+            }
+
+            // --- FLOATING PARTICLES (ambient) ---
+            const particleCount = 1500;
+            const particlesGeo = new THREE.BufferGeometry();
+            const particlesPos = new Float32Array(particleCount * 3);
+            for (let i = 0; i < particleCount; i++) {
+                particlesPos[i*3] = (Math.random() - 0.5) * 50;
+                particlesPos[i*3+1] = (Math.random() - 0.5) * 20;
+                particlesPos[i*3+2] = (Math.random() - 0.5) * 50;
+            }
+            particlesGeo.setAttribute('position', new THREE.BufferAttribute(particlesPos, 3));
+            const particlesMat = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.1, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending });
+            const particles = new THREE.Points(particlesGeo, particlesMat);
+            scene.add(particles);
+
+            // --- SKY DOME (simple gradient via fog, but we can add a starfield) ---
+            // (already have fog)
+
+            // --- PLAYER PHYSICS (first-person) ---
+            const controls = new PointerLockControls(camera, document.body);
+            scene.add(controls.getObject());
+
+            renderer.domElement.addEventListener('click', () => {
+                if (!controls.isLocked) controls.lock();
+            });
+
+            const player = {
+                velocity: new THREE.Vector3(),
+                onGround: false,
+                speed: 8,
+                jumpSpeed: 6,
+                gravity: 25,
+                damp: 0.8,
+                radius: 0.5,
+                height: 2.0
+            };
+
+            // Bounds: stay on central platform and islands (simple cylindrical bounds)
+            // We'll approximate by allowing movement within a circle of radius ~8
+            const maxDist = 9; // can go to islands
+            const minY = 1.0;  // platform height
+
+            // --- KEYBOARD INPUT ---
+            const keyState = { w: false, a: false, s: false, d: false, space: false };
+            window.addEventListener('keydown', (e) => {
+                switch(e.code) {
+                    case 'KeyW': keyState.w = true; e.preventDefault(); break;
+                    case 'KeyA': keyState.a = true; e.preventDefault(); break;
+                    case 'KeyS': keyState.s = true; e.preventDefault(); break;
+                    case 'KeyD': keyState.d = true; e.preventDefault(); break;
+                    case 'Space': keyState.space = true; e.preventDefault(); break;
                 }
-            }
-
-            // --- Mobile Joystick ---
-            let joystickActive = false;
-            let joystickVector = { x: 0, y: 0 };
-            const joystickDiv = document.getElementById('joystick');
-            const joystickThumb = document.getElementById('joystick-thumb');
-            if (window.innerWidth <= 768) {
-                joystickDiv.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    joystickActive = true;
-                    updateJoystick(e.touches[0]);
-                });
-                joystickDiv.addEventListener('touchmove', (e) => {
-                    e.preventDefault();
-                    if (joystickActive) updateJoystick(e.touches[0]);
-                });
-                joystickDiv.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    joystickActive = false;
-                    joystickVector.x = 0;
-                    joystickVector.y = 0;
-                    joystickThumb.style.transform = 'translate(-50%, -50%)';
-                });
-                function updateJoystick(touch) {
-                    const rect = joystickDiv.getBoundingClientRect();
-                    const centerX = rect.left + rect.width/2;
-                    const centerY = rect.top + rect.height/2;
-                    const dx = touch.clientX - centerX;
-                    const dy = touch.clientY - centerY;
-                    const distance = Math.min(Math.sqrt(dx*dx+dy*dy), rect.width/2);
-                    const angle = Math.atan2(dy, dx);
-                    const limitedX = Math.cos(angle) * distance;
-                    const limitedY = Math.sin(angle) * distance;
-                    joystickVector.x = limitedX / (rect.width/2);
-                    joystickVector.y = limitedY / (rect.height/2);
-                    joystickThumb.style.transform = `translate(calc(-50% + ${limitedX}px), calc(-50% + ${limitedY}px))`;
+            });
+            window.addEventListener('keyup', (e) => {
+                switch(e.code) {
+                    case 'KeyW': keyState.w = false; e.preventDefault(); break;
+                    case 'KeyA': keyState.a = false; e.preventDefault(); break;
+                    case 'KeyS': keyState.s = false; e.preventDefault(); break;
+                    case 'KeyD': keyState.d = false; e.preventDefault(); break;
+                    case 'Space': keyState.space = false; e.preventDefault(); break;
                 }
-            }
+            });
 
-            // --- Helper to fetch room content and create CSS2D objects ---
-            async function loadRoomContent(roomType) {
-                const url = `${roomType}-room.html`; // e.g., skills-room.html
-                try {
-                    const response = await fetch(url);
-                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                    const html = await response.text();
-                    // Extract content inside <!-- ROOM_CONTENT --> markers
-                    const match = html.match(/<!-- ROOM_CONTENT -->([\s\S]*?)<!-- \/ROOM_CONTENT -->/);
-                    if (!match) throw new Error('No room content markers found');
-                    const contentHTML = match[1];
-                    // Create a temporary container to parse HTML
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = contentHTML;
-                    // Convert each child into a CSS2DObject
-                    const panels = [];
-                    tempDiv.childNodes.forEach(node => {
-                        if (node.nodeType === Node.ELEMENT_NODE) {
-                            const div = document.createElement('div');
-                            div.innerHTML = node.outerHTML;
-                            // Apply base styles for positioning (will be set later)
-                            const obj = new THREE.CSS2DObject(div);
-                            panels.push(obj);
-                        }
-                    });
-                    return panels;
-                } catch (e) {
-                    console.error(`Failed to load room ${roomType}:`, e);
-                    // Return a fallback panel
-                    const fallbackDiv = document.createElement('div');
-                    fallbackDiv.style.cssText = `
-                        font-family: 'Inter', sans-serif;
-                        background: rgba(30,30,40,0.9);
-                        border: 2px solid #ff5555;
-                        border-radius: 12px;
-                        padding: 20px;
-                        color: white;
-                        text-align: center;
-                    `;
-                    fallbackDiv.innerText = `⚠️ Failed to load ${roomType} room content.`;
-                    return [new THREE.CSS2DObject(fallbackDiv)];
+            // --- DOOR INTERACTION (E key) ---
+            let currentDoor = null;
+            window.addEventListener('keydown', (e) => {
+                if (e.code === 'KeyE' && currentDoor) {
+                    const room = currentDoor.userData.room;
+                    window.location.href = `${room}-room.html`; // e.g., skills-room.html
                 }
+            });
+
+            // --- PHYSICS UPDATE ---
+            function updatePlayer(delta) {
+                if (!controls.isLocked) return;
+
+                const playerPos = controls.getObject().position;
+
+                // Get camera direction (horizontal)
+                const cameraDir = new THREE.Vector3();
+                camera.getWorldDirection(cameraDir);
+                cameraDir.y = 0;
+                cameraDir.normalize();
+                const cameraRight = new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0), cameraDir).normalize();
+
+                const moveDir = new THREE.Vector3(0, 0, 0);
+                if (keyState.w) moveDir.add(cameraDir);
+                if (keyState.s) moveDir.sub(cameraDir);
+                if (keyState.a) moveDir.add(cameraRight);
+                if (keyState.d) moveDir.sub(cameraRight);
+
+                if (moveDir.lengthSq() > 0) {
+                    moveDir.normalize();
+                    player.velocity.x = moveDir.x * player.speed;
+                    player.velocity.z = moveDir.z * player.speed;
+                } else {
+                    player.velocity.x *= player.damp;
+                    player.velocity.z *= player.damp;
+                }
+
+                // Gravity
+                player.velocity.y -= player.gravity * delta;
+
+                // Ground check (platform at y=1)
+                if (playerPos.y <= 1.0 && player.velocity.y < 0) {
+                    player.velocity.y = 0;
+                    playerPos.y = 1.0;
+                    player.onGround = true;
+                    if (keyState.space) {
+                        player.velocity.y = player.jumpSpeed;
+                        player.onGround = false;
+                    }
+                } else {
+                    player.onGround = false;
+                }
+
+                // Apply velocity
+                playerPos.x += player.velocity.x * delta;
+                playerPos.y += player.velocity.y * delta;
+                playerPos.z += player.velocity.z * delta;
+
+                // Constrain to circular area (hub)
+                const dist = Math.sqrt(playerPos.x*playerPos.x + playerPos.z*playerPos.z);
+                if (dist > maxDist) {
+                    const angle = Math.atan2(playerPos.z, playerPos.x);
+                    playerPos.x = Math.cos(angle) * maxDist;
+                    playerPos.z = Math.sin(angle) * maxDist;
+                }
+
+                if (playerPos.y < 1.0) playerPos.y = 1.0;
             }
 
-            // --- THREE.JS INIT ---
-            function initThree() {
-                try {
-                    const scene = new THREE.Scene();
-                    scene.background = new THREE.Color(0x11131f);
-                    scene.fog = new THREE.FogExp2(0x11131f, 0.002);
+            // --- PROXIMITY DETECTION (for doors) ---
+            function checkDoors() {
+                if (!controls.isLocked) return;
 
-                    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-                    camera.position.set(0, 2, 10);
+                const playerPos = controls.getObject().position;
+                let closestDoor = null;
+                let minDist = 3.0;
 
-                    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-                    renderer.setSize(window.innerWidth, window.innerHeight);
-                    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-                    renderer.shadowMap.enabled = true;
-                    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-                    document.body.appendChild(renderer.domElement);
-
-                    const labelRenderer = new THREE.CSS2DRenderer();
-                    labelRenderer.setSize(window.innerWidth, window.innerHeight);
-                    labelRenderer.domElement.style.position = 'absolute';
-                    labelRenderer.domElement.style.top = '0px';
-                    labelRenderer.domElement.style.left = '0px';
-                    labelRenderer.domElement.style.pointerEvents = 'none';
-                    document.body.appendChild(labelRenderer.domElement);
-
-                    // Controls
-                    const controls = new THREE.PointerLockControls(camera, document.body);
-                    scene.add(controls.getObject());
-
-                    renderer.domElement.addEventListener('click', () => {
-                        if (!controls.isLocked) controls.lock();
-                    });
-                    controls.addEventListener('lock', () => {
-                        tutorialDiv.style.opacity = '0';
-                        setTimeout(() => tutorialDiv.style.display = 'none', 1000);
-                    });
-
-                    // --- Lighting ---
-                    const ambient = new THREE.AmbientLight(0x404060);
-                    scene.add(ambient);
-
-                    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-                    dirLight.position.set(5, 10, 7);
-                    dirLight.castShadow = true;
-                    dirLight.shadow.mapSize.width = 1024;
-                    dirLight.shadow.mapSize.height = 1024;
-                    const d = 15;
-                    dirLight.shadow.camera.left = -d;
-                    dirLight.shadow.camera.right = d;
-                    dirLight.shadow.camera.top = d;
-                    dirLight.shadow.camera.bottom = -d;
-                    dirLight.shadow.camera.near = 1;
-                    dirLight.shadow.camera.far = 25;
-                    scene.add(dirLight);
-
-                    const fillLight = new THREE.PointLight(0x446688, 0.5);
-                    fillLight.position.set(-3, 2, 4);
-                    scene.add(fillLight);
-
-                    // --- HUB: Central platform and surrounding islands with doors ---
-                    const hubGroup = new THREE.Group();
-
-                    // Central platform
-                    const platformGeo = new THREE.CylinderGeometry(4, 4, 0.5, 32);
-                    const platformMat = new THREE.MeshStandardMaterial({ color: 0x2a2a3a, roughness: 0.7, metalness: 0.2 });
-                    const platform = new THREE.Mesh(platformGeo, platformMat);
-                    platform.position.y = -0.25;
-                    platform.receiveShadow = true;
-                    platform.castShadow = true;
-                    hubGroup.add(platform);
-
-                    // Door positions
-                    const doorPositions = [
-                        { angle: 0, radius: 7, type: 'skills', label: 'SKILLS', color: '#FFD700' },
-                        { angle: Math.PI/2, radius: 7, type: 'projects', label: 'PROJECTS', color: '#00FF7F' },
-                        { angle: Math.PI, radius: 7, type: 'experience', label: 'EXPERIENCE', color: '#5a9eff' },
-                        { angle: 3*Math.PI/2, radius: 7, type: 'contact', label: 'CONTACT', color: '#ffaa00' }
-                    ];
-
-                    // Store doors for proximity detection
-                    const doors = [];
-
-                    // Improved door model with panels and realistic handle
-                    function createDoor(color, label, type) {
-                        const doorGroup = new THREE.Group();
-
-                        // Frame (dark wood)
-                        const frameMat = new THREE.MeshStandardMaterial({ color: 0x5a4a3a, roughness: 0.7 });
-                        const leftPost = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.2, 0.2), frameMat);
-                        leftPost.position.set(-1, 1.1, 0);
-                        doorGroup.add(leftPost);
-                        const rightPost = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.2, 0.2), frameMat);
-                        rightPost.position.set(1, 1.1, 0);
-                        doorGroup.add(rightPost);
-                        const topBeam = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.2, 0.2), frameMat);
-                        topBeam.position.set(0, 2.2, 0);
-                        doorGroup.add(topBeam);
-
-                        // Door leaf with panels
-                        const doorMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.5, metalness: 0.1 });
-                        const doorLeaf = new THREE.Mesh(new THREE.BoxGeometry(1.8, 2.0, 0.1), doorMat);
-                        doorLeaf.position.set(0, 1.0, 0.05);
-                        doorLeaf.castShadow = true;
-                        doorLeaf.receiveShadow = true;
-                        doorGroup.add(doorLeaf);
-
-                        // Panels (recessed squares)
-                        const panelMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
-                        const panel1 = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.05), panelMat);
-                        panel1.position.set(-0.5, 1.3, 0.12);
-                        doorGroup.add(panel1);
-                        const panel2 = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.05), panelMat);
-                        panel2.position.set(0.5, 1.3, 0.12);
-                        doorGroup.add(panel2);
-                        const panel3 = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.05), panelMat);
-                        panel3.position.set(-0.5, 0.7, 0.12);
-                        doorGroup.add(panel3);
-                        const panel4 = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.05), panelMat);
-                        panel4.position.set(0.5, 0.7, 0.12);
-                        doorGroup.add(panel4);
-
-                        // Handle (more realistic: curved bar)
-                        const handleMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.3, metalness: 0.8 });
-                        const handleBar = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.4, 8), handleMat);
-                        handleBar.rotation.z = Math.PI/2;
-                        handleBar.position.set(0.6, 1.0, 0.15);
-                        doorGroup.add(handleBar);
-                        const handleKnob = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8), handleMat);
-                        handleKnob.position.set(0.8, 1.0, 0.15);
-                        doorGroup.add(handleKnob);
-
-                        // Nameplate (CSS2D) above door
-                        const nameDiv = document.createElement('div');
-                        nameDiv.style.color = 'white';
-                        nameDiv.style.background = 'rgba(20,20,30,0.9)';
-                        nameDiv.style.padding = '6px 16px';
-                        nameDiv.style.borderRadius = '20px';
-                        nameDiv.style.border = '1px solid ' + color;
-                        nameDiv.style.fontSize = '16px';
-                        nameDiv.style.fontWeight = 'bold';
-                        nameDiv.style.backdropFilter = 'blur(4px)';
-                        nameDiv.style.boxShadow = '0 4px 10px rgba(0,0,0,0.5)';
-                        nameDiv.innerText = label;
-                        const nameLabel = new THREE.CSS2DObject(nameDiv);
-                        nameLabel.position.set(0, 3.0, 0);
-                        doorGroup.add(nameLabel);
-
-                        doorGroup.userData = { type: 'door', room: type, label: label, color: color };
-                        return doorGroup;
+                doors.forEach(door => {
+                    const dist = playerPos.distanceTo(door.position);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        closestDoor = door;
                     }
+                });
 
-                    // Build islands and doors
-                    doorPositions.forEach(pos => {
-                        // Island base
-                        const islandBase = new THREE.Mesh(
-                            new THREE.CylinderGeometry(2.5, 3, 0.8, 16),
-                            new THREE.MeshStandardMaterial({ color: 0x3a4a5a, roughness: 0.6 })
-                        );
-                        islandBase.position.set(Math.cos(pos.angle)*pos.radius, -0.4, Math.sin(pos.angle)*pos.radius);
-                        islandBase.receiveShadow = true;
-                        islandBase.castShadow = true;
-                        scene.add(islandBase);
-
-                        // Door
-                        const door = createDoor(pos.color, pos.label, pos.type);
-                        door.position.set(Math.cos(pos.angle)*pos.radius, 0.5, Math.sin(pos.angle)*pos.radius);
-                        door.rotation.y = -pos.angle;
-                        scene.add(door);
-                        doors.push(door);
-                    });
-
-                    // Decorative pillars on central platform
-                    for (let i = 0; i < 8; i++) {
-                        const angle = (i/8)*Math.PI*2;
-                        const radius = 3.5;
-                        const pillarGeo = new THREE.CylinderGeometry(0.3, 0.4, 2, 8);
-                        const pillarMat = new THREE.MeshStandardMaterial({ color: 0x6a7a8a });
-                        const pillar = new THREE.Mesh(pillarGeo, pillarMat);
-                        pillar.position.set(Math.cos(angle)*radius, 1, Math.sin(angle)*radius);
-                        pillar.castShadow = true;
-                        pillar.receiveShadow = true;
-                        scene.add(pillar);
-                    }
-
-                    scene.add(hubGroup);
-
-                    // --- Rooms (will be built dynamically with collision) ---
-                    const rooms = {
-                        skills: new THREE.Group(),
-                        projects: new THREE.Group(),
-                        experience: new THREE.Group(),
-                        contact: new THREE.Group()
-                    };
-
-                    // Room dimensions (half-size)
-                    const roomHalf = 5.0;
-                    const roomHeight = 4.0;
-
-                    // Function to create a premium futuristic room base (walls, floor, ceiling, trim)
-                    function createRoomBase(colorAccent) {
-                        const group = new THREE.Group();
-
-                        // Floor with grid texture (using simple lines or a grid material)
-                        const floorMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2a, roughness: 0.7, metalness: 0.2 });
-                        const floor = new THREE.Mesh(new THREE.PlaneGeometry(roomHalf*2, roomHalf*2), floorMat);
-                        floor.rotation.x = -Math.PI/2;
-                        floor.position.y = 0;
-                        floor.receiveShadow = true;
-                        group.add(floor);
-
-                        // Add a grid overlay (using LineSegments)
-                        const gridHelper = new THREE.GridHelper(roomHalf*2, 20, colorAccent, 0x333344);
-                        gridHelper.position.y = 0.01;
-                        group.add(gridHelper);
-
-                        // Ceiling
-                        const ceilingMat = new THREE.MeshStandardMaterial({ color: 0x0a0a1a, emissive: 0x111122, transparent: true, opacity: 0.8 });
-                        const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(roomHalf*2, roomHalf*2), ceilingMat);
-                        ceiling.rotation.x = Math.PI/2;
-                        ceiling.position.y = roomHeight;
-                        ceiling.receiveShadow = true;
-                        group.add(ceiling);
-
-                        // Walls with panels
-                        const wallMat = new THREE.MeshStandardMaterial({ color: 0x2a2a3a, roughness: 0.6, emissive: 0x101018 });
-                        
-                        // Back wall (-z)
-                        const backWall = new THREE.Mesh(new THREE.BoxGeometry(roomHalf*2, roomHeight, 0.2), wallMat);
-                        backWall.position.set(0, roomHeight/2, -roomHalf);
-                        backWall.castShadow = true;
-                        backWall.receiveShadow = true;
-                        group.add(backWall);
-                        // Add some glowing strips
-                        const stripMat = new THREE.MeshStandardMaterial({ color: colorAccent, emissive: colorAccent });
-                        const hStrip = new THREE.Mesh(new THREE.BoxGeometry(roomHalf*2 - 1, 0.05, 0.1), stripMat);
-                        hStrip.position.set(0, 1.5, -roomHalf + 0.15);
-                        group.add(hStrip);
-                        const vStrip = new THREE.Mesh(new THREE.BoxGeometry(0.05, roomHeight - 1, 0.1), stripMat);
-                        vStrip.position.set(0, roomHeight/2, -roomHalf + 0.15);
-                        group.add(vStrip);
-
-                        // Front wall (+z) but with a door opening? We'll handle door separately.
-                        const frontWall = new THREE.Mesh(new THREE.BoxGeometry(roomHalf*2, roomHeight, 0.2), wallMat);
-                        frontWall.position.set(0, roomHeight/2, roomHalf);
-                        frontWall.castShadow = true;
-                        frontWall.receiveShadow = true;
-                        group.add(frontWall);
-                        // Add strips
-                        const hStripFront = new THREE.Mesh(new THREE.BoxGeometry(roomHalf*2 - 1, 0.05, 0.1), stripMat);
-                        hStripFront.position.set(0, 1.5, roomHalf - 0.15);
-                        group.add(hStripFront);
-                        const vStripFront = new THREE.Mesh(new THREE.BoxGeometry(0.05, roomHeight - 1, 0.1), stripMat);
-                        vStripFront.position.set(0, roomHeight/2, roomHalf - 0.15);
-                        group.add(vStripFront);
-
-                        // Left wall (-x)
-                        const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.2, roomHeight, roomHalf*2), wallMat);
-                        leftWall.position.set(-roomHalf, roomHeight/2, 0);
-                        leftWall.castShadow = true;
-                        leftWall.receiveShadow = true;
-                        group.add(leftWall);
-                        // Strips
-                        const hStripLeft = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.05, roomHalf*2 - 1), stripMat);
-                        hStripLeft.position.set(-roomHalf + 0.15, 1.5, 0);
-                        group.add(hStripLeft);
-                        const vStripLeft = new THREE.Mesh(new THREE.BoxGeometry(0.1, roomHeight - 1, 0.05), stripMat);
-                        vStripLeft.position.set(-roomHalf + 0.15, roomHeight/2, 0);
-                        group.add(vStripLeft);
-
-                        // Right wall (+x)
-                        const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.2, roomHeight, roomHalf*2), wallMat);
-                        rightWall.position.set(roomHalf, roomHeight/2, 0);
-                        rightWall.castShadow = true;
-                        rightWall.receiveShadow = true;
-                        group.add(rightWall);
-                        const hStripRight = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.05, roomHalf*2 - 1), stripMat);
-                        hStripRight.position.set(roomHalf - 0.15, 1.5, 0);
-                        group.add(hStripRight);
-                        const vStripRight = new THREE.Mesh(new THREE.BoxGeometry(0.1, roomHeight - 1, 0.05), stripMat);
-                        vStripRight.position.set(roomHalf - 0.15, roomHeight/2, 0);
-                        group.add(vStripRight);
-
-                        // Add some floating panels (for data) – these will be CSS2D later, but we can add small 3D accents
-                        return group;
-                    }
-
-                    // Create rooms with accent colors
-                    rooms.skills.add(createRoomBase('#FFD700'));
-                    rooms.projects.add(createRoomBase('#00FF7F'));
-                    rooms.experience.add(createRoomBase('#5a9eff'));
-                    rooms.contact.add(createRoomBase('#ffaa00'));
-
-                    // Add return doors to each room
-                    function addReturnDoor(roomGroup, color) {
-                        const returnDoor = createDoor(color, 'BACK TO HUB', 'hub');
-                        returnDoor.position.set(0, 0.5, -4.5); // near back wall
-                        returnDoor.rotation.y = 0;
-                        roomGroup.add(returnDoor);
-                        doors.push(returnDoor);
-                    }
-
-                    addReturnDoor(rooms.skills, '#FFD700');
-                    addReturnDoor(rooms.projects, '#00FF7F');
-                    addReturnDoor(rooms.experience, '#5a9eff');
-                    addReturnDoor(rooms.contact, '#ffaa00');
-
-                    // Hide rooms initially
-                    for (let key in rooms) {
-                        rooms[key].visible = false;
-                        scene.add(rooms[key]);
-                    }
-
-                    // --- Particles (subtle) ---
-                    const particleCount = 800;
-                    const particlesGeo = new THREE.BufferGeometry();
-                    const particlesPos = new Float32Array(particleCount * 3);
-                    for (let i = 0; i < particleCount; i++) {
-                        particlesPos[i*3] = (Math.random() - 0.5) * 60;
-                        particlesPos[i*3+1] = (Math.random() - 0.5) * 30;
-                        particlesPos[i*3+2] = (Math.random() - 0.5) * 60;
-                    }
-                    particlesGeo.setAttribute('position', new THREE.BufferAttribute(particlesPos, 3));
-                    const particlesMat = new THREE.PointsMaterial({ color: 0x99aacc, size: 0.1, transparent: true, opacity: 0.3 });
-                    const particles = new THREE.Points(particlesGeo, particlesMat);
-                    scene.add(particles);
-
-                    // --- Proximity detection and door interaction ---
-                    let currentDoor = null;
-                    const roomHalf = 5.0; // for collision
-
-                    function checkDoorProximity() {
-                        if (!controls.isLocked) return;
-                        const playerPos = controls.getObject().position;
-                        let closestDoor = null;
-                        let minDist = 3.0;
-
-                        doors.forEach(door => {
-                            const dist = playerPos.distanceTo(door.position);
-                            if (dist < minDist) {
-                                minDist = dist;
-                                closestDoor = door;
+                if (closestDoor !== currentDoor) {
+                    // Reset previous door glow
+                    if (currentDoor) {
+                        currentDoor.children.forEach(child => {
+                            if (child.material && child.material.emissive) {
+                                child.material.emissive.setHex(currentDoor.userData.originalEmissive || 0);
                             }
                         });
-
-                        if (closestDoor !== currentDoor) {
-                            if (currentDoor) {
-                                currentDoor.children.forEach(child => {
-                                    if (child.material && child.material.emissive) {
-                                        child.material.emissive.setHex(0x000000);
-                                    }
-                                });
-                            }
-                            currentDoor = closestDoor;
-                            if (currentDoor) {
-                                currentDoor.children.forEach(child => {
-                                    if (child.material && child.material.emissive) {
-                                        child.material.emissive.setHex(0x333333);
-                                    }
-                                });
-                                doorPrompt.style.display = 'block';
-                            } else {
-                                doorPrompt.style.display = 'none';
-                            }
-                        }
                     }
-
-                    // Key handler for E
-                    async function onKeyDown(e) {
-                        if (e.code === 'KeyE' && currentDoor) {
-                            const roomType = currentDoor.userData.room;
-                            if (roomType === 'hub') {
-                                hubGroup.visible = true;
-                                for (let key in rooms) {
-                                    rooms[key].visible = false;
+                    currentDoor = closestDoor;
+                    if (currentDoor) {
+                        // Store original emissive
+                        currentDoor.children.forEach(child => {
+                            if (child.material && child.material.emissive) {
+                                if (currentDoor.userData.originalEmissive === undefined) {
+                                    currentDoor.userData.originalEmissive = child.material.emissive.getHex();
                                 }
-                                // Clear any dynamically added content from previous room (we'll rebuild when entering)
-                                controls.getObject().position.set(0, 2, 5);
-                                controls.getObject().lookAt(0, 2, 0);
-                                infoDiv.innerText = '📍 HUB';
-                            } else {
-                                hubGroup.visible = false;
-                                for (let key in rooms) {
-                                    rooms[key].visible = (key === roomType);
-                                }
-                                const roomGroup = rooms[roomType];
-                                // Remove any previously added CSS2D panels (keep base structure)
-                                // We'll assume base is everything except CSS2D objects.
-                                // Better: store CSS2D panels separately. We'll clear only CSS2D children.
-                                const toRemove = [];
-                                roomGroup.children.forEach(child => {
-                                    if (child instanceof THREE.CSS2DObject) {
-                                        toRemove.push(child);
-                                    }
-                                });
-                                toRemove.forEach(child => roomGroup.remove(child));
-
-                                // Load and place content panels
-                                try {
-                                    const panels = await loadRoomContent(roomType);
-                                    // Place panels on walls in an organized way
-                                    // For simplicity, we'll place them on the back wall at different positions
-                                    panels.forEach((panel, index) => {
-                                        // Arrange in a grid: max 3 per row
-                                        const rows = 2;
-                                        const cols = 3;
-                                        const row = Math.floor(index / cols);
-                                        const col = index % cols;
-                                        const spacingX = 3.0;
-                                        const startX = -3.0;
-                                        const yPos = 2.0 + row * 1.5; // vertical spacing
-                                        panel.position.set(startX + col * spacingX, yPos, -4.5); // back wall
-                                        roomGroup.add(panel);
-                                    });
-                                } catch (err) {
-                                    console.error(err);
-                                    const fallbackDiv = document.createElement('div');
-                                    fallbackDiv.style.cssText = `
-                                        font-family: 'Inter', sans-serif;
-                                        background: rgba(30,30,40,0.9);
-                                        border: 2px solid #ff5555;
-                                        border-radius: 12px;
-                                        padding: 20px;
-                                        color: white;
-                                    `;
-                                    fallbackDiv.innerText = `⚠️ Failed to load content for ${roomType}.`;
-                                    const fallbackObj = new THREE.CSS2DObject(fallbackDiv);
-                                    fallbackObj.position.set(0, 2.5, -4.5);
-                                    roomGroup.add(fallbackObj);
-                                }
-
-                                controls.getObject().position.set(0, 2, 2);
-                                controls.getObject().lookAt(0, 2, -2);
-                                infoDiv.innerText = `📍 ${roomType.toUpperCase()} ROOM`;
+                                child.material.emissive.setHex(0x5a9eff);
                             }
-                            doorPrompt.style.display = 'none';
-                            if (currentDoor) {
-                                currentDoor.children.forEach(child => {
-                                    if (child.material && child.material.emissive) {
-                                        child.material.emissive.setHex(0x000000);
-                                    }
-                                });
-                                currentDoor = null;
-                            }
-                        }
+                        });
+                        doorPrompt.style.display = 'block';
+                    } else {
+                        doorPrompt.style.display = 'none';
                     }
-                    document.addEventListener('keydown', onKeyDown);
-
-                    // --- Movement with collision detection ---
-                    const moveState = { forward: false, backward: false, left: false, right: false };
-                    document.addEventListener('keydown', (e) => {
-                        switch(e.code) {
-                            case 'KeyW': moveState.forward = true; break;
-                            case 'KeyS': moveState.backward = true; break;
-                            case 'KeyA': moveState.left = true; break;
-                            case 'KeyD': moveState.right = true; break;
-                        }
-                    });
-                    document.addEventListener('keyup', (e) => {
-                        switch(e.code) {
-                            case 'KeyW': moveState.forward = false; break;
-                            case 'KeyS': moveState.backward = false; break;
-                            case 'KeyA': moveState.left = false; break;
-                            case 'KeyD': moveState.right = false; break;
-                        }
-                    });
-
-                    function updateMovement(delta) {
-                        if (!controls.isLocked) return;
-                        const speed = 5 * delta;
-                        const playerPos = controls.getObject().position;
-
-                        // Camera directions
-                        const cameraDir = new THREE.Vector3();
-                        camera.getWorldDirection(cameraDir);
-                        cameraDir.y = 0;
-                        cameraDir.normalize();
-                        const strafeDir = new THREE.Vector3().crossVectors(cameraDir, new THREE.Vector3(0,1,0)).normalize();
-
-                        // Calculate desired movement
-                        let moveX = 0, moveZ = 0;
-                        if (moveState.forward) {
-                            moveX += cameraDir.x * speed;
-                            moveZ += cameraDir.z * speed;
-                        }
-                        if (moveState.backward) {
-                            moveX -= cameraDir.x * speed;
-                            moveZ -= cameraDir.z * speed;
-                        }
-                        if (moveState.left) {
-                            moveX -= strafeDir.x * speed;
-                            moveZ -= strafeDir.z * speed;
-                        }
-                        if (moveState.right) {
-                            moveX += strafeDir.x * speed;
-                            moveZ += strafeDir.z * speed;
-                        }
-
-                        if (joystickActive) {
-                            const joyX = joystickVector.x;
-                            const joyY = joystickVector.y;
-                            if (Math.abs(joyX) > 0.1 || Math.abs(joyY) > 0.1) {
-                                moveX += strafeDir.x * joyX * speed * 1.5;
-                                moveZ += strafeDir.z * joyX * speed * 1.5;
-                                moveX -= cameraDir.x * joyY * speed * 1.5;
-                                moveZ -= cameraDir.z * joyY * speed * 1.5;
-                            }
-                        }
-
-                        // Apply movement with collision against room walls if inside a room
-                        let newX = playerPos.x + moveX;
-                        let newZ = playerPos.z + moveZ;
-
-                        // Determine if we are in a room (any room visible)
-                        let inRoom = false;
-                        for (let key in rooms) {
-                            if (rooms[key].visible) inRoom = true;
-                        }
-
-                        if (inRoom) {
-                            // Clamp to room boundaries (roomHalf - margin)
-                            const margin = 0.5;
-                            const bound = roomHalf - margin;
-                            newX = Math.max(-bound, Math.min(bound, newX));
-                            newZ = Math.max(-bound, Math.min(bound, newZ));
-                        }
-
-                        playerPos.x = newX;
-                        playerPos.z = newZ;
-                    }
-
-                    // --- Animation loop ---
-                    function animate() {
-                        requestAnimationFrame(animate);
-                        const delta = Math.min(clock.getDelta(), 0.1);
-                        updateFPS();
-
-                        particles.rotation.y += 0.0002;
-
-                        updateMovement(delta);
-                        checkDoorProximity();
-
-                        renderer.render(scene, camera);
-                        labelRenderer.render(scene, camera);
-                    }
-
-                    const clock = new THREE.Clock();
-                    animate();
-
-                    // --- Resize ---
-                    window.addEventListener('resize', () => {
-                        camera.aspect = window.innerWidth / window.innerHeight;
-                        camera.updateProjectionMatrix();
-                        renderer.setSize(window.innerWidth, window.innerHeight);
-                        labelRenderer.setSize(window.innerWidth, window.innerHeight);
-                    });
-
-                } catch (e) {
-                    showError("3D init failed: " + e.message);
                 }
             }
-        })();
+
+            // --- ANIMATION LOOP ---
+            const clock = new THREE.Clock();
+
+            function animate() {
+                requestAnimationFrame(animate);
+                const delta = Math.min(clock.getDelta(), 0.1);
+
+                // Animate moving lights
+                const time = performance.now() / 1000;
+                movingLight1.position.x = Math.sin(time * 0.5) * 8;
+                movingLight1.position.z = Math.cos(time * 0.7) * 8;
+                movingLight2.position.x = Math.sin(time * 0.8 + 2) * 8;
+                movingLight2.position.z = Math.cos(time * 0.6 + 1) * 8;
+
+                // Rotate central platform slowly
+                platformGroup.rotation.y += 0.002;
+
+                // Rotate particles
+                particles.rotation.y += 0.0002;
+
+                updatePlayer(delta);
+                checkDoors();
+
+                composer.render();
+                labelRenderer.render(scene, camera);
+            }
+            animate();
+
+            // --- RESIZE ---
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                composer.setSize(window.innerWidth, window.innerHeight);
+                labelRenderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            // Hide loading
+            setTimeout(() => {
+                if (loadingDiv) {
+                    loadingDiv.style.opacity = '0';
+                    setTimeout(() => { loadingDiv.style.display = 'none'; }, 500);
+                }
+            }, 1500);
+
+        } catch (err) {
+            showError(err.message);
+        }
     </script>
 </body>
 </html>
