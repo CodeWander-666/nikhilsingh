@@ -3,1159 +3,476 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NIKHIL SINGH | DATA RUNNER</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>NIKHIL SINGH · DREAM WALK</title>
     <style>
-        /* CORE MOBILE SETTINGS */
-        body { 
-            margin: 0; 
-            overflow: hidden; 
-            background: #050505; 
-            touch-action: none; /* Prevents scrolling */
-            font-family: 'Courier New', Courier, monospace; 
-            user-select: none; /* Prevents text selection */
-            -webkit-user-select: none;
+        body { margin: 0; overflow: hidden; font-family: 'Courier New', monospace; }
+        #info {
+            position: absolute; bottom: 20px; left: 20px; color: #00f3ff;
+            text-shadow: 0 0 10px #00f3ff; font-size: 14px; z-index: 100;
+            background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px;
+            pointer-events: none;
         }
-        
-        /* UI OVERLAY */
-        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
-        
-        /* SCOREBOARD */
-        #score-box {
-            position: absolute; top: 5%; left: 50%; transform: translateX(-50%);
-            text-align: center;
-            color: white;
-            text-shadow: 0 0 10px #00f3ff;
-            width: 100%;
-        }
-        #score-val { font-size: 10vw; font-weight: bold; line-height: 1; }
-        #score-label { font-size: 3vw; letter-spacing: 2px; color: #00f3ff; }
-
-        /* MODAL (Popups) */
-        #modal {
-            display: none;
+        #loading {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 85%; max-width: 400px;
-            background: rgba(10, 10, 15, 0.98);
-            border: 2px solid #00f3ff;
-            box-shadow: 0 0 50px rgba(0, 243, 255, 0.3);
-            padding: 20px;
-            text-align: center;
-            color: white;
-            pointer-events: auto;
-            border-radius: 10px;
-            z-index: 100;
+            color: white; font-size: 24px; z-index: 200;
+            background: rgba(0,0,0,0.8); padding: 20px; border-radius: 8px;
+            border: 1px solid #00f3ff;
         }
-        
-        .btn {
-            background: #00f3ff; color: black; border: none; 
-            padding: 15px 30px; font-size: 1.2rem;
-            font-weight: bold; cursor: pointer; margin-top: 15px;
-            text-transform: uppercase; letter-spacing: 1px;
-            border-radius: 5px; width: 100%;
-            touch-action: manipulation;
-        }
-        .btn:active { background: white; transform: scale(0.95); }
-
-        /* START SCREEN */
-        #start-screen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            pointer-events: auto; z-index: 20;
-            padding: 20px;
-        }
-        
-        /* MOBILE INSTRUCTIONS */
-        .instruction-icon {
-            width: 50px; height: 50px;
-            border: 2px dashed #00f3ff;
-            border-radius: 50%;
-            margin: 20px auto;
-            position: relative;
-        }
-        .instruction-icon::after {
-            content: ''; position: absolute; top: 50%; left: 50%;
-            width: 10px; height: 10px; background: #00f3ff;
-            border-radius: 50%; transform: translate(-50%, -50%);
-            animation: touchMove 1.5s infinite;
-        }
-        @keyframes touchMove {
-            0% { transform: translate(-50%, -50%); opacity: 1; }
-            50% { transform: translate(100%, -150%); opacity: 0.5; }
-            100% { transform: translate(-50%, -50%); opacity: 0; }
+        #error {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: #ff5555; background: black; padding: 20px; border: 2px solid red;
+            z-index: 300; display: none;
         }
     </style>
 </head>
 <body>
+    <div id="loading">INITIALIZING DREAM WALK...</div>
+    <div id="error"></div>
+    <div id="info">WASD MOVE | MOUSE LOOK | COLLECT CRYSTALS</div>
 
-    <canvas id="game"></canvas>
+    <!-- Load dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
 
-    <div id="ui-layer">
-        <div id="score-box">
-            <div id="score-val">0</div>
-            <div id="score-label">DATA PROCESSED</div>
-        </div>
-    </div>
-
-    <div id="start-screen">
-        <h1 class="text-4xl md:text-6xl font-bold text-white mb-2 text-center" style="text-shadow: 0 0 20px #00f3ff;">
-            NIKHIL'S<br><span style="color:#00f3ff">DATA RUNNER</span>
-        </h1>
-        
-        <div class="instruction-icon"></div>
-        <p class="text-gray-400 mb-8 text-center text-sm">
-            DRAG TO MOVE.<br>
-            COLLECT <span style="color:#00f3ff">SKILLS</span>.<br>
-            AVOID <span style="color:#ff0055">RED BUGS</span>.
-        </p>
-        
-        <button class="btn" onclick="startGame()">START MISSION</button>
-    </div>
-
-    <div id="modal">
-        <h2 id="m-title" class="text-2xl font-bold mb-1 text-cyan-400">TITLE</h2>
-        <div id="m-tag" class="text-[10px] bg-gray-800 inline-block px-2 py-1 mb-3 rounded border border-cyan-500/50">TAG</div>
-        <p id="m-desc" class="text-sm text-gray-300 mb-4 leading-relaxed">Description...</p>
-        <a id="m-link" href="#" target="_blank" class="block text-center text-sm text-cyan-400 border-b border-cyan-400/50 pb-2 mb-4">OPEN LINK</a>
-        <button class="btn" onclick="closeModal()">RESUME</button>
-    </div>
+    <!-- Load our data and widgets -->
+    <script src="data.html"></script>
+    <script src="widgets.html"></script>
 
     <script>
-        // --- SETUP ---
-        const canvas = document.getElementById('game');
-        const ctx = canvas.getContext('2d');
-        const scoreEl = document.getElementById('score-val');
-        const modal = document.getElementById('modal');
-        const startScreen = document.getElementById('start-screen');
+        (function() {
+            "use strict";
 
-        let width, height;
-        
-        function resize() {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resize);
-        resize();
+            // --- ERROR HANDLING & WEBGL CHECK ---
+            const loadingDiv = document.getElementById('loading');
+            const errorDiv = document.getElementById('error');
 
-        // --- GAME DATA ---
-        const ITEMS = [
-            { type: 'SKILL', name: 'PYTHON', desc: 'Core language for Data Science. Pandas, NumPy, Scikit-learn.', color: '#FFD700', points: 100 },
-            { type: 'SKILL', name: 'SQL', desc: 'Expert in complex queries, schema design, and data extraction.', color: '#00BFFF', points: 100 },
-            { type: 'SKILL', name: 'GEN-AI', desc: 'LLM Integration, Prompt Engineering, RAG Systems.', color: '#bc13fe', points: 150 },
-            { type: 'PROJECT', name: 'SEOMAN AI', desc: 'Full-stack AI SEO Analyzer with Traffic Forecasting.', link: 'https://seoman-ai.vercel.app', color: '#00FF7F', points: 500 },
-            { type: 'PROJECT', name: 'NOVUSFACE', desc: 'Biometric Face Regeneration & Swapping Engine.', link: '#', color: '#FF1493', points: 500 },
-            { type: 'EXP', name: 'ALMABETTER', desc: 'Data Analyst Apprentice (2025-Present).', color: '#FFFFFF', points: 300 }
-        ];
-
-        // --- STATE ---
-        let gameRunning = false;
-        let score = 0;
-        let player = { x: width/2, y: height/2, size: 25 }; // Larger player for mobile visibility
-        let entities = [];
-        let particles = [];
-        let enemies = [];
-        let inputPos = { x: width/2, y: height/2 };
-
-        // --- MOBILE INPUT HANDLING ---
-        function handleInput(x, y) {
-            inputPos.x = x;
-            inputPos.y = y;
-            // Keep input within bounds
-            if (inputPos.x < 0) inputPos.x = 0;
-            if (inputPos.x > width) inputPos.x = width;
-            if (inputPos.y < 0) inputPos.y = 0;
-            if (inputPos.y > height) inputPos.y = height;
-        }
-
-        window.addEventListener('mousemove', e => handleInput(e.clientX, e.clientY));
-        
-        // Touch events (Prevent default to stop scrolling)
-        canvas.addEventListener('touchstart', e => {
-            e.preventDefault();
-            handleInput(e.touches[0].clientX, e.touches[0].clientY);
-        }, { passive: false });
-
-        canvas.addEventListener('touchmove', e => {
-            e.preventDefault();
-            handleInput(e.touches[0].clientX, e.touches[0].clientY);
-        }, { passive: false });
-
-        // --- CLASSES ---
-        class Entity {
-            constructor(data) {
-                this.data = data;
-                this.reset();
-            }
-            reset() {
-                this.x = Math.random() * (width - 40) + 20;
-                this.y = Math.random() * (height - 40) + 20;
-                this.vx = (Math.random() - 0.5) * 1.5; // Slower speed for mobile readability
-                this.vy = (Math.random() - 0.5) * 1.5;
-                this.size = 20; // Larger hitboxes
-                this.pulse = 0;
-            }
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-                if(this.x < 0 || this.x > width) this.vx *= -1;
-                if(this.y < 0 || this.y > height) this.vy *= -1;
-                this.pulse += 0.08;
-            }
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size + Math.sin(this.pulse)*2, 0, Math.PI*2);
-                ctx.fillStyle = this.data.color;
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = this.data.color;
-                ctx.fill();
-                ctx.shadowBlur = 0;
-                
-                // Simplified text for mobile performance
-                ctx.fillStyle = "white";
-                ctx.font = "bold 10px Arial";
-                ctx.textAlign = "center";
-                ctx.fillText(this.data.type, this.x, this.y - 30);
-            }
-        }
-
-        class Enemy {
-            constructor() {
-                this.x = Math.random() * width;
-                this.y = Math.random() * height;
-                if(Math.abs(this.x - player.x) < 150) this.x += 200; // Safer spawn distance
-                this.vx = (Math.random() - 0.5) * 3;
-                this.vy = (Math.random() - 0.5) * 3;
-                this.size = 12; // Smaller enemies
-            }
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-                if(this.x < 0 || this.x > width) this.vx *= -1;
-                if(this.y < 0 || this.y > height) this.vy *= -1;
-            }
-            draw() {
-                ctx.beginPath();
-                for(let i=0; i<3; i++) { // Triangle shape (faster to render)
-                    ctx.lineTo(this.x + Math.cos((i*120)*Math.PI/180)*12, this.y + Math.sin((i*120)*Math.PI/180)*12);
-                }
-                ctx.fillStyle = "#ff0055";
-                ctx.fill();
-            }
-        }
-
-        class Particle {
-            constructor(x, y, color) {
-                this.x = x; this.y = y;
-                this.vx = (Math.random() - 0.5) * 8;
-                this.vy = (Math.random() - 0.5) * 8;
-                this.life = 1;
-                this.color = color;
-            }
-            update() { this.x += this.vx; this.y += this.vy; this.life -= 0.04; }
-            draw() {
-                ctx.globalAlpha = this.life;
-                ctx.fillStyle = this.color;
-                ctx.fillRect(this.x, this.y, 4, 4);
-                ctx.globalAlpha = 1;
-            }
-        }
-
-        // --- FUNCTIONS ---
-        function startGame() {
-            startScreen.style.display = 'none';
-            // Init player position to center
-            player.x = width/2; 
-            player.y = height/2;
-            inputPos.x = width/2;
-            inputPos.y = height/2;
-            
-            gameRunning = true;
-            entities = [];
-            ITEMS.forEach(item => entities.push(new Entity(item)));
-            enemies = [];
-            for(let i=0; i<12; i++) enemies.push(new Enemy());
-            animate();
-        }
-
-        function checkCollision(a, b, dist) {
-            const dx = a.x - b.x;
-            const dy = a.y - b.y;
-            return (dx*dx + dy*dy) < (dist*dist); // Squared distance is faster
-        }
-
-        function openModal(data) {
-            gameRunning = false;
-            modal.style.display = 'block';
-            document.getElementById('m-title').innerText = data.name;
-            document.getElementById('m-title').style.color = data.color;
-            const tag = document.getElementById('m-tag');
-            tag.innerText = data.type;
-            tag.style.borderColor = data.color;
-            tag.style.color = data.color;
-            document.getElementById('m-desc').innerText = data.desc;
-            
-            const link = document.getElementById('m-link');
-            if(data.link) {
-                link.style.display = 'block';
-                link.href = data.link;
-                link.style.color = data.color;
-            } else {
-                link.style.display = 'none';
-            }
-        }
-
-        function closeModal() {
-            modal.style.display = 'none';
-            gameRunning = true;
-            // Reset input pos to avoid instant jump
-            inputPos.x = player.x;
-            inputPos.y = player.y;
-            animate();
-        }
-
-        function animate() {
-            if(!gameRunning) return;
-
-            ctx.fillStyle = 'rgba(5, 5, 5, 0.25)'; // Higher opacity for less trail (better performance)
-            ctx.fillRect(0, 0, width, height);
-
-            // 1. MOVE PLAYER (Direct follow for instant response)
-            // Linear interpolation for slight smoothness but fast response
-            player.x += (inputPos.x - player.x) * 0.15;
-            player.y += (inputPos.y - player.y) * 0.15;
-
-            // Draw Player
-            ctx.beginPath();
-            ctx.arc(player.x, player.y, player.size, 0, Math.PI*2);
-            ctx.strokeStyle = "#00f3ff"; ctx.lineWidth = 2; ctx.stroke();
-            ctx.beginPath();
-            ctx.arc(player.x, player.y, 8, 0, Math.PI*2);
-            ctx.fillStyle = "#00f3ff"; ctx.fill();
-
-            // 2. ITEMS
-            for(let i=entities.length-1; i>=0; i--) {
-                const e = entities[i];
-                e.update();
-                e.draw();
-
-                if(checkCollision(player, e, player.size + e.size)) {
-                    // Spawn particles
-                    for(let k=0; k<10; k++) particles.push(new Particle(e.x, e.y, e.data.color));
-                    
-                    score += e.data.points;
-                    scoreEl.innerText = score;
-                    openModal(e.data);
-                    entities.splice(i, 1);
-                }
+            function showError(msg) {
+                console.error(msg);
+                errorDiv.style.display = 'block';
+                errorDiv.innerText = 'ERROR: ' + msg;
+                if (loadingDiv) loadingDiv.style.display = 'none';
             }
 
-            // 3. ENEMIES
-            enemies.forEach(e => {
-                e.update();
-                e.draw();
-                if(checkCollision(player, e, player.size + e.size)) {
-                    score = Math.max(0, score - 5); // Less harsh penalty
-                    scoreEl.innerText = score;
-                    scoreEl.style.color = "red";
-                    setTimeout(() => scoreEl.style.color = "white", 200);
-                    // Knockback
-                    const angle = Math.atan2(player.y - e.y, player.x - e.x);
-                    player.x += Math.cos(angle) * 20;
-                    player.y += Math.sin(angle) * 20;
-                    inputPos.x = player.x; inputPos.y = player.y; // Sync input
-                }
-            });
-
-            // 4. PARTICLES
-            for(let i=particles.length-1; i>=0; i--) {
-                const p = particles[i];
-                p.update();
-                p.draw();
-                if(p.life <= 0) particles.splice(i, 1);
-            }
-
-            // WIN STATE
-            if(entities.length === 0) {
-                ctx.fillStyle = "white";
-                ctx.font = "bold 8vw Courier New";
-                ctx.textAlign = "center";
-                ctx.fillText("MISSION COMPLETE", width/2, height/2);
+            if (!window.PORTFOLIO_DATA) {
+                showError("Portfolio data failed to load.");
                 return;
             }
 
-            requestAnimationFrame(animate);
-        }
-    </script>
-</body>
-</html>
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transform-style: preserve-3d;
-        }
+            // --- THREE.JS SETUP ---
+            let scene, camera, renderer, labelRenderer, composer, controls;
+            let clock = new THREE.Clock();
 
-        /* THE FLOATING DASHBOARD */
-        #dashboard {
-            display: grid;
-            grid-template-columns: 300px 1fr 250px;
-            grid-template-rows: 100px 1fr 200px;
-            gap: 20px;
-            width: 90vw;
-            max-width: 1400px;
-            height: 85vh;
-            transform-style: preserve-3d;
-            transition: transform 0.1s ease-out; /* Smooth follow */
-        }
+            try {
+                // Scene
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x050510);
+                scene.fog = new THREE.FogExp2(0x050510, 0.002);
 
-        /* WIDGET BASE STYLE (Glassmorphism) */
-        .widget {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            padding: 20px;
-            position: relative;
-            transform-style: preserve-3d;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            overflow: hidden;
-        }
+                // Camera
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                camera.position.set(0, 2, 10);
 
-        .widget:hover {
-            border-color: var(--neon-blue);
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
-            transform: translateZ(20px); /* Pop out effect */
-        }
+                // Renderer (WebGL)
+                renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                renderer.toneMapping = THREE.ReinhardToneMapping;
+                renderer.toneMappingExposure = 1.2;
+                document.body.appendChild(renderer.domElement);
 
-        /* OPTICAL ILLUSION LAYER (Depth) */
-        .depth-layer {
-            transform: translateZ(40px);
-        }
+                // CSS2 Renderer for widgets
+                labelRenderer = new THREE.CSS2DRenderer();
+                labelRenderer.setSize(window.innerWidth, window.innerHeight);
+                labelRenderer.domElement.style.position = 'absolute';
+                labelRenderer.domElement.style.top = '0px';
+                labelRenderer.domElement.style.left = '0px';
+                labelRenderer.domElement.style.pointerEvents = 'none'; // Allow clicking through to canvas
+                document.body.appendChild(labelRenderer.domElement);
 
-        /* SPECIFIC WIDGET LAYOUTS */
-        .w-header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; }
-        .w-profile { grid-row: 2 / 4; }
-        .w-main { grid-column: 2 / 3; grid-row: 2 / 3; display: flex; flex-direction: column; gap: 20px;}
-        .w-skills { grid-column: 3 / 4; grid-row: 2 / 4; }
-        .w-log { grid-column: 2 / 3; grid-row: 3 / 4; }
+                // Controls (PointerLock)
+                controls = new THREE.PointerLockControls(camera, document.body);
+                scene.add(controls.getObject());
 
-        /* TEXT STYLES */
-        .mono { font-family: 'Share Tech Mono', monospace; }
-        .text-glow { text-shadow: 0 0 10px var(--neon-blue); }
-        
-        /* ANIMATIONS */
-        @keyframes pulse {
-            0% { opacity: 0.5; }
-            50% { opacity: 1; }
-            100% { opacity: 0.5; }
-        }
-        .status-dot {
-            width: 8px; height: 8px; background: var(--neon-blue);
-            border-radius: 50%; display: inline-block;
-            box-shadow: 0 0 10px var(--neon-blue);
-            animation: pulse 2s infinite;
-        }
+                // Lock on click
+                renderer.domElement.addEventListener('click', () => {
+                    if (!controls.isLocked) controls.lock();
+                });
 
-        /* PROJECT CARDS */
-        .project-card {
-            background: rgba(0,0,0,0.3);
-            border-left: 2px solid var(--glass-border);
-            padding: 15px;
-            margin-bottom: 10px;
-            transition: 0.3s;
-            cursor: pointer;
-        }
-        .project-card:hover {
-            border-left-color: var(--neon-purple);
-            background: rgba(188, 19, 254, 0.1);
-            transform: translateX(10px);
-        }
+                // --- POST PROCESSING (BLOOM) ---
+                const renderScene = new THREE.RenderPass(scene, camera);
+                const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+                bloomPass.threshold = 0.1;
+                bloomPass.strength = 1.5;
+                bloomPass.radius = 0.5;
 
-        /* MOBILE FIX */
-        @media (max-width: 1024px) {
-            body { height: auto; overflow-y: auto; perspective: none; }
-            #dashboard { 
-                display: flex; flex-direction: column; 
-                height: auto; width: 100%; padding: 20px; 
-                transform: none !important; /* Disable 3D on mobile */
+                composer = new THREE.EffectComposer(renderer);
+                composer.addPass(renderScene);
+                composer.addPass(bloomPass);
+            } catch (e) {
+                showError("WebGL initialization failed: " + e.message);
+                return;
             }
-            #scene { height: auto; display: block; }
-            .widget { transform: none !important; }
-        }
-    </style>
-</head>
-<body>
 
-    <div id="scene">
-        <div id="dashboard">
-            
-            <div class="widget w-header">
-                <div class="depth-layer flex items-center gap-4">
-                    <div class="status-dot"></div>
-                    <h1 class="text-3xl font-bold tracking-widest">SIMULATION_<span style="color:var(--neon-blue)">CORE</span></h1>
-                </div>
-                <div class="depth-layer mono text-xs text-gray-400 text-right">
-                    SYS_TIME: <span id="clock">00:00:00</span><br>
-                    LOC: IND_MP
-                </div>
-            </div>
+            // --- LIGHTING ---
+            try {
+                // Ambient
+                const ambient = new THREE.AmbientLight(0x404060);
+                scene.add(ambient);
 
-            <div class="widget w-profile flex flex-col items-center text-center">
-                <div class="depth-layer relative mb-6 mt-4">
-                    <div class="w-32 h-32 rounded-full border-2 border-dashed border-gray-600 flex items-center justify-center relative">
-                        <div class="absolute inset-0 rounded-full border border-cyan-500 animate-[spin_10s_linear_infinite] opacity-50"></div>
-                        <img src="https://ui-avatars.com/api/?name=Nikhil+Singh&background=00f3ff&color=000" class="w-28 h-28 rounded-full opacity-90">
-                    </div>
-                </div>
-                <div class="depth-layer">
-                    <h2 class="text-3xl font-bold mb-1">NIKHIL SINGH</h2>
-                    <p class="text-cyan-400 mono text-sm mb-6">DATA ANALYST // FULL STACK</p>
-                    
-                    <div class="text-left w-full px-4 space-y-4">
-                        <div class="p-3 bg-white/5 rounded border border-white/10">
-                            <div class="text-[10px] text-gray-400 mono">CURRENT_STATUS</div>
-                            <div class="text-sm font-bold">OPEN TO WORK</div>
-                        </div>
-                        <div class="p-3 bg-white/5 rounded border border-white/10">
-                            <div class="text-[10px] text-gray-400 mono">CLEARANCE</div>
-                            <div class="text-sm font-bold">LEVEL 5 (ADMIN)</div>
-                        </div>
-                    </div>
+                // Point lights with colors
+                const light1 = new THREE.PointLight(0x00f3ff, 1, 30);
+                light1.position.set(5, 5, 5);
+                scene.add(light1);
 
-                    <div class="mt-auto pt-8 w-full flex gap-2 justify-center">
-                        <a href="https://linkedin.com/in/nikhil-singh" target="_blank" class="px-4 py-2 bg-blue-600/20 border border-blue-500 text-xs hover:bg-blue-500 hover:text-white transition-all">LINKEDIN</a>
-                        <a href="https://github.com/codewonder-666" target="_blank" class="px-4 py-2 bg-purple-600/20 border border-purple-500 text-xs hover:bg-purple-500 hover:text-white transition-all">GITHUB</a>
-                    </div>
-                </div>
-            </div>
+                const light2 = new THREE.PointLight(0xff00aa, 0.8, 30);
+                light2.position.set(-5, 3, -5);
+                scene.add(light2);
 
-            <div class="widget w-main">
-                <div class="flex-1 relative overflow-hidden">
-                    <div class="depth-layer">
-                        <h3 class="mono text-gray-500 text-sm mb-4 border-b border-gray-700 pb-2">EXPERIENCE_LOGS</h3>
-                        
-                        <div class="flex items-start gap-4 mb-4">
-                            <div class="w-1 h-full bg-cyan-500/50"></div>
-                            <div>
-                                <h4 class="font-bold text-lg">ALMABETTER</h4>
-                                <div class="text-cyan-400 text-xs mono">AUG 2025 - PRESENT</div>
-                                <p class="text-sm text-gray-400 mt-1">Data Analyst Apprentice. Full Stack Data Science & AI model training.</p>
-                            </div>
-                        </div>
+                // Flickering light for dream effect
+                const flickerLight = new THREE.PointLight(0xffffff, 0.5, 20);
+                flickerLight.position.set(0, 4, 0);
+                scene.add(flickerLight);
+            } catch (e) {
+                console.warn("Lighting setup failed:", e);
+            }
 
-                        <div class="flex items-start gap-4">
-                            <div class="w-1 h-full bg-purple-500/50"></div>
-                            <div>
-                                <h4 class="font-bold text-lg">SG GURUKUL</h4>
-                                <div class="text-purple-400 text-xs mono">AUG 2023 - OCT 2023</div>
-                                <p class="text-sm text-gray-400 mt-1">Sales & Marketing Intern. Lead generation & counseling.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            // --- ENVIRONMENT (Floating islands / platforms) ---
+            function createFloatingIsland(pos, color = 0x223344) {
+                try {
+                    const group = new THREE.Group();
+                    const base = new THREE.Mesh(
+                        new THREE.CylinderGeometry(2, 2.5, 0.5, 8),
+                        new THREE.MeshStandardMaterial({ color: color, emissive: 0x112233, roughness: 0.4, metalness: 0.1 })
+                    );
+                    base.position.y = 0;
+                    group.add(base);
 
-                <div class="flex-1">
-                    <div class="depth-layer">
-                        <h3 class="mono text-gray-500 text-sm mb-4 border-b border-gray-700 pb-2">DEPLOYED_PROJECTS</h3>
-                        
-                        <div class="project-card" onclick="window.open('https://seoman-ai.vercel.app')">
-                            <div class="flex justify-between">
-                                <span class="font-bold text-cyan-300">SEOMAN AI</span>
-                                <span class="text-[10px] border border-cyan-500 px-1 text-cyan-500">LIVE</span>
-                            </div>
-                            <p class="text-xs text-gray-400 mt-1">Full-stack AI SEO Analyzer. Traffic Forecasting & Audits.</p>
-                        </div>
+                    const pillar = new THREE.Mesh(
+                        new THREE.CylinderGeometry(0.5, 0.5, 2, 6),
+                        new THREE.MeshStandardMaterial({ color: 0x8899aa, emissive: 0x112233 })
+                    );
+                    pillar.position.y = 1.25;
+                    group.add(pillar);
 
-                        <div class="project-card">
-                            <div class="flex justify-between">
-                                <span class="font-bold text-purple-300">NOVUSFACE AI</span>
-                                <span class="text-[10px] border border-purple-500 px-1 text-purple-500">BETA</span>
-                            </div>
-                            <p class="text-xs text-gray-400 mt-1">Biometric Face Regeneration & Swapping. No Sign-up required.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                    const top = new THREE.Mesh(
+                        new THREE.TorusKnotGeometry(1, 0.3, 64, 8),
+                        new THREE.MeshStandardMaterial({ color: 0x00f3ff, emissive: 0x004466 })
+                    );
+                    top.position.y = 2.5;
+                    group.add(top);
 
-            <div class="widget w-skills">
-                <div class="depth-layer h-full flex flex-col">
-                    <h3 class="mono text-gray-500 text-sm mb-4 border-b border-gray-700 pb-2">SKILL_MATRIX</h3>
-                    
-                    <div class="space-y-4 flex-1">
-                        <div>
-                            <div class="flex justify-between text-xs mb-1"><span>PYTHON</span><span>95%</span></div>
-                            <div class="h-1 bg-gray-700 w-full"><div class="h-full bg-yellow-400 shadow-[0_0_10px_orange]" style="width: 95%"></div></div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-xs mb-1"><span>SQL</span><span>90%</span></div>
-                            <div class="h-1 bg-gray-700 w-full"><div class="h-full bg-blue-500 shadow-[0_0_10px_blue]" style="width: 90%"></div></div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-xs mb-1"><span>GEN-AI</span><span>85%</span></div>
-                            <div class="h-1 bg-gray-700 w-full"><div class="h-full bg-purple-500 shadow-[0_0_10px_purple]" style="width: 85%"></div></div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-xs mb-1"><span>COMPUTER VISION</span><span>80%</span></div>
-                            <div class="h-1 bg-gray-700 w-full"><div class="h-full bg-red-500 shadow-[0_0_10px_red]" style="width: 80%"></div></div>
-                        </div>
-                    </div>
+                    group.position.copy(pos);
+                    return group;
+                } catch (e) {
+                    console.warn("Island creation failed:", e);
+                    return new THREE.Group();
+                }
+            }
 
-                    <div class="mt-4 p-4 bg-black/40 rounded border border-gray-700 text-center">
-                        <div class="text-3xl font-bold text-white">225+</div>
-                        <div class="text-[10px] text-gray-400 tracking-widest">IMPRESSIONS</div>
-                    </div>
-                </div>
-            </div>
+            // Place islands
+            scene.add(createFloatingIsland(new THREE.Vector3(0, 0, 0)));
+            scene.add(createFloatingIsland(new THREE.Vector3(8, 2, -5)));
+            scene.add(createFloatingIsland(new THREE.Vector3(-7, -1, 6)));
 
-            <div class="widget w-log">
-                <div class="depth-layer h-full font-mono text-xs overflow-hidden">
-                    <div class="text-gray-500 border-b border-gray-700 pb-1 mb-2">SYSTEM_LOGS</div>
-                    <div id="logs" class="space-y-1 text-green-500/80">
-                        </div>
-                </div>
-            </div>
+            // --- PARTICLES (Floating dust) ---
+            try {
+                const particleCount = 2000;
+                const particlesGeo = new THREE.BufferGeometry();
+                const particlesPos = new Float32Array(particleCount * 3);
+                for (let i = 0; i < particleCount; i++) {
+                    particlesPos[i*3] = (Math.random() - 0.5) * 50;
+                    particlesPos[i*3+1] = (Math.random() - 0.5) * 30;
+                    particlesPos[i*3+2] = (Math.random() - 0.5) * 50;
+                }
+                particlesGeo.setAttribute('position', new THREE.BufferAttribute(particlesPos, 3));
+                const particlesMat = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.05, transparent: true, opacity: 0.5 });
+                const particles = new THREE.Points(particlesGeo, particlesMat);
+                scene.add(particles);
+            } catch (e) {
+                console.warn("Particles failed:", e);
+            }
 
-        </div>
-    </div>
+            // --- INTERACTIVE OBJECTS ---
+            let interactiveObjects = []; // Store for raycasting
 
-    <script>
-        // --- 1. OPTICAL ILLUSION ENGINE (Parallax) ---
-        const dashboard = document.getElementById('dashboard');
-        const scene = document.getElementById('scene');
+            // Helper to create a glowing crystal
+            function createCrystal(pos, color, skillData) {
+                try {
+                    const geom = new THREE.OctahedronGeometry(0.8, 0);
+                    const mat = new THREE.MeshStandardMaterial({ color: color, emissive: color, emissiveIntensity: 0.5 });
+                    const mesh = new THREE.Mesh(geom, mat);
+                    mesh.position.copy(pos);
+                    mesh.userData = { type: 'skill', data: skillData };
+                    scene.add(mesh);
 
-        // Only enable parallax on desktop
-        if (window.innerWidth > 1024) {
-            document.addEventListener('mousemove', (e) => {
-                const xAxis = (window.innerWidth / 2 - e.pageX) / 25;
-                const yAxis = (window.innerHeight / 2 - e.pageY) / 25;
-                
-                dashboard.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+                    // Add a point light inside
+                    const light = new THREE.PointLight(color, 1, 5);
+                    light.position.copy(pos);
+                    scene.add(light);
+
+                    // Create and attach widget
+                    const widget = Widgets.createSkillWidget(skillData);
+                    widget.position.copy(pos.clone().add(new THREE.Vector3(0, 1.5, 0)));
+                    scene.add(widget);
+                    mesh.userData.widget = widget;
+
+                    interactiveObjects.push(mesh);
+                    return mesh;
+                } catch (e) {
+                    console.warn("Crystal creation failed:", e);
+                    return null;
+                }
+            }
+
+            // Create crystals from skills
+            PORTFOLIO_DATA.skills.forEach((skill, index) => {
+                const angle = (index / PORTFOLIO_DATA.skills.length) * Math.PI * 2;
+                const radius = 4;
+                const pos = new THREE.Vector3(Math.cos(angle) * radius, 1 + Math.sin(angle*2)*0.5, Math.sin(angle) * radius);
+                createCrystal(pos, skill.color, skill);
             });
-        }
 
-        // --- 2. CLOCK ---
-        setInterval(() => {
-            const now = new Date();
-            document.getElementById('clock').innerText = now.toLocaleTimeString();
-        }, 1000);
+            // Create project portals
+            function createPortal(pos, projectData) {
+                try {
+                    const ringGeo = new THREE.TorusGeometry(1.2, 0.2, 16, 32);
+                    const ringMat = new THREE.MeshStandardMaterial({ color: projectData.color, emissive: projectData.color, emissiveIntensity: 0.3 });
+                    const ring = new THREE.Mesh(ringGeo, ringMat);
+                    ring.position.copy(pos);
+                    ring.rotation.x = Math.PI / 2;
+                    ring.userData = { type: 'project', data: projectData };
+                    scene.add(ring);
 
-        // --- 3. AUTO-SCROLLING LOGS ---
-        const logsContainer = document.getElementById('logs');
-        const logMessages = [
-            "Connecting to Neural Link...",
-            "Decrypting Profile: NIKHIL SINGH",
-            "Loading Modules: Python, SQL, AI...",
-            "Fetching Project Data: SEOMAN AI...",
-            "Fetching Project Data: NOVUSFACE AI...",
-            "Analyzing Career Timeline...",
-            "System Optimization: 100%",
-            "Ready for Interaction."
-        ];
+                    // Inner glow (small sphere)
+                    const glowGeo = new THREE.SphereGeometry(0.4, 8);
+                    const glowMat = new THREE.MeshBasicMaterial({ color: projectData.color, transparent: true, opacity: 0.3 });
+                    const glow = new THREE.Mesh(glowGeo, glowMat);
+                    glow.position.copy(pos);
+                    scene.add(glow);
 
-        let logIndex = 0;
-        function addLog() {
-            if (logIndex < logMessages.length) {
-                const div = document.createElement('div');
-                div.innerText = `> ${logMessages[logIndex]}`;
-                div.style.opacity = 0;
-                logsContainer.appendChild(div);
-                
-                // Fade in
-                setTimeout(() => div.style.opacity = 1, 50);
-                
-                logIndex++;
-                setTimeout(addLog, 300); // Speed of typing
-            }
-        }
-        addLog();
+                    // Widget
+                    const widget = Widgets.createProjectWidget(projectData);
+                    widget.position.copy(pos.clone().add(new THREE.Vector3(0, 1.8, 0)));
+                    scene.add(widget);
+                    ring.userData.widget = widget;
 
-    </script>
-</body>
-</html>
-            100% { opacity: 0.95; }
-        }
-        .crt-screen {
-            animation: flicker 0.15s infinite;
-            height: 100%;
-            padding: 20px;
-            overflow-y: auto;
-            position: relative;
-        }
-
-        /* --- 2. GAME UI ELEMENTS --- */
-        .input-line {
-            display: flex;
-            align-items: center;
-            margin-top: 10px;
-        }
-        .prompt {
-            color: #00f3ff; /* User Prompt Color (Cyan) */
-            margin-right: 10px;
-            font-weight: bold;
-        }
-        input {
-            background: transparent;
-            border: none;
-            color: #fff;
-            font-family: inherit;
-            font-size: 1rem;
-            flex-grow: 1;
-            outline: none;
-            caret-color: #33ff00;
-        }
-
-        /* Typing Effect for output */
-        .output-line {
-            margin-bottom: 5px;
-            white-space: pre-wrap;
-            line-height: 1.5;
-        }
-        .error { color: #ff3333; }
-        .highlight { color: #ffff33; font-weight: bold; }
-        .link { color: #00f3ff; text-decoration: underline; cursor: pointer; }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-thumb { background: #33ff00; border-radius: 4px; }
-        ::-webkit-scrollbar-track { background: #0d0d0d; }
-
-        /* Mobile Controls */
-        #mobile-controls {
-            display: none; /* Hidden on desktop */
-            position: fixed;
-            bottom: 20px;
-            left: 0;
-            width: 100%;
-            justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            padding: 0 10px;
-            z-index: 200;
-        }
-        @media (max-width: 768px) {
-            #mobile-controls { display: flex; }
-        }
-        .cmd-btn {
-            background: rgba(0, 50, 0, 0.8);
-            border: 1px solid #33ff00;
-            color: #33ff00;
-            padding: 8px 12px;
-            font-family: inherit;
-            cursor: pointer;
-            text-transform: uppercase;
-            font-size: 0.8rem;
-        }
-        .cmd-btn:active { background: #33ff00; color: #000; }
-    </style>
-</head>
-<body>
-
-    <div class="scanlines"></div>
-    
-    <div class="crt-screen" id="terminal" onclick="document.getElementById('cmd-input').focus()">
-        <div id="history"></div>
-        <div class="input-line">
-            <span class="prompt">visitor@nikhil-singh:~$</span>
-            <input type="text" id="cmd-input" autocomplete="off" autofocus>
-        </div>
-    </div>
-
-    <div id="mobile-controls">
-        <button class="cmd-btn" onclick="runCmd('whois')">WHOIS</button>
-        <button class="cmd-btn" onclick="runCmd('skills')">SKILLS</button>
-        <button class="cmd-btn" onclick="runCmd('projects')">PROJECTS</button>
-        <button class="cmd-btn" onclick="runCmd('exp')">EXPERIENCE</button>
-        <button class="cmd-btn" onclick="runCmd('contact')">CONTACT</button>
-    </div>
-
-    <script>
-        // --- 3. DATA MATRIX (YOUR PROFILE) ---
-        const PROFILE = {
-            name: "NIKHIL SINGH",
-            role: "DATA ANALYST // FULL STACK SCIENTIST",
-            about: "A Data Analyst capable of turning raw chaos into actionable intelligence. Specializing in Python, AI, and Full Stack Data Science.",
-            skills: [
-                "PYTHON [95%]", "SQL [90%]", "GEN-AI [85%]", "MACHINE LEARNING [80%]", "COMPUTER VISION"
-            ],
-            projects: [
-                { title: "SEOMAN AI", desc: "Full-stack AI SEO Analyzer with Traffic Forecasting.", link: "https://seoman-ai.vercel.app" },
-                { title: "NOVUSFACE AI", desc: "Biometric Face Regeneration & Swapper (Free/No-Login).", link: "#" }
-            ],
-            experience: [
-                "ALMABETTER (2025-Present): Data Analyst Apprentice. Building AI models.",
-                "SG GURUKUL (2023): Sales & Marketing Intern. Lead generation."
-            ],
-            socials: {
-                linkedin: "https://linkedin.com/in/nikhil-singh",
-                github: "https://github.com/codewonder-666"
-            }
-        };
-
-        const terminal = document.getElementById('history');
-        const input = document.getElementById('cmd-input');
-
-        // --- 4. GAME ENGINE ---
-        
-        // Initial Boot Sequence
-        const bootSequence = [
-            "INITIALIZING KERNEL...",
-            "LOADING USER PROFILE: NIKHIL SINGH...",
-            "DECRYPTING SECURE FILES...",
-            "ACCESS GRANTED.",
-            "",
-            "WELCOME TO THE INSIGHT ENGINE (v1.0)",
-            "TYPE 'help' TO VIEW AVAILABLE COMMANDS."
-        ];
-
-        let delay = 0;
-        bootSequence.forEach((line, index) => {
-            setTimeout(() => printLine(line, index === 0 ? "highlight" : ""), delay);
-            delay += 100;
-        });
-
-        // Command Listener
-        input.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                const command = input.value.trim().toLowerCase();
-                printLine(`visitor@nikhil-singh:~$ ${command}`, "prompt");
-                processCommand(command);
-                input.value = '';
-                window.scrollTo(0, document.body.scrollHeight);
-            }
-        });
-
-        // Mobile Button Helper
-        function runCmd(cmd) {
-            printLine(`visitor@nikhil-singh:~$ ${cmd}`, "prompt");
-            processCommand(cmd);
-        }
-
-        // Logic Core
-        function processCommand(cmd) {
-            switch(cmd) {
-                case 'help':
-                    printLine("AVAILABLE COMMANDS:", "highlight");
-                    printLine("  whois     - View Operator Identity");
-                    printLine("  skills    - Scan Technical Abilities");
-                    printLine("  projects  - Access Deployed Missions");
-                    printLine("  exp       - View Execution Logs");
-                    printLine("  contact   - Establish Uplink");
-                    printLine("  clear     - Clear Terminal Screen");
-                    break;
-
-                case 'whois':
-                    printLine(`ID: ${PROFILE.name}`, "highlight");
-                    printLine(`ROLE: ${PROFILE.role}`);
-                    printLine(`BIO: ${PROFILE.about}`);
-                    break;
-
-                case 'skills':
-                    printLine("SCANNING NEURAL PATHWAYS...", "highlight");
-                    PROFILE.skills.forEach(s => printLine(`> ${s}`));
-                    break;
-
-                case 'projects':
-                    printLine("ACCESSING CLASSIFIED FILES...", "highlight");
-                    PROFILE.projects.forEach(p => {
-                        printLine(`[${p.title}]`, "highlight");
-                        printLine(`  ${p.desc}`);
-                        if(p.link !== '#') printLine(`  LINK: ${p.link}`, "link", p.link);
-                    });
-                    break;
-
-                case 'exp':
-                    printLine("DECRYPTING TIMELINE...", "highlight");
-                    PROFILE.experience.forEach(e => printLine(`> ${e}`));
-                    break;
-
-                case 'contact':
-                    printLine("ESTABLISHING SECURE CHANNEL...", "highlight");
-                    printLine(`LINKEDIN: ${PROFILE.socials.linkedin}`, "link", PROFILE.socials.linkedin);
-                    printLine(`GITHUB: ${PROFILE.socials.github}`, "link", PROFILE.socials.github);
-                    break;
-
-                case 'clear':
-                    terminal.innerHTML = '';
-                    break;
-
-                default:
-                    printLine(`ERROR: Command '${cmd}' not recognized. Type 'help'.`, "error");
-            }
-        }
-
-        // Output Renderer
-        function printLine(text, type = "", linkUrl = null) {
-            const div = document.createElement('div');
-            div.className = `output-line ${type}`;
-            div.textContent = text;
-            
-            if (type === "link" && linkUrl) {
-                div.onclick = () => window.open(linkUrl, '_blank');
-            }
-            
-            if (type === "prompt") {
-                div.style.color = "#00f3ff";
-                div.style.marginTop = "10px";
+                    interactiveObjects.push(ring);
+                    return ring;
+                } catch (e) {
+                    console.warn("Portal creation failed:", e);
+                    return null;
+                }
             }
 
-            terminal.appendChild(div);
-            // Auto-scroll to bottom
-            const screen = document.querySelector('.crt-screen');
-            screen.scrollTop = screen.scrollHeight;
-        }
-    </script>
-</body>
-</html>
-        .border-neon { border-color: #00f3ff; box-shadow: 0 0 10px rgba(0, 243, 255, 0.2); }
-        .bg-neon-dim { background-color: rgba(0, 243, 255, 0.05); }
+            PORTFOLIO_DATA.projects.forEach((proj, index) => {
+                const pos = new THREE.Vector3( (index === 0 ? 5 : -5), 2, 3 );
+                createPortal(pos, proj);
+            });
 
-        /* CUSTOM CURSOR */
-        #cursor {
-            position: fixed;
-            top: 0; left: 0;
-            width: 20px; height: 20px;
-            border: 1px solid #00f3ff;
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            z-index: 9999;
-            transition: width 0.2s, height 0.2s;
-            mix-blend-mode: difference;
-        }
-        #cursor-dot {
-            position: fixed;
-            top: 0; left: 0;
-            width: 4px; height: 4px;
-            background: #00f3ff;
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            z-index: 9999;
-        }
+            // Experience monoliths
+            function createMonolith(pos, expData) {
+                try {
+                    const geom = new THREE.BoxGeometry(0.8, 2.5, 0.8);
+                    const mat = new THREE.MeshStandardMaterial({ color: 0x556677, emissive: 0x112233 });
+                    const monolith = new THREE.Mesh(geom, mat);
+                    monolith.position.copy(pos);
+                    monolith.userData = { type: 'experience', data: expData };
+                    scene.add(monolith);
 
-        /* ANIMATIONS */
-        .reveal {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.8s ease-out;
-        }
-        .reveal.active {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
-        .skill-bar-fill { width: 0%; transition: width 1.5s ease-out; }
-        
-        /* HOVER EFFECTS */
-        .data-card:hover { border-color: #00f3ff; background: rgba(0, 243, 255, 0.03); }
-    </style>
-</head>
-<body class="selection:bg-cyan-500/30 selection:text-white">
+                    const widget = Widgets.createExperienceWidget(expData);
+                    widget.position.copy(pos.clone().add(new THREE.Vector3(0, 2, 0)));
+                    scene.add(widget);
+                    monolith.userData.widget = widget;
 
-    <div id="cursor"></div>
-    <div id="cursor-dot"></div>
+                    interactiveObjects.push(monolith);
+                    return monolith;
+                } catch (e) {
+                    console.warn("Monolith creation failed:", e);
+                    return null;
+                }
+            }
 
-    <div class="grid-bg"></div>
+            PORTFOLIO_DATA.experience.forEach((exp, index) => {
+                const pos = new THREE.Vector3( -2 + index*4, 0.5, -4 );
+                createMonolith(pos, exp);
+            });
 
-    <div class="fixed top-0 left-0 w-full p-6 flex justify-between items-start pointer-events-none z-50 text-[10px] md:text-xs text-cyan-900 font-bold tracking-widest">
-        <div class="flex items-center gap-2">
-            <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-            LIVE_FEED :: SECURE_CONNECTION
-        </div>
-        <div class="text-right">
-            <div>SYS_OPERATOR: NIKHIL_SINGH</div>
-            <div>LOC: KARNATAKA_IN</div>
-        </div>
-    </div>
+            // Contact beacon
+            function createBeacon(pos) {
+                try {
+                    const geom = new THREE.ConeGeometry(0.6, 2, 8);
+                    const mat = new THREE.MeshStandardMaterial({ color: 0xffaa00, emissive: 0x442200 });
+                    const beacon = new THREE.Mesh(geom, mat);
+                    beacon.position.copy(pos);
+                    beacon.userData = { type: 'contact' };
+                    scene.add(beacon);
 
-    <div class="fixed left-6 top-0 h-full w-[1px] bg-gray-900 z-40 hidden md:block">
-        <div id="scroll-line" class="w-full bg-cyan-500 shadow-[0_0_10px_#00f3ff]" style="height: 0%"></div>
-    </div>
+                    const widget = Widgets.createContactWidget(PORTFOLIO_DATA.socials);
+                    widget.position.copy(pos.clone().add(new THREE.Vector3(0, 2, 0)));
+                    scene.add(widget);
+                    beacon.userData.widget = widget;
 
-    <main class="max-w-4xl mx-auto px-6 py-24 md:pl-24 relative z-10">
+                    interactiveObjects.push(beacon);
+                    return beacon;
+                } catch (e) {
+                    console.warn("Beacon creation failed:", e);
+                    return null;
+                }
+            }
+            createBeacon(new THREE.Vector3(0, 0.5, 5));
 
-        <section class="min-h-[90vh] flex flex-col justify-center reveal active">
-            <p class="text-cyan-500 text-sm tracking-widest mb-2">> INITIALIZING PROFILE...</p>
-            <h1 class="text-5xl md:text-8xl font-bold text-white tracking-tighter mb-4">
-                NIKHIL <br>
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600">SINGH</span>
-            </h1>
-            <div class="h-[1px] w-24 bg-cyan-500 mb-6"></div>
-            <p class="text-xl md:text-2xl text-gray-400 max-w-2xl leading-relaxed">
-                DATA ANALYST // FULL STACK SCIENTIST <br>
-                <span class="text-sm text-gray-500">Turning Raw Data into Actionable Intelligence.</span>
-            </p>
+            // --- RAYCASTER for interaction (look at / click) ---
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+            let hoveredObj = null;
 
-            <div class="flex gap-4 mt-10 pointer-events-auto">
-                <a href="https://www.linkedin.com/in/nikhil-singh" target="_blank" class="px-8 py-3 bg-cyan-600 text-black font-bold hover:bg-white transition-all border border-cyan-500">
-                    LINKEDIN_UPLINK
-                </a>
-                <a href="https://github.com/wander-666" target="_blank" class="px-8 py-3 border border-cyan-500 text-cyan-500 font-bold hover:bg-cyan-500/10 transition-all">
-                    GITHUB_REPO
-                </a>
-            </div>
-        </section>
+            function onMouseMove(event) {
+                // Normalize mouse coordinates
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            }
+            window.addEventListener('mousemove', onMouseMove);
 
-        <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-24 reveal">
-            <div class="p-4 border border-gray-800 bg-gray-900/30 text-center">
-                <div class="text-2xl font-bold text-white">888</div>
-                <div class="text-[10px] text-cyan-500 tracking-widest mt-1">FOLLOWERS</div>
-            </div>
-            <div class="p-4 border border-gray-800 bg-gray-900/30 text-center">
-                <div class="text-2xl font-bold text-white">225+</div>
-                <div class="text-[10px] text-cyan-500 tracking-widest mt-1">IMPRESSIONS</div>
-            </div>
-            <div class="p-4 border border-gray-800 bg-gray-900/30 text-center">
-                <div class="text-2xl font-bold text-white">313</div>
-                <div class="text-[10px] text-cyan-500 tracking-widest mt-1">PROFILE_VIEWS</div>
-            </div>
-            <div class="p-4 border border-gray-800 bg-gray-900/30 text-center">
-                <div class="text-2xl font-bold text-white">100%</div>
-                <div class="text-[10px] text-cyan-500 tracking-widest mt-1">UPTIME</div>
-            </div>
-        </section>
+            // Check what we're looking at each frame
+            function checkInteraction() {
+                if (!controls.isLocked) return;
 
-        <section class="mb-32 reveal">
-            <h2 class="text-3xl font-bold text-white mb-8 flex items-center gap-3">
-                <span class="text-cyan-500">01.</span> CORE_MODULES
-            </h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                    <div class="flex justify-between text-xs mb-2 text-cyan-400"><span>PYTHON</span><span>95%</span></div>
-                    <div class="h-1 w-full bg-gray-800"><div class="skill-bar-fill h-full bg-yellow-400 shadow-[0_0_10px_orange]" data-width="95%"></div></div>
-                </div>
-                <div>
-                    <div class="flex justify-between text-xs mb-2 text-cyan-400"><span>SQL & DATABASES</span><span>90%</span></div>
-                    <div class="h-1 w-full bg-gray-800"><div class="skill-bar-fill h-full bg-blue-500 shadow-[0_0_10px_blue]" data-width="90%"></div></div>
-                </div>
-                <div>
-                    <div class="flex justify-between text-xs mb-2 text-cyan-400"><span>GEN_AI & LLMs</span><span>85%</span></div>
-                    <div class="h-1 w-full bg-gray-800"><div class="skill-bar-fill h-full bg-purple-500 shadow-[0_0_10px_purple]" data-width="85%"></div></div>
-                </div>
-                <div>
-                    <div class="flex justify-between text-xs mb-2 text-cyan-400"><span>MACHINE LEARNING</span><span>80%</span></div>
-                    <div class="h-1 w-full bg-gray-800"><div class="skill-bar-fill h-full bg-red-500 shadow-[0_0_10px_red]" data-width="80%"></div></div>
-                </div>
-            </div>
-        </section>
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(interactiveObjects);
 
-        <section class="mb-32 reveal">
-            <h2 class="text-3xl font-bold text-white mb-8 flex items-center gap-3">
-                <span class="text-cyan-500">02.</span> DEPLOYED_MISSIONS
-            </h2>
-            
-            <div class="data-card border border-gray-800 bg-gray-900/20 p-8 mb-8 transition-all relative overflow-hidden group">
-                <div class="absolute top-0 right-0 p-2 bg-blue-900/20 text-blue-400 text-[10px] font-bold border-l border-b border-blue-900">ANALYTICS_ENGINE</div>
-                <h3 class="text-2xl font-bold text-white mb-2 group-hover:text-cyan-400 transition-colors">SEOMAN AI</h3>
-                <p class="text-gray-400 mb-4 text-sm leading-relaxed">
-                    Advanced 360-degree SEO Analyzer with real-time traffic forecasting, security audits, and mobile optimization checks.
-                </p>
-                <div class="flex gap-2 flex-wrap">
-                    <span class="px-2 py-1 bg-gray-800 text-[10px] text-cyan-200 border border-gray-700">REACT</span>
-                    <span class="px-2 py-1 bg-gray-800 text-[10px] text-cyan-200 border border-gray-700">AI INTEGRATION</span>
-                    <span class="px-2 py-1 bg-gray-800 text-[10px] text-cyan-200 border border-gray-700">ANALYTICS</span>
-                </div>
-                <a href="https://seoman-ai.vercel.app" target="_blank" class="mt-6 inline-block text-xs text-cyan-500 hover:text-white border-b border-cyan-500 pb-1">VIEW_DEPLOYMENT ></a>
-            </div>
+                if (intersects.length > 0) {
+                    const hit = intersects[0].object;
+                    if (hoveredObj !== hit) {
+                        // Unhover previous
+                        if (hoveredObj && hoveredObj.material.emissive) {
+                            hoveredObj.material.emissive.setHex(hoveredObj.userData.originalEmissive || 0);
+                        }
+                        hoveredObj = hit;
+                        // Store original emissive if not stored
+                        if (hit.material.emissive) {
+                            if (hit.userData.originalEmissive === undefined) {
+                                hit.userData.originalEmissive = hit.material.emissive.getHex();
+                            }
+                            hit.material.emissive.setHex(0x00f3ff); // highlight
+                        }
+                        // Show widget? Already visible; maybe scale it
+                        if (hit.userData.widget) {
+                            hit.userData.widget.element.style.transform = 'scale(1.1)';
+                        }
+                    }
+                } else {
+                    if (hoveredObj) {
+                        if (hoveredObj.material.emissive) {
+                            hoveredObj.material.emissive.setHex(hoveredObj.userData.originalEmissive || 0);
+                        }
+                        if (hoveredObj.userData.widget) {
+                            hoveredObj.userData.widget.element.style.transform = 'scale(1)';
+                        }
+                        hoveredObj = null;
+                    }
+                }
+            }
 
-            <div class="data-card border border-gray-800 bg-gray-900/20 p-8 transition-all relative overflow-hidden group">
-                <div class="absolute top-0 right-0 p-2 bg-purple-900/20 text-purple-400 text-[10px] font-bold border-l border-b border-purple-900">COMPUTER_VISION</div>
-                <h3 class="text-2xl font-bold text-white mb-2 group-hover:text-cyan-400 transition-colors">NOVUSFACE AI</h3>
-                <p class="text-gray-400 mb-4 text-sm leading-relaxed">
-                    Biometric Face Regeneration & Swapping Engine. 100% Free, No Sign-up required. Features quantum-accelerated reconstruction.
-                </p>
-                <div class="flex gap-2 flex-wrap">
-                    <span class="px-2 py-1 bg-gray-800 text-[10px] text-purple-200 border border-gray-700">GEN_AI</span>
-                    <span class="px-2 py-1 bg-gray-800 text-[10px] text-purple-200 border border-gray-700">PYTHON</span>
-                    <span class="px-2 py-1 bg-gray-800 text-[10px] text-purple-200 border border-gray-700">DEEPFAKE</span>
-                </div>
-            </div>
-        </section>
-
-        <section class="mb-32 reveal">
-            <h2 class="text-3xl font-bold text-white mb-8 flex items-center gap-3">
-                <span class="text-cyan-500">03.</span> EXECUTION_LOGS
-            </h2>
-
-            <div class="border-l border-gray-800 ml-3 space-y-12">
-                <div class="pl-8 relative">
-                    <div class="absolute -left-[5px] top-2 w-2.5 h-2.5 bg-cyan-500 rounded-full shadow-[0_0_10px_#00f3ff]"></div>
-                    <h4 class="text-xl font-bold text-white">Data Analyst Trainee</h4>
-                    <div class="text-sm text-cyan-600 mb-2 font-bold">ALMABETTER • AUG 2025 - PRESENT</div>
-                    <p class="text-sm text-gray-400">
-                        Full Stack Data Science & AI Program. Introductory Python, Data Types, and complex dataset handling.
-                    </p>
-                </div>
-
-                <div class="pl-8 relative">
-                    <div class="absolute -left-[5px] top-2 w-2.5 h-2.5 bg-gray-600 rounded-full border border-gray-500"></div>
-                    <h4 class="text-xl font-bold text-white">Sales & Marketing Intern</h4>
-                    <div class="text-sm text-gray-500 mb-2 font-bold">SG GURUKUL • AUG 2023 - OCT 2023</div>
-                    <p class="text-sm text-gray-400">
-                        Lead generation, outbound telesales, and education counseling.
-                    </p>
-                </div>
-            </div>
-        </section>
-
-        <footer class="py-12 border-t border-gray-900 text-center text-xs text-gray-600">
-            <p>THE INSIGHT ENGINE v3.0</p>
-            <p class="mt-2 text-cyan-900">SYSTEM_ID: WANDER-666</p>
-        </footer>
-
-    </main>
-
-    <script>
-        // A. Custom Cursor Logic
-        const cursor = document.getElementById('cursor');
-        const cursorDot = document.getElementById('cursor-dot');
-
-        document.addEventListener('mousemove', (e) => {
-            cursor.style.left = e.clientX + 'px';
-            cursor.style.top = e.clientY + 'px';
-            cursorDot.style.left = e.clientX + 'px';
-            cursorDot.style.top = e.clientY + 'px';
-        });
-
-        document.addEventListener('mousedown', () => {
-            cursor.style.transform = 'translate(-50%, -50%) scale(0.8)';
-            cursor.style.backgroundColor = 'rgba(0, 243, 255, 0.2)';
-        });
-
-        document.addEventListener('mouseup', () => {
-            cursor.style.transform = 'translate(-50%, -50%) scale(1)';
-            cursor.style.backgroundColor = 'transparent';
-        });
-
-        // B. Scroll Animation Logic (Intersection Observer)
-        const observerOptions = {
-            threshold: 0.1
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
-                    
-                    // Trigger Skill Bars if visible
-                    const skillBars = entry.target.querySelectorAll('.skill-bar-fill');
-                    skillBars.forEach(bar => {
-                        bar.style.width = bar.getAttribute('data-width');
-                    });
+            // --- MOVEMENT HANDLING ---
+            const moveState = { forward: false, backward: false, left: false, right: false };
+            document.addEventListener('keydown', (e) => {
+                switch(e.code) {
+                    case 'KeyW': moveState.forward = true; break;
+                    case 'KeyS': moveState.backward = true; break;
+                    case 'KeyA': moveState.left = true; break;
+                    case 'KeyD': moveState.right = true; break;
                 }
             });
-        }, observerOptions);
+            document.addEventListener('keyup', (e) => {
+                switch(e.code) {
+                    case 'KeyW': moveState.forward = false; break;
+                    case 'KeyS': moveState.backward = false; break;
+                    case 'KeyA': moveState.left = false; break;
+                    case 'KeyD': moveState.right = false; break;
+                }
+            });
 
-        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+            function updateMovement(delta) {
+                if (!controls.isLocked) return;
+                const speed = 5 * delta;
+                const cameraDir = new THREE.Vector3();
+                camera.getWorldDirection(cameraDir);
+                cameraDir.y = 0; // keep horizontal
+                cameraDir.normalize();
 
-        // C. Scroll Line Progress
-        window.addEventListener('scroll', () => {
-            const scrolled = window.scrollY;
-            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-            const scrollPercent = (scrolled / maxScroll) * 100;
-            document.getElementById('scroll-line').style.height = scrollPercent + '%';
-        });
+                const strafeDir = new THREE.Vector3().crossVectors(cameraDir, new THREE.Vector3(0,1,0)).normalize();
+
+                if (moveState.forward) controls.getObject().position.addScaledVector(cameraDir, speed);
+                if (moveState.backward) controls.getObject().position.addScaledVector(cameraDir, -speed);
+                if (moveState.left) controls.getObject().position.addScaledVector(strafeDir, -speed);
+                if (moveState.right) controls.getObject().position.addScaledVector(strafeDir, speed);
+            }
+
+            // --- ANIMATION LOOP ---
+            function animate() {
+                try {
+                    requestAnimationFrame(animate);
+
+                    const delta = clock.getDelta();
+
+                    // Rotate crystals and portals
+                    scene.traverse(obj => {
+                        if (obj.geometry && (obj.geometry.type === 'OctahedronGeometry' || obj.geometry.type === 'TorusGeometry')) {
+                            obj.rotation.y += 0.01;
+                            obj.rotation.x += 0.005;
+                        }
+                    });
+
+                    // Flicker light
+                    const flicker = scene.children.find(c => c instanceof THREE.PointLight && c.position.length() < 1);
+                    if (flicker) {
+                        flicker.intensity = 0.3 + Math.sin(Date.now() * 0.01) * 0.2;
+                    }
+
+                    updateMovement(delta);
+                    checkInteraction();
+
+                    // Render via composer for bloom
+                    composer.render();
+
+                    // Render CSS2D separately
+                    labelRenderer.render(scene, camera);
+                } catch (e) {
+                    console.error("Animation loop error:", e);
+                    // Don't stop, but log
+                }
+            }
+
+            animate();
+
+            // --- RESIZE HANDLER ---
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                labelRenderer.setSize(window.innerWidth, window.innerHeight);
+                composer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            // --- HIDE LOADING ---
+            loadingDiv.style.display = 'none';
+
+            // --- FALLBACK FOR NO POINTER LOCK ---
+            if (!controls) {
+                showError("Controls initialization failed.");
+            }
+
+            // --- TOUCH / MOBILE (simplified) ---
+            // For mobile, we could add a virtual joystick, but out of scope for this demo.
+            // Provide a simple info.
+            if (/Mobi|Android/i.test(navigator.userAgent)) {
+                document.getElementById('info').innerHTML = 'DRAG TO LOOK | TAP TO LOCK | (MOBILE EXPERIMENTAL)';
+            }
+        })();
     </script>
 </body>
 </html>
