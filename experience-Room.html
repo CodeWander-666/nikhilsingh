@@ -85,7 +85,7 @@
         <div id="progress-bar" style="width:0%; height:6px; background:#5a9eff; margin-top:20px; border-radius:3px;"></div>
     </div>
     <div id="error"></div>
-    <div id="info">📍 SKILLS ROOM · Free camera (inside) · Zoom & orbit · Double‑click surface to upload</div>
+    <div id="info">📍 SKILLS ROOM · Free camera · Zoom & orbit · Double‑click surface to upload · Press E to return</div>
     <div id="crosshair"></div>
     <input type="file" id="file-input" accept="image/*">
 
@@ -221,7 +221,7 @@
             const roomCenter = new THREE.Vector3(0, roomHeight/2, 0);
 
             // Camera bounds (keep camera strictly inside)
-            const cameraMargin = 0.5; // small margin from walls
+            const cameraMargin = 0.5;
             const bounds = {
                 minX: -roomWidth/2 + cameraMargin,
                 maxX: roomWidth/2 - cameraMargin,
@@ -235,9 +235,9 @@
             const controls = new OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             controls.dampingFactor = 0.06;
-            controls.maxPolarAngle = Math.PI; // allow full vertical look (including straight up)
-            controls.minDistance = 1;          // zoom in as close as you want
-            controls.maxDistance = 100;        // will be clamped by bounds anyway
+            controls.maxPolarAngle = Math.PI;
+            controls.minDistance = 1;
+            controls.maxDistance = 100;
             controls.target.copy(roomCenter);
             controls.update();
 
@@ -311,7 +311,7 @@
             createWall('right', roomDepth, roomHeight,
                 { x: roomWidth/2, y: roomHeight/2, z: 0 }, { x: 0, y: -Math.PI/2, z: 0 }, wallColors.right);
 
-            // --- RETURN DOOR ---
+            // --- RETURN DOOR (decorative only) ---
             function createDoor() {
                 const doorGroup = new THREE.Group();
                 const frameMat = new THREE.MeshStandardMaterial({ color: 0x8b6b4d, roughness: 0.7 });
@@ -350,7 +350,7 @@
                 labelDiv.style.fontSize = '16px';
                 labelDiv.style.fontWeight = 'bold';
                 labelDiv.style.backdropFilter = 'blur(4px)';
-                labelDiv.innerText = 'BACK TO HUB (E)';
+                labelDiv.innerText = 'PRESS E TO RETURN';
                 const labelObj = new CSS2DObject(labelDiv);
                 labelObj.position.set(0, 3.0, 0);
                 doorGroup.add(labelObj);
@@ -380,7 +380,6 @@
                 canvas.height = img.height;
                 ctx.drawImage(img, 0, 0);
 
-                // Simple sharpening (same as before)
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 const data = imageData.data;
                 const w = canvas.width, h = canvas.height;
@@ -439,7 +438,6 @@
             function applyTextureToSurface(mesh, tex, imgAspect, imageDataUrl) {
                 if (!mesh || !tex) return false;
 
-                // Dispose old textures
                 if (mesh.material.map) mesh.material.map.dispose();
 
                 const newMaterial = new THREE.MeshStandardMaterial({
@@ -474,7 +472,6 @@
                 newMaterial.map = tex;
                 mesh.material = newMaterial;
 
-                // Save to IndexedDB if imageDataUrl provided
                 if (imageDataUrl) {
                     saveImageToDB(mesh.userData.name, imageDataUrl).catch(err => console.warn('Failed to save image', err));
                 }
@@ -547,22 +544,18 @@
                 }
             }, 1000);
 
-            // --- DOOR INTERACTION (E key) ---
+            // --- UNIVERSAL E KEY TO RETURN TO HUB (no proximity check) ---
             window.addEventListener('keydown', (e) => {
                 if (e.code === 'KeyE') {
-                    const distToDoor = camera.position.distanceTo(door.position);
-                    if (distToDoor < 5.0) {
-                        window.location.href = 'index.html';
-                    }
+                    window.location.href = 'index.html';
                 }
             });
 
             // --- ANIMATION LOOP with camera clamping ---
             function animate() {
                 requestAnimationFrame(animate);
-                controls.update(); // damping
+                controls.update();
 
-                // Clamp camera position to stay inside room
                 const pos = camera.position;
                 pos.x = Math.max(bounds.minX, Math.min(bounds.maxX, pos.x));
                 pos.y = Math.max(bounds.minY, Math.min(bounds.maxY, pos.y));
