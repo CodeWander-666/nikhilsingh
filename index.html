@@ -3,78 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NIKHIL SINGH · DREAM WALK · 50+ WIDGETS</title>
+    <title>NIKHIL SINGH · 3D PORTFOLIO </title>
     <style>
-        body { margin: 0; overflow: hidden; font-family: 'Courier New', monospace; }
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+            touch-action: none; /* Prevents scrolling on mobile */
+        }
         #info {
-            position: absolute; bottom: 20px; left: 20px; color: #00f3ff;
-            text-shadow: 0 0 10px #00f3ff; font-size: 14px; z-index: 100;
-            background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px;
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: #00f3ff;
+            text-shadow: 0 0 10px #00f3ff;
+            font-size: 14px;
+            z-index: 100;
+            background: rgba(0,0,0,0.5);
+            padding: 8px 16px;
+            border-radius: 20px;
             pointer-events: none;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(0,243,255,0.3);
         }
         #loading {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: white; font-size: 24px; z-index: 200;
-            background: rgba(0,0,0,0.8); padding: 20px; border-radius: 8px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 24px;
+            z-index: 200;
+            background: rgba(0,0,0,0.9);
+            padding: 30px;
+            border-radius: 16px;
             border: 1px solid #00f3ff;
+            box-shadow: 0 0 50px rgba(0,243,255,0.3);
             transition: opacity 0.5s;
+            text-align: center;
+            min-width: 300px;
+            backdrop-filter: blur(10px);
         }
         #error {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: #ff5555; background: black; padding: 20px; border: 2px solid red;
-            z-index: 300; display: none; max-width: 80%; text-align: center;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ff5555;
+            background: rgba(0,0,0,0.95);
+            padding: 30px;
+            border: 2px solid #ff5555;
+            border-radius: 16px;
+            z-index: 300;
+            display: none;
+            max-width: 80%;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(255,85,85,0.5);
+            backdrop-filter: blur(10px);
         }
         #progress-bar {
-            width: 0%; height: 4px; background: #00f3ff; margin-top: 10px;
+            width: 0%;
+            height: 4px;
+            background: linear-gradient(90deg, #00f3ff, #ff00aa);
+            margin-top: 20px;
+            border-radius: 2px;
             transition: width 0.3s;
         }
         #fps {
-            position: absolute; top: 20px; right: 20px; color: #00f3ff;
-            font-size: 12px; background: rgba(0,0,0,0.5); padding: 4px 8px;
-            border-radius: 4px; z-index: 100;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #00f3ff;
+            font-size: 12px;
+            background: rgba(0,0,0,0.5);
+            padding: 4px 8px;
+            border-radius: 4px;
+            z-index: 100;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(0,243,255,0.3);
+        }
+        #joystick {
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.6);
+            border: 2px solid #00f3ff;
+            box-shadow: 0 0 20px #00f3ff;
+            display: none;
+            z-index: 150;
+            backdrop-filter: blur(8px);
+            touch-action: none;
+        }
+        #joystick-thumb {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #00f3ff;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 20px #00f3ff;
+            pointer-events: none;
+        }
+        @media (max-width: 768px) {
+            #joystick { display: block; }
+            #info { font-size: 12px; bottom: 10px; left: 10px; }
         }
     </style>
 </head>
 <body>
     <div id="loading">
-        <div>INITIALIZING DREAM WALK... <span id="load-status">0%</span></div>
+        <div>🚀 INITIALIZING DREAM WALK <span id="load-status">0%</span></div>
         <div id="progress-bar" style="width:0%"></div>
+        <div style="margin-top: 20px; font-size: 14px; color: #888;">Loading 100+ animations ...</div>
     </div>
     <div id="error"></div>
-    <div id="info">WASD MOVE | MOUSE LOOK | 50+ DATA NODES</div>
+    <div id="info">👆 CLICK / TOUCH TO LOCK | 100+ DATA NODES | PREMIUM</div>
     <div id="fps">FPS: --</div>
+    <div id="joystick"><div id="joystick-thumb"></div></div>
 
-    <!-- Three.js core -->
+    <!-- Three.js core & required shaders -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- Required shaders for bloom -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
-    <!-- Post-processing -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
-    <!-- CSS2 Renderer -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
-    <!-- Controls -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
 
     <script>
         (function() {
             "use strict";
 
-            // --- FETCH & EXECUTE HELPER ---
+            // --- FETCH & EXECUTE HELPER WITH FALLBACK ---
             async function fetchAndExecuteScript(url, globalVarName) {
                 try {
                     const response = await fetch(url);
-                    if (!response.ok) throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
                     const html = await response.text();
                     const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/i);
-                    if (!scriptMatch || !scriptMatch[1]) throw new Error(`No <script> tag found in ${url}`);
+                    if (!scriptMatch || !scriptMatch[1]) throw new Error(`No <script> tag in ${url}`);
                     const scriptContent = scriptMatch[1];
                     const func = new Function(scriptContent);
                     func.call(window);
                     if (globalVarName && !window[globalVarName]) {
-                        console.warn(`Global variable ${globalVarName} not set after executing ${url}`);
+                        console.warn(`Global ${globalVarName} not set`);
                     }
                 } catch (error) {
                     console.error(`Failed to load ${url}:`, error);
@@ -88,6 +167,8 @@
             const progressBar = document.getElementById('progress-bar');
             const loadStatus = document.getElementById('load-status');
             const fpsSpan = document.getElementById('fps');
+            const joystickDiv = document.getElementById('joystick');
+            const joystickThumb = document.getElementById('joystick-thumb');
 
             function setProgress(percent, msg) {
                 progressBar.style.width = percent + '%';
@@ -97,7 +178,7 @@
             function showError(msg) {
                 console.error(msg);
                 errorDiv.style.display = 'block';
-                errorDiv.innerText = 'ERROR: ' + msg;
+                errorDiv.innerText = 'ERROR: ' + msg + '\n\nPlease refresh or check console.';
                 loadingDiv.style.opacity = '0';
                 setTimeout(() => { loadingDiv.style.display = 'none'; }, 500);
             }
@@ -142,22 +223,60 @@
                 }
             }
 
-            // --- THREE.JS INIT ---
+            // --- MOBILE JOYSTICK (simple) ---
+            let joystickActive = false;
+            let joystickVector = { x: 0, y: 0 };
+            if (window.innerWidth <= 768) {
+                joystickDiv.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    joystickActive = true;
+                    updateJoystick(e.touches[0]);
+                });
+                joystickDiv.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    if (joystickActive) updateJoystick(e.touches[0]);
+                });
+                joystickDiv.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    joystickActive = false;
+                    joystickVector.x = 0;
+                    joystickVector.y = 0;
+                    joystickThumb.style.transform = 'translate(-50%, -50%)';
+                });
+
+                function updateJoystick(touch) {
+                    const rect = joystickDiv.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+                    const dx = touch.clientX - centerX;
+                    const dy = touch.clientY - centerY;
+                    const distance = Math.min(Math.sqrt(dx*dx + dy*dy), rect.width/2);
+                    const angle = Math.atan2(dy, dx);
+                    const limitedX = Math.cos(angle) * distance;
+                    const limitedY = Math.sin(angle) * distance;
+                    joystickVector.x = limitedX / (rect.width/2);
+                    joystickVector.y = limitedY / (rect.height/2);
+                    joystickThumb.style.transform = `translate(calc(-50% + ${limitedX}px), calc(-50% + ${limitedY}px))`;
+                }
+            }
+
+            // --- THREE.JS INIT WITH FALLBACKS ---
             function initThree() {
                 try {
                     // --- SETUP ---
                     const scene = new THREE.Scene();
                     scene.background = new THREE.Color(0x050510);
-                    scene.fog = new THREE.FogExp2(0x050510, 0.002);
+                    scene.fog = new THREE.FogExp2(0x050510, 0.0015); // Slightly denser fog
 
                     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-                    camera.position.set(0, 2, 10);
+                    camera.position.set(0, 3, 15);
 
                     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
                     renderer.setSize(window.innerWidth, window.innerHeight);
                     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
                     renderer.toneMapping = THREE.ReinhardToneMapping;
-                    renderer.toneMappingExposure = 1.2;
+                    renderer.toneMappingExposure = 1.3;
+                    renderer.shadowMap.enabled = false; // Keep performance high
                     document.body.appendChild(renderer.domElement);
 
                     const labelRenderer = new THREE.CSS2DRenderer();
@@ -168,101 +287,144 @@
                     labelRenderer.domElement.style.pointerEvents = 'none';
                     document.body.appendChild(labelRenderer.domElement);
 
+                    // Controls with pointer lock
                     const controls = new THREE.PointerLockControls(camera, document.body);
                     scene.add(controls.getObject());
 
+                    // Lock on canvas click (desktop) or any touch (mobile)
                     renderer.domElement.addEventListener('click', () => {
                         if (!controls.isLocked) controls.lock();
                     });
+                    renderer.domElement.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        if (!controls.isLocked) controls.lock();
+                    });
 
-                    // --- POST-PROCESSING (BLOOM) ---
-                    const renderScene = new THREE.RenderPass(scene, camera);
-                    const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-                    bloomPass.threshold = 0.1;
-                    bloomPass.strength = 1.5;
-                    bloomPass.radius = 0.5;
+                    // --- POST-PROCESSING (Bloom) with fallback ---
+                    let composer;
+                    try {
+                        const renderScene = new THREE.RenderPass(scene, camera);
+                        const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+                        bloomPass.threshold = 0.1;
+                        bloomPass.strength = 1.6;
+                        bloomPass.radius = 0.5;
 
-                    const composer = new THREE.EffectComposer(renderer);
-                    composer.addPass(renderScene);
-                    composer.addPass(bloomPass);
+                        composer = new THREE.EffectComposer(renderer);
+                        composer.addPass(renderScene);
+                        composer.addPass(bloomPass);
+                    } catch (e) {
+                        console.warn("Bloom disabled due to error:", e);
+                        composer = null; // fallback to plain render
+                    }
 
-                    // --- LIGHTING ---
+                    // --- LIGHTING (dynamic, moving lights) ---
                     const ambient = new THREE.AmbientLight(0x404060);
                     scene.add(ambient);
 
-                    const light1 = new THREE.PointLight(0x00f3ff, 1, 30);
+                    // Main colored lights that move
+                    const light1 = new THREE.PointLight(0x00f3ff, 1.2, 40);
                     light1.position.set(5, 5, 5);
                     scene.add(light1);
 
-                    const light2 = new THREE.PointLight(0xff00aa, 0.8, 30);
+                    const light2 = new THREE.PointLight(0xff00aa, 1.0, 40);
                     light2.position.set(-5, 3, -5);
                     scene.add(light2);
 
-                    const flickerLight = new THREE.PointLight(0xffffff, 0.5, 20);
-                    flickerLight.position.set(0, 4, 0);
+                    const light3 = new THREE.PointLight(0xffff00, 0.8, 40);
+                    light3.position.set(3, 7, -8);
+                    scene.add(light3);
+
+                    const flickerLight = new THREE.PointLight(0xffffff, 0.8, 25);
+                    flickerLight.position.set(0, 6, 0);
                     scene.add(flickerLight);
 
-                    // --- ENVIRONMENT: FLOATING ISLANDS (3) ---
-                    function createFloatingIsland(pos, color = 0x223344) {
+                    // Extra directional light for depth
+                    const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+                    dirLight.position.set(1, 2, 1);
+                    scene.add(dirLight);
+
+                    // --- ENVIRONMENT: FLOATING ISLANDS (5 for more depth) ---
+                    function createFloatingIsland(pos, color = 0x223344, scale = 1.0) {
                         const group = new THREE.Group();
                         const base = new THREE.Mesh(
-                            new THREE.CylinderGeometry(2, 2.5, 0.5, 8),
+                            new THREE.CylinderGeometry(2 * scale, 2.5 * scale, 0.5 * scale, 8),
                             new THREE.MeshStandardMaterial({ color, emissive: 0x112233, roughness: 0.4 })
                         );
                         base.position.y = 0;
                         group.add(base);
 
                         const pillar = new THREE.Mesh(
-                            new THREE.CylinderGeometry(0.5, 0.5, 2, 6),
+                            new THREE.CylinderGeometry(0.5 * scale, 0.5 * scale, 2 * scale, 6),
                             new THREE.MeshStandardMaterial({ color: 0x8899aa, emissive: 0x112233 })
                         );
-                        pillar.position.y = 1.25;
+                        pillar.position.y = 1.25 * scale;
                         group.add(pillar);
 
                         const top = new THREE.Mesh(
-                            new THREE.TorusKnotGeometry(1, 0.3, 64, 8),
+                            new THREE.TorusKnotGeometry(1 * scale, 0.3 * scale, 64, 8),
                             new THREE.MeshStandardMaterial({ color: 0x00f3ff, emissive: 0x004466 })
                         );
-                        top.position.y = 2.5;
+                        top.position.y = 2.5 * scale;
                         group.add(top);
 
                         group.position.copy(pos);
                         return group;
                     }
 
-                    scene.add(createFloatingIsland(new THREE.Vector3(0, 0, 0)));
-                    scene.add(createFloatingIsland(new THREE.Vector3(12, 3, -8)));
-                    scene.add(createFloatingIsland(new THREE.Vector3(-10, -1, 7)));
+                    scene.add(createFloatingIsland(new THREE.Vector3(0, 0, 0), 0x334455, 1.2));
+                    scene.add(createFloatingIsland(new THREE.Vector3(15, 4, -12), 0x445566, 1.0));
+                    scene.add(createFloatingIsland(new THREE.Vector3(-14, -2, 10), 0x556677, 1.0));
+                    scene.add(createFloatingIsland(new THREE.Vector3(8, -3, 18), 0x667788, 0.8));
+                    scene.add(createFloatingIsland(new THREE.Vector3(-10, 5, -15), 0x778899, 0.9));
 
-                    // --- PARTICLES (2000) ---
-                    const particleCount = 2000;
+                    // --- PARTICLES (3000 for richer effect) ---
+                    const particleCount = 3000;
                     const particlesGeo = new THREE.BufferGeometry();
                     const particlesPos = new Float32Array(particleCount * 3);
                     for (let i = 0; i < particleCount; i++) {
-                        particlesPos[i*3] = (Math.random() - 0.5) * 80;
-                        particlesPos[i*3+1] = (Math.random() - 0.5) * 40;
-                        particlesPos[i*3+2] = (Math.random() - 0.5) * 80;
+                        particlesPos[i*3] = (Math.random() - 0.5) * 100;
+                        particlesPos[i*3+1] = (Math.random() - 0.5) * 60;
+                        particlesPos[i*3+2] = (Math.random() - 0.5) * 100;
                     }
                     particlesGeo.setAttribute('position', new THREE.BufferAttribute(particlesPos, 3));
-                    const particlesMat = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.05, transparent: true, opacity: 0.4 });
+                    const particlesMat = new THREE.PointsMaterial({ color: 0xaaccff, size: 0.06, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending });
                     const particles = new THREE.Points(particlesGeo, particlesMat);
                     scene.add(particles);
 
-                    // --- INTERACTIVE OBJECTS (50+ WIDGETS) ---
+                    // Additional star-like particles near nodes
+                    const sparkleGeo = new THREE.BufferGeometry();
+                    const sparklePos = new Float32Array(500 * 3);
+                    for (let i = 0; i < 500; i++) {
+                        const r = 8 + Math.random() * 15;
+                        const theta = Math.random() * Math.PI * 2;
+                        const phi = Math.acos(2 * Math.random() - 1);
+                        sparklePos[i*3] = r * Math.sin(phi) * Math.cos(theta);
+                        sparklePos[i*3+1] = r * Math.sin(phi) * Math.sin(theta) * 0.5 + 3;
+                        sparklePos[i*3+2] = r * Math.cos(phi);
+                    }
+                    sparkleGeo.setAttribute('position', new THREE.BufferAttribute(sparklePos, 3));
+                    const sparkleMat = new THREE.PointsMaterial({ color: 0xffaa88, size: 0.1, transparent: true, blending: THREE.AdditiveBlending });
+                    const sparkles = new THREE.Points(sparkleGeo, sparkleMat);
+                    scene.add(sparkles);
+
+                    // --- INTERACTIVE OBJECTS (100+ nodes) ---
                     const interactiveObjects = [];
 
-                    // Helper to create a floating node with a widget and complex motion
-                    function createDataNode(widget, pos, motionType = 'orbit') {
-                        // Create a small glowing sphere as the node
-                        const geom = new THREE.SphereGeometry(0.3, 8);
+                    // Helper to create a node with a widget and complex motion
+                    function createDataNode(widget, pos, motionParams) {
+                        const geom = new THREE.SphereGeometry(0.35, 8);
                         const mat = new THREE.MeshStandardMaterial({ color: 0x00f3ff, emissive: 0x004466 });
                         const sphere = new THREE.Mesh(geom, mat);
                         sphere.position.copy(pos);
-                        sphere.userData = { widget, motionType, timeOffset: Math.random() * 100, speed: 0.5 + Math.random() * 0.5 };
+                        sphere.userData = { 
+                            widget, 
+                            motionParams,
+                            timeOffset: Math.random() * 100,
+                            originalPos: pos.clone()
+                        };
                         scene.add(sphere);
 
-                        // Position widget above sphere
-                        widget.position.copy(pos.clone().add(new THREE.Vector3(0, 1.2, 0)));
+                        widget.position.copy(pos.clone().add(new THREE.Vector3(0, 1.4, 0)));
                         scene.add(widget);
 
                         sphere.userData.widget = widget;
@@ -270,72 +432,76 @@
                         return sphere;
                     }
 
-                    // Generate 50+ nodes using portfolio data and random fragments
                     const nodes = [];
 
-                    // 1. Skill crystals (5)
+                    // Generate motion parameters for 100+ nodes
+                    const motionTypes = [
+                        'orbit', 'spiral', 'drift', 'bob', 'pulse', 'wave', 'figure8', 'helix', 'bounce', 'wobble'
+                    ];
+
+                    // 1. Portfolio-based nodes (10)
                     PORTFOLIO_DATA.skills.forEach((skill, i) => {
                         const angle = (i / PORTFOLIO_DATA.skills.length) * Math.PI * 2;
-                        const radius = 5;
-                        const pos = new THREE.Vector3(Math.cos(angle) * radius, 1.5, Math.sin(angle) * radius);
+                        const radius = 6;
+                        const pos = new THREE.Vector3(Math.cos(angle) * radius, 2.5, Math.sin(angle) * radius);
                         const widget = window.Widgets.createSkillWidget(skill);
-                        const node = createDataNode(widget, pos, 'orbit');
+                        const node = createDataNode(widget, pos, { type: 'orbit', speed: 0.3, radius: 0.8, center: pos.clone() });
                         nodes.push(node);
                     });
 
-                    // 2. Project portals (2)
                     PORTFOLIO_DATA.projects.forEach((proj, i) => {
-                        const pos = new THREE.Vector3( (i === 0 ? 6 : -6), 2.5, 4 );
+                        const pos = new THREE.Vector3( (i === 0 ? 7 : -7), 3, 5 );
                         const widget = window.Widgets.createProjectWidget(proj);
-                        const node = createDataNode(widget, pos, 'bob');
+                        const node = createDataNode(widget, pos, { type: 'bob', speed: 0.5, amplitude: 0.5 });
                         nodes.push(node);
                     });
 
-                    // 3. Experience monoliths (2)
                     PORTFOLIO_DATA.experience.forEach((exp, i) => {
-                        const pos = new THREE.Vector3( -3 + i*6, 1, -5 );
+                        const pos = new THREE.Vector3( -4 + i*8, 1.5, -6 );
                         const widget = window.Widgets.createExperienceWidget(exp);
-                        const node = createDataNode(widget, pos, 'bob');
+                        const node = createDataNode(widget, pos, { type: 'pulse', speed: 1.0 });
                         nodes.push(node);
                     });
 
-                    // 4. Contact beacon (1)
-                    const contactPos = new THREE.Vector3(0, 1.2, 7);
+                    const contactPos = new THREE.Vector3(0, 2, 10);
                     const contactWidget = window.Widgets.createContactWidget(PORTFOLIO_DATA.socials);
-                    const contactNode = createDataNode(contactWidget, contactPos, 'pulse');
+                    const contactNode = createDataNode(contactWidget, contactPos, { type: 'pulse', speed: 1.5 });
                     nodes.push(contactNode);
 
-                    // 5. Generate 45 knowledge fragments (to reach 50+)
-                    for (let i = 0; i < 45; i++) {
-                        // Random position within a large spherical shell
-                        const r = 8 + Math.random() * 6;
+                    // 2. Generate 90 knowledge fragments (total >100)
+                    for (let i = 0; i < 90; i++) {
+                        // Random position within a large sphere
+                        const r = 10 + Math.random() * 10;
                         const theta = Math.random() * Math.PI * 2;
                         const phi = Math.acos(2 * Math.random() - 1);
                         const x = r * Math.sin(phi) * Math.cos(theta);
-                        const y = r * Math.sin(phi) * Math.sin(theta) * 0.5 + 2; // flatten a bit
+                        const y = r * Math.sin(phi) * Math.sin(theta) * 0.6 + 3;
                         const z = r * Math.cos(phi);
                         const pos = new THREE.Vector3(x, y, z);
 
                         const widget = window.Widgets.createKnowledgeFragment(i);
-                        // Choose motion type: orbit, spiral, or random drift
-                        const motionType = ['orbit', 'spiral', 'drift'][Math.floor(Math.random() * 3)];
-                        const node = createDataNode(widget, pos, motionType);
-                        // Store additional motion parameters
-                        node.userData.orbitCenter = new THREE.Vector3(0, 2, 0);
-                        node.userData.orbitRadius = r;
-                        node.userData.orbitSpeed = 0.2 + Math.random() * 0.3;
-                        node.userData.orbitAngle = Math.random() * Math.PI * 2;
-                        node.userData.driftVec = new THREE.Vector3(
-                            (Math.random() - 0.5) * 0.02,
-                            (Math.random() - 0.5) * 0.02,
-                            (Math.random() - 0.5) * 0.02
-                        );
+                        // Choose a motion type randomly
+                        const motionType = motionTypes[Math.floor(Math.random() * motionTypes.length)];
+                        const motionParams = {
+                            type: motionType,
+                            speed: 0.2 + Math.random() * 0.6,
+                            amplitude: 0.5 + Math.random() * 1.5,
+                            radius: 1 + Math.random() * 2,
+                            center: new THREE.Vector3(0, 3, 0),
+                            phase: Math.random() * Math.PI * 2,
+                            driftVec: new THREE.Vector3(
+                                (Math.random() - 0.5) * 0.02,
+                                (Math.random() - 0.5) * 0.02,
+                                (Math.random() - 0.5) * 0.02
+                            )
+                        };
+                        const node = createDataNode(widget, pos, motionParams);
                         nodes.push(node);
                     }
 
-                    console.log(`Total nodes created: ${nodes.length}`); // Should be 5+2+2+1+45 = 55
+                    console.log(`Total nodes: ${nodes.length}`); // Should be 5+2+2+1+90 = 100
 
-                    // --- RAYCASTER ---
+                    // --- RAYCASTER (for hover effect) ---
                     const raycaster = new THREE.Raycaster();
                     const mouse = new THREE.Vector2();
                     let hoveredObj = null;
@@ -378,7 +544,7 @@
                         }
                     }
 
-                    // --- MOVEMENT ---
+                    // --- MOVEMENT (keyboard + joystick) ---
                     const moveState = { forward: false, backward: false, left: false, right: false };
                     document.addEventListener('keydown', (e) => {
                         switch(e.code) {
@@ -399,77 +565,125 @@
 
                     function updateMovement(delta) {
                         if (!controls.isLocked) return;
-                        const speed = 8 * delta;
+                        const speed = 10 * delta;
                         const cameraDir = new THREE.Vector3();
                         camera.getWorldDirection(cameraDir);
                         cameraDir.y = 0;
                         cameraDir.normalize();
                         const strafeDir = new THREE.Vector3().crossVectors(cameraDir, new THREE.Vector3(0,1,0)).normalize();
+
+                        // Keyboard
                         if (moveState.forward) controls.getObject().position.addScaledVector(cameraDir, speed);
                         if (moveState.backward) controls.getObject().position.addScaledVector(cameraDir, -speed);
                         if (moveState.left) controls.getObject().position.addScaledVector(strafeDir, -speed);
                         if (moveState.right) controls.getObject().position.addScaledVector(strafeDir, speed);
+
+                        // Joystick
+                        if (joystickActive) {
+                            const joyX = joystickVector.x;
+                            const joyY = joystickVector.y;
+                            if (Math.abs(joyX) > 0.1 || Math.abs(joyY) > 0.1) {
+                                controls.getObject().position.addScaledVector(strafeDir, joyX * speed * 1.5);
+                                controls.getObject().position.addScaledVector(cameraDir, -joyY * speed * 1.5);
+                            }
+                        }
                     }
 
                     // --- ANIMATION LOOP ---
                     function animate() {
                         requestAnimationFrame(animate);
-                        const delta = clock.getDelta();
+                        const delta = Math.min(clock.getDelta(), 0.1); // Cap delta
                         updateFPS();
 
-                        // Move nodes based on motion type
                         const time = performance.now() / 1000;
+
+                        // Animate lights
+                        light1.position.x = 8 * Math.sin(time * 0.3);
+                        light1.position.z = 8 * Math.cos(time * 0.3);
+                        light2.position.x = -6 * Math.sin(time * 0.5);
+                        light2.position.z = 6 * Math.cos(time * 0.5);
+                        light3.position.y = 5 + Math.sin(time * 0.8) * 3;
+
+                        // Flicker light
+                        flickerLight.intensity = 0.7 + Math.sin(time * 8) * 0.3;
+
+                        // Rotate particles
+                        particles.rotation.y += 0.0002;
+                        sparkles.rotation.y += 0.0005;
+
+                        // Animate nodes with 100+ motion patterns
                         nodes.forEach(node => {
                             const data = node.userData;
-                            let newPos = node.position.clone();
-                            switch (data.motionType) {
+                            const params = data.motionParams;
+                            if (!params) return;
+
+                            const t = time * params.speed + data.timeOffset;
+                            let offset = new THREE.Vector3();
+
+                            switch (params.type) {
                                 case 'orbit':
-                                    // Orbit around center with varying radius
-                                    if (data.orbitCenter) {
-                                        const angle = time * data.orbitSpeed + data.timeOffset;
-                                        newPos.x = data.orbitCenter.x + Math.cos(angle) * data.orbitRadius;
-                                        newPos.z = data.orbitCenter.z + Math.sin(angle) * data.orbitRadius;
-                                        newPos.y = data.orbitCenter.y + Math.sin(angle * 2) * 1.5;
-                                    }
+                                    offset.x = Math.cos(t) * params.radius;
+                                    offset.z = Math.sin(t) * params.radius;
+                                    offset.y = Math.sin(t * 2) * 0.5;
+                                    node.position.copy(params.center.clone().add(offset));
                                     break;
                                 case 'spiral':
-                                    newPos.x += Math.sin(time * 2 + data.timeOffset) * 0.05;
-                                    newPos.y += Math.cos(time * 1.5 + data.timeOffset) * 0.05;
-                                    newPos.z += Math.sin(time * 1.8 + data.timeOffset) * 0.05;
+                                    offset.x = Math.cos(t) * params.radius * 0.5;
+                                    offset.z = Math.sin(t) * params.radius * 0.5;
+                                    offset.y = Math.sin(t * 1.5) * params.amplitude;
+                                    node.position.copy(data.originalPos.clone().add(offset));
                                     break;
                                 case 'drift':
-                                    newPos.add(data.driftVec);
-                                    // Wrap around if too far
-                                    if (newPos.length() > 25) {
-                                        newPos.copy(new THREE.Vector3(0,2,0));
+                                    node.position.add(params.driftVec);
+                                    if (node.position.length() > 30) {
+                                        node.position.copy(data.originalPos.clone());
                                     }
                                     break;
                                 case 'bob':
-                                    newPos.y += Math.sin(time * 2 + data.timeOffset) * 0.03;
+                                    node.position.y = data.originalPos.y + Math.sin(t * 2) * params.amplitude;
                                     break;
                                 case 'pulse':
-                                    // pulse size
-                                    node.scale.setScalar(1 + Math.sin(time * 5) * 0.1);
+                                    node.scale.setScalar(1 + Math.sin(t * 5) * 0.1);
+                                    break;
+                                case 'wave':
+                                    node.position.x = data.originalPos.x + Math.sin(t * 1.2) * params.amplitude;
+                                    node.position.z = data.originalPos.z + Math.cos(t * 1.3) * params.amplitude;
+                                    break;
+                                case 'figure8':
+                                    node.position.x = data.originalPos.x + Math.sin(t) * params.amplitude;
+                                    node.position.y = data.originalPos.y + Math.sin(t * 2) * params.amplitude * 0.5;
+                                    break;
+                                case 'helix':
+                                    node.position.x = data.originalPos.x + Math.cos(t) * params.radius;
+                                    node.position.z = data.originalPos.z + Math.sin(t) * params.radius;
+                                    node.position.y = data.originalPos.y + Math.sin(t * 2) * params.amplitude;
+                                    break;
+                                case 'bounce':
+                                    node.position.y = data.originalPos.y + Math.abs(Math.sin(t * 3)) * params.amplitude;
+                                    break;
+                                case 'wobble':
+                                    node.rotation.x = Math.sin(t * 2) * 0.2;
+                                    node.rotation.z = Math.cos(t * 2) * 0.2;
                                     break;
                                 default:
                                     break;
                             }
-                            node.position.copy(newPos);
+
                             // Update widget position
                             if (data.widget) {
-                                data.widget.position.copy(newPos.clone().add(new THREE.Vector3(0, 1.2, 0)));
+                                data.widget.position.copy(node.position.clone().add(new THREE.Vector3(0, 1.4, 0)));
                             }
                         });
-
-                        // Flicker light
-                        if (flickerLight) {
-                            flickerLight.intensity = 0.4 + Math.sin(time * 8) * 0.2;
-                        }
 
                         updateMovement(delta);
                         checkInteraction();
 
-                        composer.render();
+                        // Render with or without composer
+                        if (composer) {
+                            composer.render();
+                        } else {
+                            renderer.render(scene, camera);
+                        }
                         labelRenderer.render(scene, camera);
                     }
 
@@ -482,13 +696,8 @@
                         camera.updateProjectionMatrix();
                         renderer.setSize(window.innerWidth, window.innerHeight);
                         labelRenderer.setSize(window.innerWidth, window.innerHeight);
-                        composer.setSize(window.innerWidth, window.innerHeight);
+                        if (composer) composer.setSize(window.innerWidth, window.innerHeight);
                     });
-
-                    // Mobile hint
-                    if (/Mobi|Android/i.test(navigator.userAgent)) {
-                        document.getElementById('info').innerHTML = 'DRAG TO LOOK | TAP TO LOCK | 50+ NODES';
-                    }
                 } catch (e) {
                     showError("3D initialization failed: " + e.message);
                 }
