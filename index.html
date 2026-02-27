@@ -17,20 +17,28 @@
             color: white; font-size: 24px; z-index: 200;
             background: rgba(0,0,0,0.8); padding: 20px; border-radius: 8px;
             border: 1px solid #00f3ff;
+            transition: opacity 0.5s;
         }
         #error {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             color: #ff5555; background: black; padding: 20px; border: 2px solid red;
-            z-index: 300; display: none;
+            z-index: 300; display: none; max-width: 80%; text-align: center;
+        }
+        #progress-bar {
+            width: 0%; height: 4px; background: #00f3ff; margin-top: 10px;
+            transition: width 0.3s;
         }
     </style>
 </head>
 <body>
-    <div id="loading">INITIALIZING DREAM WALK...</div>
+    <div id="loading">
+        <div>INITIALIZING DREAM WALK...</div>
+        <div id="progress-bar" style="width:0%"></div>
+    </div>
     <div id="error"></div>
     <div id="info">WASD MOVE | MOUSE LOOK | COLLECT CRYSTALS</div>
 
-    <!-- Load dependencies -->
+    <!-- Three.js dependencies -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
@@ -38,439 +46,468 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
 
-    <!-- Load our data and widgets -->
-    <script src="data.html"></script>
-    <script src="widgets.html"></script>
-
     <script>
         (function() {
             "use strict";
 
-            // --- ERROR HANDLING & WEBGL CHECK ---
+            // --- UTILITIES: fetch and extract script content from HTML ---
+            async function fetchAndExecuteScript(url, globalVarName) {
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+                    }
+                    const html = await response.text();
+                    // Extract content of first <script> tag (assuming it contains the definition)
+                    const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/i);
+                    if (!scriptMatch || !scriptMatch[1]) {
+                        throw new Error(`No <script> tag found in ${url}`);
+                    }
+                    const scriptContent = scriptMatch[1];
+                    // Execute in global scope
+                    const func = new Function(scriptContent);
+                    func.call(window); // Ensures `window` is the context
+                    // Check if the global variable was set
+                    if (globalVarName && !window[globalVarName]) {
+                        console.warn(`Global variable ${globalVarName} not set after executing ${url}`);
+                    }
+                } catch (error) {
+                    console.error(`Failed to load ${url}:`, error);
+                    throw error; // rethrow to be caught by loader
+                }
+            }
+
+            // --- LOADING SEQUENCE WITH PROGRESS ---
             const loadingDiv = document.getElementById('loading');
             const errorDiv = document.getElementById('error');
+            const progressBar = document.getElementById('progress-bar');
+
+            function setProgress(percent) {
+                progressBar.style.width = percent + '%';
+            }
 
             function showError(msg) {
                 console.error(msg);
                 errorDiv.style.display = 'block';
                 errorDiv.innerText = 'ERROR: ' + msg;
-                if (loadingDiv) loadingDiv.style.display = 'none';
+                loadingDiv.style.opacity = '0';
+                setTimeout(() => { loadingDiv.style.display = 'none'; }, 500);
             }
 
-            if (!window.PORTFOLIO_DATA) {
-                showError("Portfolio data failed to load.");
-                return;
-            }
-
-            // --- THREE.JS SETUP ---
-            let scene, camera, renderer, labelRenderer, composer, controls;
-            let clock = new THREE.Clock();
-
-            try {
-                // Scene
-                scene = new THREE.Scene();
-                scene.background = new THREE.Color(0x050510);
-                scene.fog = new THREE.FogExp2(0x050510, 0.002);
-
-                // Camera
-                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-                camera.position.set(0, 2, 10);
-
-                // Renderer (WebGL)
-                renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-                renderer.setSize(window.innerWidth, window.innerHeight);
-                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-                renderer.toneMapping = THREE.ReinhardToneMapping;
-                renderer.toneMappingExposure = 1.2;
-                document.body.appendChild(renderer.domElement);
-
-                // CSS2 Renderer for widgets
-                labelRenderer = new THREE.CSS2DRenderer();
-                labelRenderer.setSize(window.innerWidth, window.innerHeight);
-                labelRenderer.domElement.style.position = 'absolute';
-                labelRenderer.domElement.style.top = '0px';
-                labelRenderer.domElement.style.left = '0px';
-                labelRenderer.domElement.style.pointerEvents = 'none'; // Allow clicking through to canvas
-                document.body.appendChild(labelRenderer.domElement);
-
-                // Controls (PointerLock)
-                controls = new THREE.PointerLockControls(camera, document.body);
-                scene.add(controls.getObject());
-
-                // Lock on click
-                renderer.domElement.addEventListener('click', () => {
-                    if (!controls.isLocked) controls.lock();
-                });
-
-                // --- POST PROCESSING (BLOOM) ---
-                const renderScene = new THREE.RenderPass(scene, camera);
-                const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-                bloomPass.threshold = 0.1;
-                bloomPass.strength = 1.5;
-                bloomPass.radius = 0.5;
-
-                composer = new THREE.EffectComposer(renderer);
-                composer.addPass(renderScene);
-                composer.addPass(bloomPass);
-            } catch (e) {
-                showError("WebGL initialization failed: " + e.message);
-                return;
-            }
-
-            // --- LIGHTING ---
-            try {
-                // Ambient
-                const ambient = new THREE.AmbientLight(0x404060);
-                scene.add(ambient);
-
-                // Point lights with colors
-                const light1 = new THREE.PointLight(0x00f3ff, 1, 30);
-                light1.position.set(5, 5, 5);
-                scene.add(light1);
-
-                const light2 = new THREE.PointLight(0xff00aa, 0.8, 30);
-                light2.position.set(-5, 3, -5);
-                scene.add(light2);
-
-                // Flickering light for dream effect
-                const flickerLight = new THREE.PointLight(0xffffff, 0.5, 20);
-                flickerLight.position.set(0, 4, 0);
-                scene.add(flickerLight);
-            } catch (e) {
-                console.warn("Lighting setup failed:", e);
-            }
-
-            // --- ENVIRONMENT (Floating islands / platforms) ---
-            function createFloatingIsland(pos, color = 0x223344) {
+            async function loadAll() {
                 try {
-                    const group = new THREE.Group();
-                    const base = new THREE.Mesh(
-                        new THREE.CylinderGeometry(2, 2.5, 0.5, 8),
-                        new THREE.MeshStandardMaterial({ color: color, emissive: 0x112233, roughness: 0.4, metalness: 0.1 })
-                    );
-                    base.position.y = 0;
-                    group.add(base);
+                    setProgress(10);
+                    // Load data.html
+                    await fetchAndExecuteScript('data.html', 'PORTFOLIO_DATA');
+                    setProgress(50);
+                    // Load widgets.html (requires THREE to be defined, which it is now)
+                    await fetchAndExecuteScript('widgets.html', 'Widgets');
+                    setProgress(80);
 
-                    const pillar = new THREE.Mesh(
-                        new THREE.CylinderGeometry(0.5, 0.5, 2, 6),
-                        new THREE.MeshStandardMaterial({ color: 0x8899aa, emissive: 0x112233 })
-                    );
-                    pillar.position.y = 1.25;
-                    group.add(pillar);
+                    // Verify that both globals exist
+                    if (!window.PORTFOLIO_DATA) {
+                        throw new Error('PORTFOLIO_DATA not defined after loading data.html');
+                    }
+                    if (!window.Widgets) {
+                        throw new Error('Widgets not defined after loading widgets.html');
+                    }
 
-                    const top = new THREE.Mesh(
-                        new THREE.TorusKnotGeometry(1, 0.3, 64, 8),
-                        new THREE.MeshStandardMaterial({ color: 0x00f3ff, emissive: 0x004466 })
-                    );
-                    top.position.y = 2.5;
-                    group.add(top);
-
-                    group.position.copy(pos);
-                    return group;
-                } catch (e) {
-                    console.warn("Island creation failed:", e);
-                    return new THREE.Group();
+                    setProgress(100);
+                    // Hide loading with fade
+                    loadingDiv.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingDiv.style.display = 'none';
+                        // Start the 3D engine
+                        initThree();
+                    }, 500);
+                } catch (error) {
+                    showError(error.message);
                 }
             }
 
-            // Place islands
-            scene.add(createFloatingIsland(new THREE.Vector3(0, 0, 0)));
-            scene.add(createFloatingIsland(new THREE.Vector3(8, 2, -5)));
-            scene.add(createFloatingIsland(new THREE.Vector3(-7, -1, 6)));
+            // --- START LOADING ---
+            loadAll();
 
-            // --- PARTICLES (Floating dust) ---
-            try {
-                const particleCount = 2000;
-                const particlesGeo = new THREE.BufferGeometry();
-                const particlesPos = new Float32Array(particleCount * 3);
-                for (let i = 0; i < particleCount; i++) {
-                    particlesPos[i*3] = (Math.random() - 0.5) * 50;
-                    particlesPos[i*3+1] = (Math.random() - 0.5) * 30;
-                    particlesPos[i*3+2] = (Math.random() - 0.5) * 50;
-                }
-                particlesGeo.setAttribute('position', new THREE.BufferAttribute(particlesPos, 3));
-                const particlesMat = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.05, transparent: true, opacity: 0.5 });
-                const particles = new THREE.Points(particlesGeo, particlesMat);
-                scene.add(particles);
-            } catch (e) {
-                console.warn("Particles failed:", e);
-            }
-
-            // --- INTERACTIVE OBJECTS ---
-            let interactiveObjects = []; // Store for raycasting
-
-            // Helper to create a glowing crystal
-            function createCrystal(pos, color, skillData) {
+            // --- THREE.JS INITIALIZATION (only after data is ready) ---
+            function initThree() {
                 try {
-                    const geom = new THREE.OctahedronGeometry(0.8, 0);
-                    const mat = new THREE.MeshStandardMaterial({ color: color, emissive: color, emissiveIntensity: 0.5 });
-                    const mesh = new THREE.Mesh(geom, mat);
-                    mesh.position.copy(pos);
-                    mesh.userData = { type: 'skill', data: skillData };
-                    scene.add(mesh);
+                    // --- THREE.JS SETUP ---
+                    let scene, camera, renderer, labelRenderer, composer, controls;
+                    let clock = new THREE.Clock();
 
-                    // Add a point light inside
-                    const light = new THREE.PointLight(color, 1, 5);
-                    light.position.copy(pos);
-                    scene.add(light);
+                    // Scene
+                    scene = new THREE.Scene();
+                    scene.background = new THREE.Color(0x050510);
+                    scene.fog = new THREE.FogExp2(0x050510, 0.002);
 
-                    // Create and attach widget
-                    const widget = Widgets.createSkillWidget(skillData);
-                    widget.position.copy(pos.clone().add(new THREE.Vector3(0, 1.5, 0)));
-                    scene.add(widget);
-                    mesh.userData.widget = widget;
+                    // Camera
+                    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                    camera.position.set(0, 2, 10);
 
-                    interactiveObjects.push(mesh);
-                    return mesh;
-                } catch (e) {
-                    console.warn("Crystal creation failed:", e);
-                    return null;
-                }
-            }
+                    // Renderer (WebGL)
+                    renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                    renderer.toneMapping = THREE.ReinhardToneMapping;
+                    renderer.toneMappingExposure = 1.2;
+                    document.body.appendChild(renderer.domElement);
 
-            // Create crystals from skills
-            PORTFOLIO_DATA.skills.forEach((skill, index) => {
-                const angle = (index / PORTFOLIO_DATA.skills.length) * Math.PI * 2;
-                const radius = 4;
-                const pos = new THREE.Vector3(Math.cos(angle) * radius, 1 + Math.sin(angle*2)*0.5, Math.sin(angle) * radius);
-                createCrystal(pos, skill.color, skill);
-            });
+                    // CSS2 Renderer for widgets
+                    labelRenderer = new THREE.CSS2DRenderer();
+                    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+                    labelRenderer.domElement.style.position = 'absolute';
+                    labelRenderer.domElement.style.top = '0px';
+                    labelRenderer.domElement.style.left = '0px';
+                    labelRenderer.domElement.style.pointerEvents = 'none'; // Allow clicking through to canvas
+                    document.body.appendChild(labelRenderer.domElement);
 
-            // Create project portals
-            function createPortal(pos, projectData) {
-                try {
-                    const ringGeo = new THREE.TorusGeometry(1.2, 0.2, 16, 32);
-                    const ringMat = new THREE.MeshStandardMaterial({ color: projectData.color, emissive: projectData.color, emissiveIntensity: 0.3 });
-                    const ring = new THREE.Mesh(ringGeo, ringMat);
-                    ring.position.copy(pos);
-                    ring.rotation.x = Math.PI / 2;
-                    ring.userData = { type: 'project', data: projectData };
-                    scene.add(ring);
+                    // Controls (PointerLock)
+                    controls = new THREE.PointerLockControls(camera, document.body);
+                    scene.add(controls.getObject());
 
-                    // Inner glow (small sphere)
-                    const glowGeo = new THREE.SphereGeometry(0.4, 8);
-                    const glowMat = new THREE.MeshBasicMaterial({ color: projectData.color, transparent: true, opacity: 0.3 });
-                    const glow = new THREE.Mesh(glowGeo, glowMat);
-                    glow.position.copy(pos);
-                    scene.add(glow);
+                    // Lock on click
+                    renderer.domElement.addEventListener('click', () => {
+                        if (!controls.isLocked) controls.lock();
+                    });
 
-                    // Widget
-                    const widget = Widgets.createProjectWidget(projectData);
-                    widget.position.copy(pos.clone().add(new THREE.Vector3(0, 1.8, 0)));
-                    scene.add(widget);
-                    ring.userData.widget = widget;
+                    // --- POST PROCESSING (BLOOM) ---
+                    const renderScene = new THREE.RenderPass(scene, camera);
+                    const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+                    bloomPass.threshold = 0.1;
+                    bloomPass.strength = 1.5;
+                    bloomPass.radius = 0.5;
 
-                    interactiveObjects.push(ring);
-                    return ring;
-                } catch (e) {
-                    console.warn("Portal creation failed:", e);
-                    return null;
-                }
-            }
+                    composer = new THREE.EffectComposer(renderer);
+                    composer.addPass(renderScene);
+                    composer.addPass(bloomPass);
 
-            PORTFOLIO_DATA.projects.forEach((proj, index) => {
-                const pos = new THREE.Vector3( (index === 0 ? 5 : -5), 2, 3 );
-                createPortal(pos, proj);
-            });
+                    // --- LIGHTING ---
+                    const ambient = new THREE.AmbientLight(0x404060);
+                    scene.add(ambient);
 
-            // Experience monoliths
-            function createMonolith(pos, expData) {
-                try {
-                    const geom = new THREE.BoxGeometry(0.8, 2.5, 0.8);
-                    const mat = new THREE.MeshStandardMaterial({ color: 0x556677, emissive: 0x112233 });
-                    const monolith = new THREE.Mesh(geom, mat);
-                    monolith.position.copy(pos);
-                    monolith.userData = { type: 'experience', data: expData };
-                    scene.add(monolith);
+                    const light1 = new THREE.PointLight(0x00f3ff, 1, 30);
+                    light1.position.set(5, 5, 5);
+                    scene.add(light1);
 
-                    const widget = Widgets.createExperienceWidget(expData);
-                    widget.position.copy(pos.clone().add(new THREE.Vector3(0, 2, 0)));
-                    scene.add(widget);
-                    monolith.userData.widget = widget;
+                    const light2 = new THREE.PointLight(0xff00aa, 0.8, 30);
+                    light2.position.set(-5, 3, -5);
+                    scene.add(light2);
 
-                    interactiveObjects.push(monolith);
-                    return monolith;
-                } catch (e) {
-                    console.warn("Monolith creation failed:", e);
-                    return null;
-                }
-            }
+                    const flickerLight = new THREE.PointLight(0xffffff, 0.5, 20);
+                    flickerLight.position.set(0, 4, 0);
+                    scene.add(flickerLight);
 
-            PORTFOLIO_DATA.experience.forEach((exp, index) => {
-                const pos = new THREE.Vector3( -2 + index*4, 0.5, -4 );
-                createMonolith(pos, exp);
-            });
+                    // --- ENVIRONMENT (Floating islands) ---
+                    function createFloatingIsland(pos, color = 0x223344) {
+                        try {
+                            const group = new THREE.Group();
+                            const base = new THREE.Mesh(
+                                new THREE.CylinderGeometry(2, 2.5, 0.5, 8),
+                                new THREE.MeshStandardMaterial({ color: color, emissive: 0x112233, roughness: 0.4, metalness: 0.1 })
+                            );
+                            base.position.y = 0;
+                            group.add(base);
 
-            // Contact beacon
-            function createBeacon(pos) {
-                try {
-                    const geom = new THREE.ConeGeometry(0.6, 2, 8);
-                    const mat = new THREE.MeshStandardMaterial({ color: 0xffaa00, emissive: 0x442200 });
-                    const beacon = new THREE.Mesh(geom, mat);
-                    beacon.position.copy(pos);
-                    beacon.userData = { type: 'contact' };
-                    scene.add(beacon);
+                            const pillar = new THREE.Mesh(
+                                new THREE.CylinderGeometry(0.5, 0.5, 2, 6),
+                                new THREE.MeshStandardMaterial({ color: 0x8899aa, emissive: 0x112233 })
+                            );
+                            pillar.position.y = 1.25;
+                            group.add(pillar);
 
-                    const widget = Widgets.createContactWidget(PORTFOLIO_DATA.socials);
-                    widget.position.copy(pos.clone().add(new THREE.Vector3(0, 2, 0)));
-                    scene.add(widget);
-                    beacon.userData.widget = widget;
+                            const top = new THREE.Mesh(
+                                new THREE.TorusKnotGeometry(1, 0.3, 64, 8),
+                                new THREE.MeshStandardMaterial({ color: 0x00f3ff, emissive: 0x004466 })
+                            );
+                            top.position.y = 2.5;
+                            group.add(top);
 
-                    interactiveObjects.push(beacon);
-                    return beacon;
-                } catch (e) {
-                    console.warn("Beacon creation failed:", e);
-                    return null;
-                }
-            }
-            createBeacon(new THREE.Vector3(0, 0.5, 5));
-
-            // --- RAYCASTER for interaction (look at / click) ---
-            const raycaster = new THREE.Raycaster();
-            const mouse = new THREE.Vector2();
-            let hoveredObj = null;
-
-            function onMouseMove(event) {
-                // Normalize mouse coordinates
-                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-            }
-            window.addEventListener('mousemove', onMouseMove);
-
-            // Check what we're looking at each frame
-            function checkInteraction() {
-                if (!controls.isLocked) return;
-
-                raycaster.setFromCamera(mouse, camera);
-                const intersects = raycaster.intersectObjects(interactiveObjects);
-
-                if (intersects.length > 0) {
-                    const hit = intersects[0].object;
-                    if (hoveredObj !== hit) {
-                        // Unhover previous
-                        if (hoveredObj && hoveredObj.material.emissive) {
-                            hoveredObj.material.emissive.setHex(hoveredObj.userData.originalEmissive || 0);
+                            group.position.copy(pos);
+                            return group;
+                        } catch (e) {
+                            console.warn("Island creation failed:", e);
+                            return new THREE.Group();
                         }
-                        hoveredObj = hit;
-                        // Store original emissive if not stored
-                        if (hit.material.emissive) {
-                            if (hit.userData.originalEmissive === undefined) {
-                                hit.userData.originalEmissive = hit.material.emissive.getHex();
+                    }
+
+                    scene.add(createFloatingIsland(new THREE.Vector3(0, 0, 0)));
+                    scene.add(createFloatingIsland(new THREE.Vector3(8, 2, -5)));
+                    scene.add(createFloatingIsland(new THREE.Vector3(-7, -1, 6)));
+
+                    // --- PARTICLES ---
+                    try {
+                        const particleCount = 2000;
+                        const particlesGeo = new THREE.BufferGeometry();
+                        const particlesPos = new Float32Array(particleCount * 3);
+                        for (let i = 0; i < particleCount; i++) {
+                            particlesPos[i*3] = (Math.random() - 0.5) * 50;
+                            particlesPos[i*3+1] = (Math.random() - 0.5) * 30;
+                            particlesPos[i*3+2] = (Math.random() - 0.5) * 50;
+                        }
+                        particlesGeo.setAttribute('position', new THREE.BufferAttribute(particlesPos, 3));
+                        const particlesMat = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.05, transparent: true, opacity: 0.5 });
+                        const particles = new THREE.Points(particlesGeo, particlesMat);
+                        scene.add(particles);
+                    } catch (e) {
+                        console.warn("Particles failed:", e);
+                    }
+
+                    // --- INTERACTIVE OBJECTS ---
+                    let interactiveObjects = [];
+
+                    // Helper to create a glowing crystal
+                    function createCrystal(pos, color, skillData) {
+                        try {
+                            const geom = new THREE.OctahedronGeometry(0.8, 0);
+                            const mat = new THREE.MeshStandardMaterial({ color: color, emissive: color, emissiveIntensity: 0.5 });
+                            const mesh = new THREE.Mesh(geom, mat);
+                            mesh.position.copy(pos);
+                            mesh.userData = { type: 'skill', data: skillData };
+                            scene.add(mesh);
+
+                            const light = new THREE.PointLight(color, 1, 5);
+                            light.position.copy(pos);
+                            scene.add(light);
+
+                            const widget = window.Widgets.createSkillWidget(skillData);
+                            widget.position.copy(pos.clone().add(new THREE.Vector3(0, 1.5, 0)));
+                            scene.add(widget);
+                            mesh.userData.widget = widget;
+
+                            interactiveObjects.push(mesh);
+                            return mesh;
+                        } catch (e) {
+                            console.warn("Crystal creation failed:", e);
+                            return null;
+                        }
+                    }
+
+                    PORTFOLIO_DATA.skills.forEach((skill, index) => {
+                        const angle = (index / PORTFOLIO_DATA.skills.length) * Math.PI * 2;
+                        const radius = 4;
+                        const pos = new THREE.Vector3(Math.cos(angle) * radius, 1 + Math.sin(angle*2)*0.5, Math.sin(angle) * radius);
+                        createCrystal(pos, skill.color, skill);
+                    });
+
+                    // Create project portals
+                    function createPortal(pos, projectData) {
+                        try {
+                            const ringGeo = new THREE.TorusGeometry(1.2, 0.2, 16, 32);
+                            const ringMat = new THREE.MeshStandardMaterial({ color: projectData.color, emissive: projectData.color, emissiveIntensity: 0.3 });
+                            const ring = new THREE.Mesh(ringGeo, ringMat);
+                            ring.position.copy(pos);
+                            ring.rotation.x = Math.PI / 2;
+                            ring.userData = { type: 'project', data: projectData };
+                            scene.add(ring);
+
+                            const glowGeo = new THREE.SphereGeometry(0.4, 8);
+                            const glowMat = new THREE.MeshBasicMaterial({ color: projectData.color, transparent: true, opacity: 0.3 });
+                            const glow = new THREE.Mesh(glowGeo, glowMat);
+                            glow.position.copy(pos);
+                            scene.add(glow);
+
+                            const widget = window.Widgets.createProjectWidget(projectData);
+                            widget.position.copy(pos.clone().add(new THREE.Vector3(0, 1.8, 0)));
+                            scene.add(widget);
+                            ring.userData.widget = widget;
+
+                            interactiveObjects.push(ring);
+                            return ring;
+                        } catch (e) {
+                            console.warn("Portal creation failed:", e);
+                            return null;
+                        }
+                    }
+
+                    PORTFOLIO_DATA.projects.forEach((proj, index) => {
+                        const pos = new THREE.Vector3( (index === 0 ? 5 : -5), 2, 3 );
+                        createPortal(pos, proj);
+                    });
+
+                    // Experience monoliths
+                    function createMonolith(pos, expData) {
+                        try {
+                            const geom = new THREE.BoxGeometry(0.8, 2.5, 0.8);
+                            const mat = new THREE.MeshStandardMaterial({ color: 0x556677, emissive: 0x112233 });
+                            const monolith = new THREE.Mesh(geom, mat);
+                            monolith.position.copy(pos);
+                            monolith.userData = { type: 'experience', data: expData };
+                            scene.add(monolith);
+
+                            const widget = window.Widgets.createExperienceWidget(expData);
+                            widget.position.copy(pos.clone().add(new THREE.Vector3(0, 2, 0)));
+                            scene.add(widget);
+                            monolith.userData.widget = widget;
+
+                            interactiveObjects.push(monolith);
+                            return monolith;
+                        } catch (e) {
+                            console.warn("Monolith creation failed:", e);
+                            return null;
+                        }
+                    }
+
+                    PORTFOLIO_DATA.experience.forEach((exp, index) => {
+                        const pos = new THREE.Vector3( -2 + index*4, 0.5, -4 );
+                        createMonolith(pos, exp);
+                    });
+
+                    // Contact beacon
+                    function createBeacon(pos) {
+                        try {
+                            const geom = new THREE.ConeGeometry(0.6, 2, 8);
+                            const mat = new THREE.MeshStandardMaterial({ color: 0xffaa00, emissive: 0x442200 });
+                            const beacon = new THREE.Mesh(geom, mat);
+                            beacon.position.copy(pos);
+                            beacon.userData = { type: 'contact' };
+                            scene.add(beacon);
+
+                            const widget = window.Widgets.createContactWidget(PORTFOLIO_DATA.socials);
+                            widget.position.copy(pos.clone().add(new THREE.Vector3(0, 2, 0)));
+                            scene.add(widget);
+                            beacon.userData.widget = widget;
+
+                            interactiveObjects.push(beacon);
+                            return beacon;
+                        } catch (e) {
+                            console.warn("Beacon creation failed:", e);
+                            return null;
+                        }
+                    }
+                    createBeacon(new THREE.Vector3(0, 0.5, 5));
+
+                    // --- RAYCASTER for interaction ---
+                    const raycaster = new THREE.Raycaster();
+                    const mouse = new THREE.Vector2();
+                    let hoveredObj = null;
+
+                    function onMouseMove(event) {
+                        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+                    }
+                    window.addEventListener('mousemove', onMouseMove);
+
+                    function checkInteraction() {
+                        if (!controls.isLocked) return;
+
+                        raycaster.setFromCamera(mouse, camera);
+                        const intersects = raycaster.intersectObjects(interactiveObjects);
+
+                        if (intersects.length > 0) {
+                            const hit = intersects[0].object;
+                            if (hoveredObj !== hit) {
+                                // Unhover previous
+                                if (hoveredObj && hoveredObj.material.emissive) {
+                                    hoveredObj.material.emissive.setHex(hoveredObj.userData.originalEmissive || 0);
+                                }
+                                hoveredObj = hit;
+                                if (hit.material.emissive) {
+                                    if (hit.userData.originalEmissive === undefined) {
+                                        hit.userData.originalEmissive = hit.material.emissive.getHex();
+                                    }
+                                    hit.material.emissive.setHex(0x00f3ff);
+                                }
+                                if (hit.userData.widget) {
+                                    hit.userData.widget.element.style.transform = 'scale(1.1)';
+                                }
                             }
-                            hit.material.emissive.setHex(0x00f3ff); // highlight
-                        }
-                        // Show widget? Already visible; maybe scale it
-                        if (hit.userData.widget) {
-                            hit.userData.widget.element.style.transform = 'scale(1.1)';
+                        } else {
+                            if (hoveredObj) {
+                                if (hoveredObj.material.emissive) {
+                                    hoveredObj.material.emissive.setHex(hoveredObj.userData.originalEmissive || 0);
+                                }
+                                if (hoveredObj.userData.widget) {
+                                    hoveredObj.userData.widget.element.style.transform = 'scale(1)';
+                                }
+                                hoveredObj = null;
+                            }
                         }
                     }
-                } else {
-                    if (hoveredObj) {
-                        if (hoveredObj.material.emissive) {
-                            hoveredObj.material.emissive.setHex(hoveredObj.userData.originalEmissive || 0);
+
+                    // --- MOVEMENT HANDLING ---
+                    const moveState = { forward: false, backward: false, left: false, right: false };
+                    document.addEventListener('keydown', (e) => {
+                        switch(e.code) {
+                            case 'KeyW': moveState.forward = true; break;
+                            case 'KeyS': moveState.backward = true; break;
+                            case 'KeyA': moveState.left = true; break;
+                            case 'KeyD': moveState.right = true; break;
                         }
-                        if (hoveredObj.userData.widget) {
-                            hoveredObj.userData.widget.element.style.transform = 'scale(1)';
-                        }
-                        hoveredObj = null;
-                    }
-                }
-            }
-
-            // --- MOVEMENT HANDLING ---
-            const moveState = { forward: false, backward: false, left: false, right: false };
-            document.addEventListener('keydown', (e) => {
-                switch(e.code) {
-                    case 'KeyW': moveState.forward = true; break;
-                    case 'KeyS': moveState.backward = true; break;
-                    case 'KeyA': moveState.left = true; break;
-                    case 'KeyD': moveState.right = true; break;
-                }
-            });
-            document.addEventListener('keyup', (e) => {
-                switch(e.code) {
-                    case 'KeyW': moveState.forward = false; break;
-                    case 'KeyS': moveState.backward = false; break;
-                    case 'KeyA': moveState.left = false; break;
-                    case 'KeyD': moveState.right = false; break;
-                }
-            });
-
-            function updateMovement(delta) {
-                if (!controls.isLocked) return;
-                const speed = 5 * delta;
-                const cameraDir = new THREE.Vector3();
-                camera.getWorldDirection(cameraDir);
-                cameraDir.y = 0; // keep horizontal
-                cameraDir.normalize();
-
-                const strafeDir = new THREE.Vector3().crossVectors(cameraDir, new THREE.Vector3(0,1,0)).normalize();
-
-                if (moveState.forward) controls.getObject().position.addScaledVector(cameraDir, speed);
-                if (moveState.backward) controls.getObject().position.addScaledVector(cameraDir, -speed);
-                if (moveState.left) controls.getObject().position.addScaledVector(strafeDir, -speed);
-                if (moveState.right) controls.getObject().position.addScaledVector(strafeDir, speed);
-            }
-
-            // --- ANIMATION LOOP ---
-            function animate() {
-                try {
-                    requestAnimationFrame(animate);
-
-                    const delta = clock.getDelta();
-
-                    // Rotate crystals and portals
-                    scene.traverse(obj => {
-                        if (obj.geometry && (obj.geometry.type === 'OctahedronGeometry' || obj.geometry.type === 'TorusGeometry')) {
-                            obj.rotation.y += 0.01;
-                            obj.rotation.x += 0.005;
+                    });
+                    document.addEventListener('keyup', (e) => {
+                        switch(e.code) {
+                            case 'KeyW': moveState.forward = false; break;
+                            case 'KeyS': moveState.backward = false; break;
+                            case 'KeyA': moveState.left = false; break;
+                            case 'KeyD': moveState.right = false; break;
                         }
                     });
 
-                    // Flicker light
-                    const flicker = scene.children.find(c => c instanceof THREE.PointLight && c.position.length() < 1);
-                    if (flicker) {
-                        flicker.intensity = 0.3 + Math.sin(Date.now() * 0.01) * 0.2;
+                    function updateMovement(delta) {
+                        if (!controls.isLocked) return;
+                        const speed = 5 * delta;
+                        const cameraDir = new THREE.Vector3();
+                        camera.getWorldDirection(cameraDir);
+                        cameraDir.y = 0;
+                        cameraDir.normalize();
+
+                        const strafeDir = new THREE.Vector3().crossVectors(cameraDir, new THREE.Vector3(0,1,0)).normalize();
+
+                        if (moveState.forward) controls.getObject().position.addScaledVector(cameraDir, speed);
+                        if (moveState.backward) controls.getObject().position.addScaledVector(cameraDir, -speed);
+                        if (moveState.left) controls.getObject().position.addScaledVector(strafeDir, -speed);
+                        if (moveState.right) controls.getObject().position.addScaledVector(strafeDir, speed);
                     }
 
-                    updateMovement(delta);
-                    checkInteraction();
+                    // --- ANIMATION LOOP ---
+                    function animate() {
+                        try {
+                            requestAnimationFrame(animate);
 
-                    // Render via composer for bloom
-                    composer.render();
+                            const delta = clock.getDelta();
 
-                    // Render CSS2D separately
-                    labelRenderer.render(scene, camera);
+                            // Rotate crystals and portals
+                            scene.traverse(obj => {
+                                if (obj.geometry && (obj.geometry.type === 'OctahedronGeometry' || obj.geometry.type === 'TorusGeometry')) {
+                                    obj.rotation.y += 0.01;
+                                    obj.rotation.x += 0.005;
+                                }
+                            });
+
+                            // Flicker light
+                            const flicker = scene.children.find(c => c instanceof THREE.PointLight && c.position.length() < 1);
+                            if (flicker) {
+                                flicker.intensity = 0.3 + Math.sin(Date.now() * 0.01) * 0.2;
+                            }
+
+                            updateMovement(delta);
+                            checkInteraction();
+
+                            composer.render();
+                            labelRenderer.render(scene, camera);
+                        } catch (e) {
+                            console.error("Animation loop error:", e);
+                        }
+                    }
+
+                    animate();
+
+                    // --- RESIZE HANDLER ---
+                    window.addEventListener('resize', () => {
+                        camera.aspect = window.innerWidth / window.innerHeight;
+                        camera.updateProjectionMatrix();
+                        renderer.setSize(window.innerWidth, window.innerHeight);
+                        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+                        composer.setSize(window.innerWidth, window.innerHeight);
+                    });
+
+                    // Mobile hint
+                    if (/Mobi|Android/i.test(navigator.userAgent)) {
+                        document.getElementById('info').innerHTML = 'DRAG TO LOOK | TAP TO LOCK | (MOBILE EXPERIMENTAL)';
+                    }
                 } catch (e) {
-                    console.error("Animation loop error:", e);
-                    // Don't stop, but log
+                    showError("3D initialization failed: " + e.message);
                 }
-            }
-
-            animate();
-
-            // --- RESIZE HANDLER ---
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-                labelRenderer.setSize(window.innerWidth, window.innerHeight);
-                composer.setSize(window.innerWidth, window.innerHeight);
-            });
-
-            // --- HIDE LOADING ---
-            loadingDiv.style.display = 'none';
-
-            // --- FALLBACK FOR NO POINTER LOCK ---
-            if (!controls) {
-                showError("Controls initialization failed.");
-            }
-
-            // --- TOUCH / MOBILE (simplified) ---
-            // For mobile, we could add a virtual joystick, but out of scope for this demo.
-            // Provide a simple info.
-            if (/Mobi|Android/i.test(navigator.userAgent)) {
-                document.getElementById('info').innerHTML = 'DRAG TO LOOK | TAP TO LOCK | (MOBILE EXPERIMENTAL)';
             }
         })();
     </script>
