@@ -296,9 +296,7 @@
                         if (node.nodeType === Node.ELEMENT_NODE) {
                             const div = document.createElement('div');
                             div.innerHTML = node.outerHTML;
-                            // Apply base styles
-                            div.style.position = 'absolute';
-                            div.style.transform = 'translate(-50%, -50%)';
+                            // Apply base styles for positioning (will be set later)
                             const obj = new THREE.CSS2DObject(div);
                             panels.push(obj);
                         }
@@ -508,7 +506,7 @@
 
                     scene.add(hubGroup);
 
-                    // --- Rooms (empty shells, will be populated dynamically) ---
+                    // --- Rooms (will be built dynamically with collision) ---
                     const rooms = {
                         skills: new THREE.Group(),
                         projects: new THREE.Group(),
@@ -516,60 +514,117 @@
                         contact: new THREE.Group()
                     };
 
-                    // Generic room builder with a return door at the back
-                    function createRoomBase(type, color) {
-                        const roomGroup = new THREE.Group();
+                    // Room dimensions (half-size)
+                    const roomHalf = 5.0;
+                    const roomHeight = 4.0;
 
-                        // Floor
-                        const floorMat = new THREE.MeshStandardMaterial({ color: 0x2a2a3a, roughness: 0.8 });
-                        const floor = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), floorMat);
+                    // Function to create a premium futuristic room base (walls, floor, ceiling, trim)
+                    function createRoomBase(colorAccent) {
+                        const group = new THREE.Group();
+
+                        // Floor with grid texture (using simple lines or a grid material)
+                        const floorMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2a, roughness: 0.7, metalness: 0.2 });
+                        const floor = new THREE.Mesh(new THREE.PlaneGeometry(roomHalf*2, roomHalf*2), floorMat);
                         floor.rotation.x = -Math.PI/2;
                         floor.position.y = 0;
                         floor.receiveShadow = true;
-                        roomGroup.add(floor);
+                        group.add(floor);
 
-                        // Walls
-                        const wallMat = new THREE.MeshStandardMaterial({ color: 0x3a3a4a });
-                        const backWall = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.5), wallMat);
-                        backWall.position.set(0, 2, -5);
+                        // Add a grid overlay (using LineSegments)
+                        const gridHelper = new THREE.GridHelper(roomHalf*2, 20, colorAccent, 0x333344);
+                        gridHelper.position.y = 0.01;
+                        group.add(gridHelper);
+
+                        // Ceiling
+                        const ceilingMat = new THREE.MeshStandardMaterial({ color: 0x0a0a1a, emissive: 0x111122, transparent: true, opacity: 0.8 });
+                        const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(roomHalf*2, roomHalf*2), ceilingMat);
+                        ceiling.rotation.x = Math.PI/2;
+                        ceiling.position.y = roomHeight;
+                        ceiling.receiveShadow = true;
+                        group.add(ceiling);
+
+                        // Walls with panels
+                        const wallMat = new THREE.MeshStandardMaterial({ color: 0x2a2a3a, roughness: 0.6, emissive: 0x101018 });
+                        
+                        // Back wall (-z)
+                        const backWall = new THREE.Mesh(new THREE.BoxGeometry(roomHalf*2, roomHeight, 0.2), wallMat);
+                        backWall.position.set(0, roomHeight/2, -roomHalf);
                         backWall.castShadow = true;
                         backWall.receiveShadow = true;
-                        roomGroup.add(backWall);
-                        const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4, 10), wallMat);
-                        leftWall.position.set(-5, 2, 0);
-                        leftWall.castShadow = true;
-                        leftWall.receiveShadow = true;
-                        roomGroup.add(leftWall);
-                        const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4, 10), wallMat);
-                        rightWall.position.set(5, 2, 0);
-                        rightWall.castShadow = true;
-                        rightWall.receiveShadow = true;
-                        roomGroup.add(rightWall);
-                        const frontWall = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.5), wallMat);
-                        frontWall.position.set(0, 2, 5);
+                        group.add(backWall);
+                        // Add some glowing strips
+                        const stripMat = new THREE.MeshStandardMaterial({ color: colorAccent, emissive: colorAccent });
+                        const hStrip = new THREE.Mesh(new THREE.BoxGeometry(roomHalf*2 - 1, 0.05, 0.1), stripMat);
+                        hStrip.position.set(0, 1.5, -roomHalf + 0.15);
+                        group.add(hStrip);
+                        const vStrip = new THREE.Mesh(new THREE.BoxGeometry(0.05, roomHeight - 1, 0.1), stripMat);
+                        vStrip.position.set(0, roomHeight/2, -roomHalf + 0.15);
+                        group.add(vStrip);
+
+                        // Front wall (+z) but with a door opening? We'll handle door separately.
+                        const frontWall = new THREE.Mesh(new THREE.BoxGeometry(roomHalf*2, roomHeight, 0.2), wallMat);
+                        frontWall.position.set(0, roomHeight/2, roomHalf);
                         frontWall.castShadow = true;
                         frontWall.receiveShadow = true;
-                        // But we need a door in the front wall? Actually we want a return door at the back.
-                        // Let's put a return door on the back wall.
-                        const returnDoor = createDoor(color, 'BACK TO HUB', 'hub');
-                        returnDoor.position.set(0, 0.5, -4.5); // in front of back wall
-                        returnDoor.rotation.y = 0; // facing forward
-                        roomGroup.add(returnDoor);
-                        doors.push(returnDoor); // add to doors array for proximity
+                        group.add(frontWall);
+                        // Add strips
+                        const hStripFront = new THREE.Mesh(new THREE.BoxGeometry(roomHalf*2 - 1, 0.05, 0.1), stripMat);
+                        hStripFront.position.set(0, 1.5, roomHalf - 0.15);
+                        group.add(hStripFront);
+                        const vStripFront = new THREE.Mesh(new THREE.BoxGeometry(0.05, roomHeight - 1, 0.1), stripMat);
+                        vStripFront.position.set(0, roomHeight/2, roomHalf - 0.15);
+                        group.add(vStripFront);
 
-                        // Add a simple light
-                        const light = new THREE.PointLight(0xffffff, 0.8, 10);
-                        light.position.set(0, 3, 0);
-                        roomGroup.add(light);
+                        // Left wall (-x)
+                        const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.2, roomHeight, roomHalf*2), wallMat);
+                        leftWall.position.set(-roomHalf, roomHeight/2, 0);
+                        leftWall.castShadow = true;
+                        leftWall.receiveShadow = true;
+                        group.add(leftWall);
+                        // Strips
+                        const hStripLeft = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.05, roomHalf*2 - 1), stripMat);
+                        hStripLeft.position.set(-roomHalf + 0.15, 1.5, 0);
+                        group.add(hStripLeft);
+                        const vStripLeft = new THREE.Mesh(new THREE.BoxGeometry(0.1, roomHeight - 1, 0.05), stripMat);
+                        vStripLeft.position.set(-roomHalf + 0.15, roomHeight/2, 0);
+                        group.add(vStripLeft);
 
-                        return roomGroup;
+                        // Right wall (+x)
+                        const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.2, roomHeight, roomHalf*2), wallMat);
+                        rightWall.position.set(roomHalf, roomHeight/2, 0);
+                        rightWall.castShadow = true;
+                        rightWall.receiveShadow = true;
+                        group.add(rightWall);
+                        const hStripRight = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.05, roomHalf*2 - 1), stripMat);
+                        hStripRight.position.set(roomHalf - 0.15, 1.5, 0);
+                        group.add(hStripRight);
+                        const vStripRight = new THREE.Mesh(new THREE.BoxGeometry(0.1, roomHeight - 1, 0.05), stripMat);
+                        vStripRight.position.set(roomHalf - 0.15, roomHeight/2, 0);
+                        group.add(vStripRight);
+
+                        // Add some floating panels (for data) – these will be CSS2D later, but we can add small 3D accents
+                        return group;
                     }
 
-                    // Create rooms with appropriate colors
-                    rooms.skills = createRoomBase('skills', '#FFD700');
-                    rooms.projects = createRoomBase('projects', '#00FF7F');
-                    rooms.experience = createRoomBase('experience', '#5a9eff');
-                    rooms.contact = createRoomBase('contact', '#ffaa00');
+                    // Create rooms with accent colors
+                    rooms.skills.add(createRoomBase('#FFD700'));
+                    rooms.projects.add(createRoomBase('#00FF7F'));
+                    rooms.experience.add(createRoomBase('#5a9eff'));
+                    rooms.contact.add(createRoomBase('#ffaa00'));
+
+                    // Add return doors to each room
+                    function addReturnDoor(roomGroup, color) {
+                        const returnDoor = createDoor(color, 'BACK TO HUB', 'hub');
+                        returnDoor.position.set(0, 0.5, -4.5); // near back wall
+                        returnDoor.rotation.y = 0;
+                        roomGroup.add(returnDoor);
+                        doors.push(returnDoor);
+                    }
+
+                    addReturnDoor(rooms.skills, '#FFD700');
+                    addReturnDoor(rooms.projects, '#00FF7F');
+                    addReturnDoor(rooms.experience, '#5a9eff');
+                    addReturnDoor(rooms.contact, '#ffaa00');
 
                     // Hide rooms initially
                     for (let key in rooms) {
@@ -592,14 +647,14 @@
                     scene.add(particles);
 
                     // --- Proximity detection and door interaction ---
-                    let currentDoor = null; // door currently in range
-                    const originalEmissive = new THREE.Color(); // store
+                    let currentDoor = null;
+                    const roomHalf = 5.0; // for collision
 
                     function checkDoorProximity() {
                         if (!controls.isLocked) return;
                         const playerPos = controls.getObject().position;
                         let closestDoor = null;
-                        let minDist = 3.0; // threshold
+                        let minDist = 3.0;
 
                         doors.forEach(door => {
                             const dist = playerPos.distanceTo(door.position);
@@ -610,7 +665,6 @@
                         });
 
                         if (closestDoor !== currentDoor) {
-                            // Reset previous door's glow
                             if (currentDoor) {
                                 currentDoor.children.forEach(child => {
                                     if (child.material && child.material.emissive) {
@@ -620,10 +674,9 @@
                             }
                             currentDoor = closestDoor;
                             if (currentDoor) {
-                                // Apply glow
                                 currentDoor.children.forEach(child => {
                                     if (child.material && child.material.emissive) {
-                                        child.material.emissive.setHex(0x333333); // subtle glow
+                                        child.material.emissive.setHex(0x333333);
                                     }
                                 });
                                 doorPrompt.style.display = 'block';
@@ -638,98 +691,46 @@
                         if (e.code === 'KeyE' && currentDoor) {
                             const roomType = currentDoor.userData.room;
                             if (roomType === 'hub') {
-                                // Return to hub
                                 hubGroup.visible = true;
                                 for (let key in rooms) {
                                     rooms[key].visible = false;
                                 }
-                                // Remove any dynamically added content from the previous room
-                                for (let key in rooms) {
-                                    while(rooms[key].children.length > 0) {
-                                        rooms[key].remove(rooms[key].children[0]);
-                                    }
-                                }
-                                // Re-add the base room structure (the return door and lights) – but we need to keep it.
-                                // Actually we want to clear all and then rebuild the base for the next entry.
-                                // For simplicity, we'll just hide/show; the base structure (walls, floor, return door) should remain.
-                                // We need to separate base structure from content. Let's store base separately.
-                                // We'll rework: each room has a base group (walls, floor, return door) and a content group.
-                                // When loading new content, we clear the content group.
-                                // We'll implement that next.
-                                // For now, we just hide.
+                                // Clear any dynamically added content from previous room (we'll rebuild when entering)
                                 controls.getObject().position.set(0, 2, 5);
                                 controls.getObject().lookAt(0, 2, 0);
                                 infoDiv.innerText = '📍 HUB';
                             } else {
-                                // Enter specific room
                                 hubGroup.visible = false;
                                 for (let key in rooms) {
                                     rooms[key].visible = (key === roomType);
                                 }
-                                // Load and display content for this room
                                 const roomGroup = rooms[roomType];
-                                // Remove any old content (keep only the base: we need to identify base objects)
-                                // We'll store base objects in userData.
-                                // For simplicity, we'll clear all children and then rebuild base + content.
-                                // But we need the base structure (walls, floor, return door). We'll recreate it.
-                                // This is a bit heavy but acceptable.
-                                // Instead, let's have a separate content group inside each room.
-                                // We'll modify the room creation to include a content group.
-                                // I'll refactor quickly.
+                                // Remove any previously added CSS2D panels (keep base structure)
+                                // We'll assume base is everything except CSS2D objects.
+                                // Better: store CSS2D panels separately. We'll clear only CSS2D children.
+                                const toRemove = [];
+                                roomGroup.children.forEach(child => {
+                                    if (child instanceof THREE.CSS2DObject) {
+                                        toRemove.push(child);
+                                    }
+                                });
+                                toRemove.forEach(child => roomGroup.remove(child));
 
-                                // --- Refactor: each room has a base group and a content group ---
-                                // We'll clear the roomGroup, rebuild base, then load content.
-                                // But to keep code concise, I'll do it here:
-                                while(roomGroup.children.length) roomGroup.remove(roomGroup.children[0]);
-
-                                // Rebuild base
-                                const floorMat = new THREE.MeshStandardMaterial({ color: 0x2a2a3a, roughness: 0.8 });
-                                const floor = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), floorMat);
-                                floor.rotation.x = -Math.PI/2;
-                                floor.position.y = 0;
-                                floor.receiveShadow = true;
-                                roomGroup.add(floor);
-
-                                const wallMat = new THREE.MeshStandardMaterial({ color: 0x3a3a4a });
-                                const backWall = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.5), wallMat);
-                                backWall.position.set(0, 2, -5);
-                                backWall.castShadow = true;
-                                backWall.receiveShadow = true;
-                                roomGroup.add(backWall);
-                                const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4, 10), wallMat);
-                                leftWall.position.set(-5, 2, 0);
-                                leftWall.castShadow = true;
-                                leftWall.receiveShadow = true;
-                                roomGroup.add(leftWall);
-                                const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4, 10), wallMat);
-                                rightWall.position.set(5, 2, 0);
-                                rightWall.castShadow = true;
-                                rightWall.receiveShadow = true;
-                                roomGroup.add(rightWall);
-                                const frontWall = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.5), wallMat);
-                                frontWall.position.set(0, 2, 5);
-                                frontWall.castShadow = true;
-                                frontWall.receiveShadow = true;
-                                roomGroup.add(frontWall);
-
-                                // Return door
-                                const returnDoor = createDoor(currentDoor.userData.color, 'BACK TO HUB', 'hub');
-                                returnDoor.position.set(0, 0.5, -4.5);
-                                returnDoor.rotation.y = 0;
-                                roomGroup.add(returnDoor);
-                                doors.push(returnDoor);
-
-                                const light = new THREE.PointLight(0xffffff, 0.8, 10);
-                                light.position.set(0, 3, 0);
-                                roomGroup.add(light);
-
-                                // Now load content and place it
+                                // Load and place content panels
                                 try {
                                     const panels = await loadRoomContent(roomType);
-                                    // Position panels along the walls (adjust as needed)
+                                    // Place panels on walls in an organized way
+                                    // For simplicity, we'll place them on the back wall at different positions
                                     panels.forEach((panel, index) => {
-                                        // Example: place in a row on the back wall
-                                        panel.position.set(-4 + index * 2, 2.5, -4.5);
+                                        // Arrange in a grid: max 3 per row
+                                        const rows = 2;
+                                        const cols = 3;
+                                        const row = Math.floor(index / cols);
+                                        const col = index % cols;
+                                        const spacingX = 3.0;
+                                        const startX = -3.0;
+                                        const yPos = 2.0 + row * 1.5; // vertical spacing
+                                        panel.position.set(startX + col * spacingX, yPos, -4.5); // back wall
                                         roomGroup.add(panel);
                                     });
                                 } catch (err) {
@@ -766,7 +767,7 @@
                     }
                     document.addEventListener('keydown', onKeyDown);
 
-                    // --- Movement (camera-relative) ---
+                    // --- Movement with collision detection ---
                     const moveState = { forward: false, backward: false, left: false, right: false };
                     document.addEventListener('keydown', (e) => {
                         switch(e.code) {
@@ -788,25 +789,65 @@
                     function updateMovement(delta) {
                         if (!controls.isLocked) return;
                         const speed = 5 * delta;
+                        const playerPos = controls.getObject().position;
+
+                        // Camera directions
                         const cameraDir = new THREE.Vector3();
                         camera.getWorldDirection(cameraDir);
                         cameraDir.y = 0;
                         cameraDir.normalize();
                         const strafeDir = new THREE.Vector3().crossVectors(cameraDir, new THREE.Vector3(0,1,0)).normalize();
 
-                        if (moveState.forward) controls.getObject().position.addScaledVector(cameraDir, speed);
-                        if (moveState.backward) controls.getObject().position.addScaledVector(cameraDir, -speed);
-                        if (moveState.left) controls.getObject().position.addScaledVector(strafeDir, -speed);
-                        if (moveState.right) controls.getObject().position.addScaledVector(strafeDir, speed);
+                        // Calculate desired movement
+                        let moveX = 0, moveZ = 0;
+                        if (moveState.forward) {
+                            moveX += cameraDir.x * speed;
+                            moveZ += cameraDir.z * speed;
+                        }
+                        if (moveState.backward) {
+                            moveX -= cameraDir.x * speed;
+                            moveZ -= cameraDir.z * speed;
+                        }
+                        if (moveState.left) {
+                            moveX -= strafeDir.x * speed;
+                            moveZ -= strafeDir.z * speed;
+                        }
+                        if (moveState.right) {
+                            moveX += strafeDir.x * speed;
+                            moveZ += strafeDir.z * speed;
+                        }
 
                         if (joystickActive) {
                             const joyX = joystickVector.x;
                             const joyY = joystickVector.y;
                             if (Math.abs(joyX) > 0.1 || Math.abs(joyY) > 0.1) {
-                                controls.getObject().position.addScaledVector(strafeDir, joyX * speed * 1.5);
-                                controls.getObject().position.addScaledVector(cameraDir, -joyY * speed * 1.5);
+                                moveX += strafeDir.x * joyX * speed * 1.5;
+                                moveZ += strafeDir.z * joyX * speed * 1.5;
+                                moveX -= cameraDir.x * joyY * speed * 1.5;
+                                moveZ -= cameraDir.z * joyY * speed * 1.5;
                             }
                         }
+
+                        // Apply movement with collision against room walls if inside a room
+                        let newX = playerPos.x + moveX;
+                        let newZ = playerPos.z + moveZ;
+
+                        // Determine if we are in a room (any room visible)
+                        let inRoom = false;
+                        for (let key in rooms) {
+                            if (rooms[key].visible) inRoom = true;
+                        }
+
+                        if (inRoom) {
+                            // Clamp to room boundaries (roomHalf - margin)
+                            const margin = 0.5;
+                            const bound = roomHalf - margin;
+                            newX = Math.max(-bound, Math.min(bound, newX));
+                            newZ = Math.max(-bound, Math.min(bound, newZ));
+                        }
+
+                        playerPos.x = newX;
+                        playerPos.z = newZ;
                     }
 
                     // --- Animation loop ---
