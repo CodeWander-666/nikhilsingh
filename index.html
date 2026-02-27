@@ -3,28 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NIKHIL SINGH · DREAM WALK · ADVENTURE</title>
+    <title>NIKHIL SINGH · DOORS OF DATA</title>
     <style>
         body {
             margin: 0;
             overflow: hidden;
-            font-family: 'Courier New', monospace;
-            touch-action: none; /* Prevents scrolling on mobile */
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            touch-action: none;
         }
         #info {
             position: absolute;
             bottom: 20px;
             left: 20px;
-            color: #00f3ff;
-            text-shadow: 0 0 10px #00f3ff;
+            color: #ccc;
+            background: rgba(20,20,30,0.8);
+            padding: 10px 20px;
+            border-radius: 8px;
+            backdrop-filter: blur(5px);
+            border: 1px solid #444;
             font-size: 14px;
             z-index: 100;
-            background: rgba(0,0,0,0.5);
-            padding: 8px 16px;
-            border-radius: 20px;
+            transition: opacity 1s;
             pointer-events: none;
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(0,243,255,0.3);
         }
         #loading {
             position: absolute;
@@ -32,16 +32,13 @@
             left: 50%;
             transform: translate(-50%, -50%);
             color: white;
-            font-size: 24px;
-            z-index: 200;
-            background: rgba(0,0,0,0.9);
+            background: rgba(10,10,20,0.95);
             padding: 30px;
-            border-radius: 16px;
-            border: 1px solid #00f3ff;
-            box-shadow: 0 0 50px rgba(0,243,255,0.3);
-            transition: opacity 0.5s;
+            border-radius: 12px;
+            border: 1px solid #555;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
             text-align: center;
-            min-width: 300px;
+            z-index: 200;
             backdrop-filter: blur(10px);
         }
         #error {
@@ -49,22 +46,20 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: #ff5555;
-            background: rgba(0,0,0,0.95);
+            color: #ff8888;
+            background: rgba(30,0,0,0.95);
             padding: 30px;
             border: 2px solid #ff5555;
-            border-radius: 16px;
+            border-radius: 12px;
             z-index: 300;
             display: none;
             max-width: 80%;
             text-align: center;
-            box-shadow: 0 0 50px rgba(255,85,85,0.5);
-            backdrop-filter: blur(10px);
         }
         #progress-bar {
             width: 0%;
             height: 4px;
-            background: linear-gradient(90deg, #00f3ff, #ff00aa);
+            background: #5a9eff;
             margin-top: 20px;
             border-radius: 2px;
             transition: width 0.3s;
@@ -73,65 +68,14 @@
             position: absolute;
             top: 20px;
             right: 20px;
-            color: #00f3ff;
-            font-size: 12px;
-            background: rgba(0,0,0,0.5);
+            color: #aaa;
+            background: rgba(20,20,30,0.6);
             padding: 4px 8px;
             border-radius: 4px;
+            font-size: 12px;
             z-index: 100;
             backdrop-filter: blur(4px);
-            border: 1px solid rgba(0,243,255,0.3);
-        }
-        #hud {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 150;
-            background: rgba(0,0,0,0.6);
-            padding: 12px 20px;
-            border-radius: 30px;
-            border: 1px solid #00f3ff;
-            backdrop-filter: blur(8px);
-            color: white;
-            pointer-events: none;
-        }
-        #xp-bar {
-            width: 200px;
-            height: 8px;
-            background: #333;
-            border-radius: 4px;
-            margin-top: 5px;
-            overflow: hidden;
-        }
-        #xp-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #00f3ff, #ff00aa);
-            transition: width 0.3s;
-        }
-        #quest-log {
-            position: absolute;
-            top: 100px;
-            right: 20px;
-            background: rgba(0,0,0,0.7);
-            border: 1px solid #00f3ff;
-            border-radius: 8px;
-            padding: 10px;
-            color: white;
-            font-size: 12px;
-            max-width: 250px;
-            backdrop-filter: blur(8px);
-            pointer-events: none;
-            z-index: 150;
-        }
-        .quest-item {
-            margin: 5px 0;
-            padding: 5px;
-            border-left: 2px solid #00f3ff;
-        }
-        .quest-completed {
-            color: #88ff88;
-            text-decoration: line-through;
+            border: 1px solid #333;
         }
         #joystick {
             position: absolute;
@@ -140,9 +84,8 @@
             width: 100px;
             height: 100px;
             border-radius: 50%;
-            background: rgba(0,0,0,0.6);
-            border: 2px solid #00f3ff;
-            box-shadow: 0 0 20px #00f3ff;
+            background: rgba(30,30,40,0.7);
+            border: 2px solid #888;
             display: none;
             z-index: 200;
             backdrop-filter: blur(8px);
@@ -153,62 +96,37 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: #00f3ff;
+            background: #aaa;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            box-shadow: 0 0 20px #00f3ff;
             pointer-events: none;
         }
-        .toast {
+        .hint {
             position: absolute;
-            top: 50%;
+            top: 30px;
             left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.8);
-            border: 2px solid #00f3ff;
-            border-radius: 30px;
-            padding: 10px 20px;
+            transform: translateX(-50%);
             color: white;
-            font-size: 20px;
-            z-index: 300;
-            animation: fadeOut 2s forwards;
+            background: rgba(0,0,0,0.6);
+            padding: 12px 24px;
+            border-radius: 40px;
+            border: 1px solid #5a9eff;
+            backdrop-filter: blur(5px);
+            font-size: 16px;
+            z-index: 150;
+            transition: opacity 0.5s;
             pointer-events: none;
-        }
-        @keyframes fadeOut {
-            0% { opacity: 1; }
-            70% { opacity: 1; }
-            100% { opacity: 0; }
+            white-space: nowrap;
         }
         @media (max-width: 768px) {
+            .hint { font-size: 14px; padding: 8px 16px; }
             #joystick { display: block; }
-            #info { font-size: 12px; bottom: 10px; left: 10px; }
-            #hud { top: 10px; left: 10px; padding: 8px 12px; }
-            #xp-bar { width: 150px; }
         }
     </style>
-</head>
-<body>
-    <div id="loading">
-        <div>🚀 INITIALIZING DREAM WALK <span id="load-status">0%</span></div>
-        <div id="progress-bar" style="width:0%"></div>
-        <div style="margin-top: 20px; font-size: 14px; color: #888;">Loading cinematic adventure ...</div>
-    </div>
-    <div id="error"></div>
-    <div id="info">👆 CLICK / TOUCH NODES TO COLLECT | WASD + JOYSTICK</div>
-    <div id="fps">FPS: --</div>
-    <div id="hud">
-        <div>LEVEL <span id="level-display">1</span></div>
-        <div id="xp-bar"><div id="xp-fill" style="width:0%"></div></div>
-        <div>XP: <span id="xp-display">0</span>/<span id="xp-next">100</span></div>
-    </div>
-    <div id="quest-log">
-        <div style="font-weight:bold; margin-bottom:8px;">📋 QUESTS</div>
-        <div id="quest-list"></div>
-    </div>
-    <div id="joystick"><div id="joystick-thumb"></div></div>
-
-    <!-- Three.js core & required shaders -->
+    <!-- Load Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Three.js core & addons -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
@@ -218,12 +136,24 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
+</head>
+<body>
+    <div id="loading">
+        <div style="font-size:24px; margin-bottom:16px;">🚪 DOORS OF DATA</div>
+        <div>LOADING <span id="load-status">0%</span></div>
+        <div id="progress-bar" style="width:0%"></div>
+    </div>
+    <div id="error"></div>
+    <div class="hint" id="tutorial">👆 CLICK TO LOCK · WASD TO MOVE · WALK TO A DOOR AND CLICK TO ENTER</div>
+    <div id="info"></div>
+    <div id="fps">FPS: --</div>
+    <div id="joystick"><div id="joystick-thumb"></div></div>
 
     <script>
         (function() {
             "use strict";
 
-            // --- PORTFOLIO DATA (embedded) ---
+            // --- Embedded Portfolio Data (same as before) ---
             const PORTFOLIO_DATA = {
                 name: "NIKHIL SINGH",
                 role: "DATA ANALYST // FULL STACK SCIENTIST",
@@ -236,12 +166,12 @@
                     { name: "COMPUTER VISION", level: 75, color: "#20B2AA", description: "OpenCV, YOLO." }
                 ],
                 projects: [
-                    { title: "SEOMAN AI", description: "Full‑stack AI SEO Analyzer.", link: "https://seoman-ai.vercel.app", color: "#00FF7F", tags: ["REACT", "AI"] },
-                    { title: "NOVUSFACE AI", description: "Biometric Face Regeneration.", link: "#", color: "#FF1493", tags: ["GEN‑AI", "PYTHON"] }
+                    { title: "SEOMAN AI", description: "Full‑stack AI SEO Analyzer with traffic forecasting.", link: "https://seoman-ai.vercel.app", color: "#00FF7F", tags: ["REACT", "AI"] },
+                    { title: "NOVUSFACE AI", description: "Biometric Face Regeneration & Swapping Engine (free).", link: "#", color: "#FF1493", tags: ["GEN‑AI", "PYTHON"] }
                 ],
                 experience: [
-                    { company: "ALMABETTER", role: "Data Analyst Apprentice", period: "2025 – Present", description: "Full Stack Data Science." },
-                    { company: "SG GURUKUL", role: "Sales Intern", period: "2023", description: "Lead generation." }
+                    { company: "ALMABETTER", role: "Data Analyst Apprentice", period: "2025 – Present", description: "Full Stack Data Science & AI program." },
+                    { company: "SG GURUKUL", role: "Sales & Marketing Intern", period: "Aug 2023 – Oct 2023", description: "Lead generation, outbound telesales." }
                 ],
                 socials: {
                     linkedin: "https://linkedin.com/in/nikhil-singh",
@@ -249,147 +179,14 @@
                 }
             };
 
-            // --- WIDGET FACTORY (embedded) ---
-            const Widgets = (() => {
-                function createCSS2D(htmlString, className = 'widget') {
-                    const div = document.createElement('div');
-                    div.className = className;
-                    div.innerHTML = htmlString;
-                    return new THREE.CSS2DObject(div);
-                }
-
-                return {
-                    createSkillWidget: (skill) => {
-                        const html = `
-                            <div style="font-family:'Courier New'; background:rgba(10,10,20,0.9); backdrop-filter:blur(8px); border:1px solid ${skill.color}; border-radius:8px; padding:12px; color:white; max-width:250px; box-shadow:0 0 20px ${skill.color};">
-                                <div style="font-size:1.2rem; color:${skill.color};">${skill.name}</div>
-                                <div style="font-size:0.9rem; margin:8px 0;">${skill.description}</div>
-                                <div style="height:4px; background:#333;"><div style="height:100%; width:${skill.level}%; background:${skill.color};"></div></div>
-                                <div style="display:flex; justify-content:space-between; margin-top:8px;"><span>${skill.level}%</span><span style="color:#00f3ff;">+100 XP</span></div>
-                            </div>
-                        `;
-                        return createCSS2D(html);
-                    },
-                    createProjectWidget: (proj) => {
-                        const tags = proj.tags.map(t => `<span style="background:#333; padding:2px 6px; border-radius:12px; margin-right:4px;">${t}</span>`).join('');
-                        const html = `
-                            <div style="font-family:'Courier New'; background:rgba(10,10,20,0.9); backdrop-filter:blur(8px); border:1px solid ${proj.color}; border-radius:8px; padding:12px; color:white; max-width:250px;">
-                                <div style="font-size:1.2rem; color:${proj.color};">${proj.title}</div>
-                                <div style="font-size:0.9rem; margin:8px 0;">${proj.description}</div>
-                                <div>${tags}</div>
-                                <div style="margin-top:8px;">${proj.link !== '#' ? '<a href="'+proj.link+'" target="_blank" style="color:#00f3ff;">Visit</a>' : ''}</div>
-                                <div style="text-align:right; color:#ffaa00;">+500 XP</div>
-                            </div>
-                        `;
-                        return createCSS2D(html);
-                    },
-                    createExperienceWidget: (exp) => {
-                        const html = `
-                            <div style="font-family:'Courier New'; background:rgba(10,10,20,0.9); backdrop-filter:blur(8px); border:1px solid #aaa; border-radius:8px; padding:12px; color:white; max-width:250px;">
-                                <div style="font-size:1.1rem;">${exp.company}</div>
-                                <div style="color:#00f3ff;">${exp.role}</div>
-                                <div style="color:#888; font-size:0.8rem;">${exp.period}</div>
-                                <div style="margin-top:8px;">${exp.description}</div>
-                            </div>
-                        `;
-                        return createCSS2D(html);
-                    },
-                    createContactWidget: (socials) => {
-                        const html = `
-                            <div style="font-family:'Courier New'; background:rgba(10,10,20,0.9); backdrop-filter:blur(8px); border:1px solid #ffaa00; border-radius:8px; padding:12px; color:white; max-width:250px;">
-                                <div style="font-size:1.2rem; color:#ffaa00;">📡 CONTACT</div>
-                                <div style="display:flex; justify-content:space-around; margin:12px 0;">
-                                    ${socials.linkedin ? '<a href="'+socials.linkedin+'" target="_blank" style="color:#00f3ff;">LinkedIn</a>' : ''}
-                                    ${socials.github ? '<a href="'+socials.github+'" target="_blank" style="color:#00f3ff;">GitHub</a>' : ''}
-                                </div>
-                            </div>
-                        `;
-                        return createCSS2D(html);
-                    },
-                    createKnowledgeFragment: (id) => {
-                        const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'];
-                        const color = colors[id % colors.length];
-                        const html = `
-                            <div style="font-family:'Courier New'; background:rgba(10,10,20,0.9); backdrop-filter:blur(8px); border:1px solid ${color}; border-radius:8px; padding:12px; color:white; max-width:200px;">
-                                <div style="color:${color};">DATA NODE #${id}</div>
-                                <div style="height:4px; background:#333; margin:8px 0;"><div style="height:100%; width:${Math.floor(Math.random()*100)}%; background:${color};"></div></div>
-                                <div style="text-align:right;">+50 XP</div>
-                            </div>
-                        `;
-                        return createCSS2D(html);
-                    }
-                };
-            })();
-
-            // --- GAME STATE (XP, Level, Quests) ---
-            let xp = 0;
-            let level = 1;
-            const xpPerLevel = 200;
-            const quests = [
-                { id: 'q1', desc: 'Collect a Python skill', target: 'PYTHON', type: 'skill', completed: false, xpReward: 200 },
-                { id: 'q2', desc: 'Visit a project portal', target: 'project', type: 'project', completed: false, xpReward: 300 },
-                { id: 'q3', desc: 'Find the contact beacon', target: 'contact', type: 'contact', completed: false, xpReward: 150 }
-            ];
-
-            function addXP(amount) {
-                xp += amount;
-                while (xp >= level * xpPerLevel) {
-                    level++;
-                    showToast(`🌟 LEVEL UP! Now level ${level}`);
-                }
-                updateHUD();
-            }
-
-            function completeQuest(questId) {
-                const quest = quests.find(q => q.id === questId);
-                if (quest && !quest.completed) {
-                    quest.completed = true;
-                    addXP(quest.xpReward);
-                    showToast(`✅ Quest completed: ${quest.desc} (+${quest.xpReward} XP)`);
-                    updateQuestLog();
-                }
-            }
-
-            function checkQuestForNode(node) {
-                const type = node.userData.type;
-                const data = node.userData.data;
-                if (type === 'skill' && data.name === 'PYTHON') completeQuest('q1');
-                if (type === 'project') completeQuest('q2');
-                if (type === 'contact') completeQuest('q3');
-            }
-
-            function updateHUD() {
-                document.getElementById('level-display').innerText = level;
-                document.getElementById('xp-display').innerText = xp;
-                const nextXP = level * xpPerLevel;
-                document.getElementById('xp-next').innerText = nextXP;
-                const percent = Math.min(100, (xp / nextXP) * 100);
-                document.getElementById('xp-fill').style.width = percent + '%';
-            }
-
-            function updateQuestLog() {
-                const list = document.getElementById('quest-list');
-                list.innerHTML = quests.map(q => 
-                    `<div class="quest-item ${q.completed ? 'quest-completed' : ''}">${q.desc} ${q.completed ? '✓' : ''}</div>`
-                ).join('');
-            }
-
-            function showToast(msg) {
-                const toast = document.createElement('div');
-                toast.className = 'toast';
-                toast.innerText = msg;
-                document.body.appendChild(toast);
-                setTimeout(() => toast.remove(), 2000);
-            }
-
-            // --- UI SETUP ---
+            // --- UI Elements ---
             const loadingDiv = document.getElementById('loading');
             const errorDiv = document.getElementById('error');
             const progressBar = document.getElementById('progress-bar');
             const loadStatus = document.getElementById('load-status');
             const fpsSpan = document.getElementById('fps');
-            const joystickDiv = document.getElementById('joystick');
-            const joystickThumb = document.getElementById('joystick-thumb');
+            const tutorialDiv = document.getElementById('tutorial');
+            const infoDiv = document.getElementById('info');
 
             function setProgress(percent, msg) {
                 progressBar.style.width = percent + '%';
@@ -399,26 +196,53 @@
             function showError(msg) {
                 console.error(msg);
                 errorDiv.style.display = 'block';
-                errorDiv.innerText = 'ERROR: ' + msg + '\n\nPlease refresh.';
+                errorDiv.innerText = 'ERROR: ' + msg;
                 loadingDiv.style.opacity = '0';
                 setTimeout(() => { loadingDiv.style.display = 'none'; }, 500);
             }
 
-            // Simulate loading (everything is embedded)
-            setProgress(30, 'Building world...');
-            setTimeout(() => {
-                setProgress(70, 'Spawning nodes...');
-                setTimeout(() => {
-                    setProgress(100, 'Ready!');
-                    loadingDiv.style.opacity = '0';
-                    setTimeout(() => {
-                        loadingDiv.style.display = 'none';
-                        initThree();
-                    }, 500);
-                }, 300);
-            }, 300);
+            // --- Fetch and execute widgets.html ---
+            async function loadWidgets() {
+                try {
+                    const response = await fetch('widgets.html');
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const html = await response.text();
+                    const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/i);
+                    if (!scriptMatch) throw new Error('No script tag in widgets.html');
+                    const scriptContent = scriptMatch[1];
+                    const func = new Function(scriptContent);
+                    func.call(window);
+                    if (!window.Widgets) throw new Error('Widgets not defined');
+                    console.log('Widgets loaded successfully');
+                } catch (e) {
+                    console.error('Failed to load widgets:', e);
+                    throw e;
+                }
+            }
 
-            // --- FPS COUNTER ---
+            // --- Main initialization after widgets are ready ---
+            async function start() {
+                try {
+                    setProgress(30, 'Loading widgets...');
+                    await loadWidgets();
+                    setProgress(60, 'Building world...');
+                    // Simulate a bit of delay
+                    setTimeout(() => {
+                        setProgress(100, 'Ready!');
+                        loadingDiv.style.opacity = '0';
+                        setTimeout(() => {
+                            loadingDiv.style.display = 'none';
+                            initThree();
+                        }, 500);
+                    }, 400);
+                } catch (e) {
+                    showError('Failed to load widgets: ' + e.message);
+                }
+            }
+
+            start();
+
+            // --- FPS Counter ---
             let frameCount = 0;
             let lastTime = performance.now();
             function updateFPS() {
@@ -433,9 +257,11 @@
                 }
             }
 
-            // --- MOBILE JOYSTICK ---
+            // --- Mobile Joystick (simplified) ---
             let joystickActive = false;
             let joystickVector = { x: 0, y: 0 };
+            const joystickDiv = document.getElementById('joystick');
+            const joystickThumb = document.getElementById('joystick-thumb');
             if (window.innerWidth <= 768) {
                 joystickDiv.addEventListener('touchstart', (e) => {
                     e.preventDefault();
@@ -453,14 +279,13 @@
                     joystickVector.y = 0;
                     joystickThumb.style.transform = 'translate(-50%, -50%)';
                 });
-
                 function updateJoystick(touch) {
                     const rect = joystickDiv.getBoundingClientRect();
-                    const centerX = rect.left + rect.width / 2;
-                    const centerY = rect.top + rect.height / 2;
+                    const centerX = rect.left + rect.width/2;
+                    const centerY = rect.top + rect.height/2;
                     const dx = touch.clientX - centerX;
                     const dy = touch.clientY - centerY;
-                    const distance = Math.min(Math.sqrt(dx*dx + dy*dy), rect.width/2);
+                    const distance = Math.min(Math.sqrt(dx*dx+dy*dy), rect.width/2);
                     const angle = Math.atan2(dy, dx);
                     const limitedX = Math.cos(angle) * distance;
                     const limitedY = Math.sin(angle) * distance;
@@ -470,22 +295,21 @@
                 }
             }
 
-            // --- THREE.JS INIT ---
+            // --- THREE.JS INIT (adapted from previous version, using Widgets) ---
             function initThree() {
                 try {
-                    // --- SETUP ---
                     const scene = new THREE.Scene();
-                    scene.background = new THREE.Color(0x0a0a1a);
-                    scene.fog = new THREE.FogExp2(0x0a0a1a, 0.001);
+                    scene.background = new THREE.Color(0x11131f);
+                    scene.fog = new THREE.FogExp2(0x11131f, 0.002);
 
                     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-                    camera.position.set(0, 2, 15);
+                    camera.position.set(0, 2, 10);
 
                     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
                     renderer.setSize(window.innerWidth, window.innerHeight);
                     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-                    renderer.toneMapping = THREE.ReinhardToneMapping;
-                    renderer.toneMappingExposure = 1.2;
+                    renderer.shadowMap.enabled = true;
+                    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
                     document.body.appendChild(renderer.domElement);
 
                     const labelRenderer = new THREE.CSS2DRenderer();
@@ -493,194 +317,280 @@
                     labelRenderer.domElement.style.position = 'absolute';
                     labelRenderer.domElement.style.top = '0px';
                     labelRenderer.domElement.style.left = '0px';
-                    labelRenderer.domElement.style.pointerEvents = 'none'; // clicks go to canvas
+                    labelRenderer.domElement.style.pointerEvents = 'none';
                     document.body.appendChild(labelRenderer.domElement);
 
-                    // Controls
                     const controls = new THREE.PointerLockControls(camera, document.body);
                     scene.add(controls.getObject());
 
-                    // Lock on canvas click
                     renderer.domElement.addEventListener('click', () => {
                         if (!controls.isLocked) controls.lock();
                     });
-                    renderer.domElement.addEventListener('touchstart', (e) => {
-                        e.preventDefault();
-                        if (!controls.isLocked) controls.lock();
+                    controls.addEventListener('lock', () => {
+                        tutorialDiv.style.opacity = '0';
+                        setTimeout(() => tutorialDiv.style.display = 'none', 1000);
                     });
 
-                    // --- POST-PROCESSING (Subtle bloom) ---
-                    let composer;
-                    try {
-                        const renderScene = new THREE.RenderPass(scene, camera);
-                        const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.8, 0.2, 0.3); // reduced strength
-                        bloomPass.threshold = 0.2;
-                        bloomPass.strength = 0.6;
-                        bloomPass.radius = 0.2;
-
-                        composer = new THREE.EffectComposer(renderer);
-                        composer.addPass(renderScene);
-                        composer.addPass(bloomPass);
-                    } catch (e) {
-                        console.warn("Bloom disabled", e);
-                        composer = null;
-                    }
-
-                    // --- LIGHTING ---
+                    // --- Lighting ---
                     const ambient = new THREE.AmbientLight(0x404060);
                     scene.add(ambient);
 
-                    const light1 = new THREE.PointLight(0x00f3ff, 1, 40);
-                    light1.position.set(5, 5, 5);
-                    scene.add(light1);
+                    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+                    dirLight.position.set(5, 10, 7);
+                    dirLight.castShadow = true;
+                    dirLight.shadow.mapSize.width = 1024;
+                    dirLight.shadow.mapSize.height = 1024;
+                    const d = 15;
+                    dirLight.shadow.camera.left = -d;
+                    dirLight.shadow.camera.right = d;
+                    dirLight.shadow.camera.top = d;
+                    dirLight.shadow.camera.bottom = -d;
+                    dirLight.shadow.camera.near = 1;
+                    dirLight.shadow.camera.far = 25;
+                    scene.add(dirLight);
 
-                    const light2 = new THREE.PointLight(0xffaa88, 0.8, 40);
-                    light2.position.set(-5, 3, -5);
-                    scene.add(light2);
+                    const fillLight = new THREE.PointLight(0x446688, 0.5);
+                    fillLight.position.set(-3, 2, 4);
+                    scene.add(fillLight);
 
-                    const flickerLight = new THREE.PointLight(0xffffff, 0.5, 25);
-                    flickerLight.position.set(0, 4, 0);
-                    scene.add(flickerLight);
+                    // --- Hub and Doors (same as before) ---
+                    const hubGroup = new THREE.Group();
 
-                    // --- ENVIRONMENT: Floating islands ---
-                    function createIsland(pos, color = 0x334455, scale = 1.0) {
-                        const group = new THREE.Group();
-                        const base = new THREE.Mesh(
-                            new THREE.CylinderGeometry(2*scale, 2.5*scale, 0.5*scale, 8),
-                            new THREE.MeshStandardMaterial({ color, emissive: 0x112233 })
-                        );
-                        base.position.y = 0;
-                        group.add(base);
-                        const pillar = new THREE.Mesh(
-                            new THREE.CylinderGeometry(0.5*scale, 0.5*scale, 2*scale, 6),
-                            new THREE.MeshStandardMaterial({ color: 0x8899aa })
-                        );
-                        pillar.position.y = 1.25*scale;
-                        group.add(pillar);
-                        const top = new THREE.Mesh(
-                            new THREE.TorusKnotGeometry(1*scale, 0.3*scale, 64, 8),
-                            new THREE.MeshStandardMaterial({ color: 0x00f3ff, emissive: 0x004466 })
-                        );
-                        top.position.y = 2.5*scale;
-                        group.add(top);
-                        group.position.copy(pos);
-                        return group;
+                    // Central platform
+                    const platformGeo = new THREE.CylinderGeometry(4, 4, 0.5, 32);
+                    const platformMat = new THREE.MeshStandardMaterial({ color: 0x2a2a3a, roughness: 0.7, metalness: 0.2 });
+                    const platform = new THREE.Mesh(platformGeo, platformMat);
+                    platform.position.y = -0.25;
+                    platform.receiveShadow = true;
+                    platform.castShadow = true;
+                    hubGroup.add(platform);
+
+                    // Door positions
+                    const doorPositions = [
+                        { angle: 0, radius: 7, type: 'skills', label: 'SKILLS' },
+                        { angle: Math.PI/2, radius: 7, type: 'projects', label: 'PROJECTS' },
+                        { angle: Math.PI, radius: 7, type: 'experience', label: 'EXPERIENCE' },
+                        { angle: 3*Math.PI/2, radius: 7, type: 'contact', label: 'CONTACT' }
+                    ];
+
+                    function createDoor(color, label) {
+                        const doorGroup = new THREE.Group();
+
+                        const frameMat = new THREE.MeshStandardMaterial({ color: 0x5a4a3a, roughness: 0.4 });
+                        const leftPost = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.2, 0.3), frameMat);
+                        leftPost.position.set(-1, 1.1, 0);
+                        doorGroup.add(leftPost);
+                        const rightPost = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.2, 0.3), frameMat);
+                        rightPost.position.set(1, 1.1, 0);
+                        doorGroup.add(rightPost);
+                        const topBeam = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.3, 0.3), frameMat);
+                        topBeam.position.set(0, 2.2, 0);
+                        doorGroup.add(topBeam);
+
+                        const doorMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6 });
+                        const doorLeaf = new THREE.Mesh(new THREE.BoxGeometry(1.8, 2.0, 0.2), doorMat);
+                        doorLeaf.position.set(0, 1.0, 0.1);
+                        doorLeaf.castShadow = true;
+                        doorLeaf.receiveShadow = true;
+                        doorGroup.add(doorLeaf);
+
+                        const handleMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.2, metalness: 0.8 });
+                        const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.4, 8), handleMat);
+                        handle.rotation.z = Math.PI/2;
+                        handle.position.set(0.6, 1.0, 0.3);
+                        doorGroup.add(handle);
+
+                        // Label (CSS2D) above door
+                        const labelDiv = document.createElement('div');
+                        labelDiv.style.color = 'white';
+                        labelDiv.style.background = 'rgba(30,30,40,0.9)';
+                        labelDiv.style.padding = '4px 12px';
+                        labelDiv.style.borderRadius = '20px';
+                        labelDiv.style.border = '1px solid #888';
+                        labelDiv.style.fontSize = '14px';
+                        labelDiv.style.fontWeight = 'bold';
+                        labelDiv.style.backdropFilter = 'blur(4px)';
+                        labelDiv.innerText = label;
+                        const labelObj = new THREE.CSS2DObject(labelDiv);
+                        labelObj.position.set(0, 3.0, 0);
+                        doorGroup.add(labelObj);
+
+                        return doorGroup;
                     }
 
-                    scene.add(createIsland(new THREE.Vector3(0, 0, 0), 0x445566, 1.2));
-                    scene.add(createIsland(new THREE.Vector3(12, 3, -8), 0x556677, 1.0));
-                    scene.add(createIsland(new THREE.Vector3(-10, -1, 10), 0x667788, 1.0));
-                    scene.add(createIsland(new THREE.Vector3(5, -2, 15), 0x778899, 0.8));
-                    scene.add(createIsland(new THREE.Vector3(-8, 4, -12), 0x8899aa, 0.9));
+                    // Build islands and doors
+                    doorPositions.forEach(pos => {
+                        const islandBase = new THREE.Mesh(
+                            new THREE.CylinderGeometry(2.5, 3, 0.8, 16),
+                            new THREE.MeshStandardMaterial({ color: 0x3a4a5a, roughness: 0.6 })
+                        );
+                        islandBase.position.set(Math.cos(pos.angle)*pos.radius, -0.4, Math.sin(pos.angle)*pos.radius);
+                        islandBase.receiveShadow = true;
+                        islandBase.castShadow = true;
+                        scene.add(islandBase);
 
-                    // --- PARTICLES ---
-                    const particleCount = 2000;
+                        const doorColor = pos.type === 'skills' ? '#FFD700' : pos.type === 'projects' ? '#00FF7F' : pos.type === 'experience' ? '#5a9eff' : '#ffaa00';
+                        const door = createDoor(doorColor, pos.label);
+                        door.position.set(Math.cos(pos.angle)*pos.radius, 0.5, Math.sin(pos.angle)*pos.radius);
+                        door.rotation.y = -pos.angle;
+                        scene.add(door);
+                        door.userData = { type: 'door', room: pos.type };
+                    });
+
+                    // Decorative pillars on central platform
+                    for (let i = 0; i < 8; i++) {
+                        const angle = (i/8)*Math.PI*2;
+                        const radius = 3.5;
+                        const pillarGeo = new THREE.CylinderGeometry(0.3, 0.4, 2, 8);
+                        const pillarMat = new THREE.MeshStandardMaterial({ color: 0x6a7a8a });
+                        const pillar = new THREE.Mesh(pillarGeo, pillarMat);
+                        pillar.position.set(Math.cos(angle)*radius, 1, Math.sin(angle)*radius);
+                        pillar.castShadow = true;
+                        pillar.receiveShadow = true;
+                        scene.add(pillar);
+                    }
+
+                    scene.add(hubGroup);
+
+                    // --- Rooms (initially invisible) ---
+                    const rooms = {
+                        skills: new THREE.Group(),
+                        projects: new THREE.Group(),
+                        experience: new THREE.Group(),
+                        contact: new THREE.Group()
+                    };
+
+                    // Skills Room
+                    const skillsRoom = rooms.skills;
+                    const floorMat = new THREE.MeshStandardMaterial({ color: 0x2a2a3a, roughness: 0.8 });
+                    const floor = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), floorMat);
+                    floor.rotation.x = -Math.PI/2;
+                    floor.position.y = 0;
+                    floor.receiveShadow = true;
+                    skillsRoom.add(floor);
+                    const wallMat = new THREE.MeshStandardMaterial({ color: 0x3a3a4a });
+                    const backWall = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.5), wallMat);
+                    backWall.position.set(0, 2, -5);
+                    backWall.castShadow = true;
+                    backWall.receiveShadow = true;
+                    skillsRoom.add(backWall);
+                    const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4, 10), wallMat);
+                    leftWall.position.set(-5, 2, 0);
+                    leftWall.castShadow = true;
+                    leftWall.receiveShadow = true;
+                    skillsRoom.add(leftWall);
+                    const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4, 10), wallMat);
+                    rightWall.position.set(5, 2, 0);
+                    rightWall.castShadow = true;
+                    rightWall.receiveShadow = true;
+                    skillsRoom.add(rightWall);
+
+                    // Place skill panels using Widgets
+                    PORTFOLIO_DATA.skills.forEach((skill, i) => {
+                        const panel = window.Widgets.createSkillPanel(skill, i);
+                        panel.position.set(-4 + i*2, 2.5, -4.5);
+                        skillsRoom.add(panel);
+                    });
+
+                    // Projects Room
+                    const projectsRoom = rooms.projects;
+                    const pFloor = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), floorMat);
+                    pFloor.rotation.x = -Math.PI/2;
+                    pFloor.position.y = 0;
+                    pFloor.receiveShadow = true;
+                    projectsRoom.add(pFloor);
+                    const pBack = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.5), wallMat);
+                    pBack.position.set(0, 2, -5);
+                    pBack.castShadow = true;
+                    projectsRoom.add(pBack);
+                    PORTFOLIO_DATA.projects.forEach((proj, i) => {
+                        const panel = window.Widgets.createProjectPanel(proj, i);
+                        panel.position.set(-2 + i*4, 2.5, -4.5);
+                        projectsRoom.add(panel);
+                    });
+
+                    // Experience Room
+                    const expRoom = rooms.experience;
+                    const eFloor = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), floorMat);
+                    eFloor.rotation.x = -Math.PI/2;
+                    eFloor.position.y = 0;
+                    eFloor.receiveShadow = true;
+                    expRoom.add(eFloor);
+                    const eBack = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.5), wallMat);
+                    eBack.position.set(0, 2, -5);
+                    eBack.castShadow = true;
+                    expRoom.add(eBack);
+                    PORTFOLIO_DATA.experience.forEach((exp, i) => {
+                        const panel = window.Widgets.createExperiencePanel(exp, i);
+                        panel.position.set(-3 + i*6, 2.5, -4.5);
+                        expRoom.add(panel);
+                    });
+
+                    // Contact Room
+                    const contactRoom = rooms.contact;
+                    const cFloor = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), floorMat);
+                    cFloor.rotation.x = -Math.PI/2;
+                    cFloor.position.y = 0;
+                    cFloor.receiveShadow = true;
+                    contactRoom.add(cFloor);
+                    const cBack = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.5), wallMat);
+                    cBack.position.set(0, 2, -5);
+                    cBack.castShadow = true;
+                    contactRoom.add(cBack);
+                    const contactPanel = window.Widgets.createContactPanel();
+                    contactPanel.position.set(0, 2.5, -4.5);
+                    contactRoom.add(contactPanel);
+
+                    // Hide all rooms initially
+                    for (let key in rooms) {
+                        rooms[key].visible = false;
+                        scene.add(rooms[key]);
+                    }
+
+                    // --- Particles ---
+                    const particleCount = 800;
                     const particlesGeo = new THREE.BufferGeometry();
                     const particlesPos = new Float32Array(particleCount * 3);
                     for (let i = 0; i < particleCount; i++) {
-                        particlesPos[i*3] = (Math.random() - 0.5) * 100;
-                        particlesPos[i*3+1] = (Math.random() - 0.5) * 50;
-                        particlesPos[i*3+2] = (Math.random() - 0.5) * 100;
+                        particlesPos[i*3] = (Math.random() - 0.5) * 60;
+                        particlesPos[i*3+1] = (Math.random() - 0.5) * 30;
+                        particlesPos[i*3+2] = (Math.random() - 0.5) * 60;
                     }
                     particlesGeo.setAttribute('position', new THREE.BufferAttribute(particlesPos, 3));
-                    const particlesMat = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.05, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending });
+                    const particlesMat = new THREE.PointsMaterial({ color: 0x99aacc, size: 0.1, transparent: true, opacity: 0.3 });
                     const particles = new THREE.Points(particlesGeo, particlesMat);
                     scene.add(particles);
 
-                    // --- NODES (interactive) ---
-                    const interactiveNodes = [];
-
-                    function createNode(widget, pos, type, data = null, xpValue = 50) {
-                        const geom = new THREE.SphereGeometry(0.4, 8);
-                        const mat = new THREE.MeshStandardMaterial({ color: 0x00f3ff, emissive: 0x004466 });
-                        const sphere = new THREE.Mesh(geom, mat);
-                        sphere.position.copy(pos);
-                        sphere.userData = { widget, type, data, xpValue, collected: false };
-                        scene.add(sphere);
-                        widget.position.copy(pos.clone().add(new THREE.Vector3(0, 1.5, 0)));
-                        scene.add(widget);
-                        interactiveNodes.push(sphere);
-                        return sphere;
-                    }
-
-                    // Skills
-                    PORTFOLIO_DATA.skills.forEach((skill, i) => {
-                        const angle = (i / PORTFOLIO_DATA.skills.length) * Math.PI * 2;
-                        const r = 5;
-                        const pos = new THREE.Vector3(Math.cos(angle)*r, 1.5, Math.sin(angle)*r);
-                        const widget = Widgets.createSkillWidget(skill);
-                        createNode(widget, pos, 'skill', skill, 100);
-                    });
-
-                    // Projects
-                    PORTFOLIO_DATA.projects.forEach((proj, i) => {
-                        const pos = new THREE.Vector3( (i===0?6:-6), 2, 4 );
-                        const widget = Widgets.createProjectWidget(proj);
-                        createNode(widget, pos, 'project', proj, 500);
-                    });
-
-                    // Experience
-                    PORTFOLIO_DATA.experience.forEach((exp, i) => {
-                        const pos = new THREE.Vector3( -3 + i*6, 1, -5 );
-                        const widget = Widgets.createExperienceWidget(exp);
-                        createNode(widget, pos, 'experience', exp, 300);
-                    });
-
-                    // Contact beacon
-                    const contactPos = new THREE.Vector3(0, 1.2, 8);
-                    const contactWidget = Widgets.createContactWidget(PORTFOLIO_DATA.socials);
-                    createNode(contactWidget, contactPos, 'contact', null, 150);
-
-                    // 40 knowledge fragments
-                    for (let i = 0; i < 40; i++) {
-                        const r = 10 + Math.random() * 8;
-                        const theta = Math.random() * Math.PI*2;
-                        const phi = Math.acos(2*Math.random() - 1);
-                        const x = r * Math.sin(phi) * Math.cos(theta);
-                        const y = r * Math.sin(phi) * Math.sin(theta) * 0.6 + 3;
-                        const z = r * Math.cos(phi);
-                        const pos = new THREE.Vector3(x, y, z);
-                        const widget = Widgets.createKnowledgeFragment(i);
-                        createNode(widget, pos, 'fragment', null, 50);
-                    }
-
-                    console.log(`Total nodes: ${interactiveNodes.length}`); // ~53
-
-                    // --- RAYCASTER for clicks ---
+                    // --- Raycaster for door clicks ---
                     const raycaster = new THREE.Raycaster();
                     const mouse = new THREE.Vector2();
 
                     function onClick(event) {
-                        if (!controls.isLocked) return; // only when pointer locked
-                        // Calculate mouse position in normalized device coordinates
+                        if (!controls.isLocked) return;
+
                         const rect = renderer.domElement.getBoundingClientRect();
                         mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
                         mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
                         raycaster.setFromCamera(mouse, camera);
-                        const intersects = raycaster.intersectObjects(interactiveNodes);
+                        const intersects = raycaster.intersectObjects(scene.children, true);
 
-                        if (intersects.length > 0) {
-                            const hit = intersects[0].object;
-                            if (!hit.userData.collected) {
-                                hit.userData.collected = true;
-                                // Award XP
-                                addXP(hit.userData.xpValue);
-                                // Show floating text
-                                const div = document.createElement('div');
-                                div.innerText = `+${hit.userData.xpValue} XP`;
-                                div.style.color = '#00f3ff';
-                                div.style.fontSize = '20px';
-                                div.style.fontWeight = 'bold';
-                                const label = new THREE.CSS2DObject(div);
-                                label.position.copy(hit.position.clone().add(new THREE.Vector3(0, 2, 0)));
-                                scene.add(label);
-                                setTimeout(() => scene.remove(label), 1000);
-
-                                // Check quests
-                                checkQuestForNode(hit);
-                                // Optionally change node appearance
-                                hit.material.emissive.setHex(0x00ff00);
+                        for (let hit of intersects) {
+                            let obj = hit.object;
+                            while (obj) {
+                                if (obj.userData && obj.userData.type === 'door') {
+                                    const roomType = obj.userData.room;
+                                    hubGroup.visible = false;
+                                    for (let key in rooms) {
+                                        rooms[key].visible = (key === roomType);
+                                    }
+                                    // Position player inside room
+                                    controls.getObject().position.set(0, 2, 3);
+                                    controls.getObject().lookAt(0, 2, 0);
+                                    infoDiv.innerText = `📍 In ${roomType.toUpperCase()} room · Click door to return (not yet implemented)`;
+                                    return;
+                                }
+                                obj = obj.parent;
                             }
                         }
                     }
@@ -689,14 +599,12 @@
                     renderer.domElement.addEventListener('touchstart', (e) => {
                         e.preventDefault();
                         if (controls.isLocked) {
-                            // Simulate click from touch
                             const touch = e.touches[0];
-                            const fakeEvent = { clientX: touch.clientX, clientY: touch.clientY };
-                            onClick(fakeEvent);
+                            onClick({ clientX: touch.clientX, clientY: touch.clientY });
                         }
                     });
 
-                    // --- MOVEMENT (keyboard + joystick) ---
+                    // --- Movement (camera-relative) ---
                     const moveState = { forward: false, backward: false, left: false, right: false };
                     document.addEventListener('keydown', (e) => {
                         switch(e.code) {
@@ -717,7 +625,7 @@
 
                     function updateMovement(delta) {
                         if (!controls.isLocked) return;
-                        const speed = 8 * delta;
+                        const speed = 5 * delta;
                         const cameraDir = new THREE.Vector3();
                         camera.getWorldDirection(cameraDir);
                         cameraDir.y = 0;
@@ -739,55 +647,31 @@
                         }
                     }
 
-                    // --- ANIMATION LOOP ---
+                    // --- Animation loop ---
                     function animate() {
                         requestAnimationFrame(animate);
                         const delta = Math.min(clock.getDelta(), 0.1);
                         updateFPS();
 
-                        const time = performance.now() / 1000;
-
-                        // Animate lights
-                        light1.position.x = 7 * Math.sin(time * 0.2);
-                        light1.position.z = 7 * Math.cos(time * 0.3);
-                        light2.position.x = -6 * Math.sin(time * 0.4);
-                        light2.position.z = 6 * Math.cos(time * 0.5);
-                        flickerLight.intensity = 0.4 + Math.sin(time * 5) * 0.2;
-
-                        // Rotate particles
                         particles.rotation.y += 0.0002;
-
-                        // Animate nodes (simple rotation)
-                        interactiveNodes.forEach(node => {
-                            node.rotation.y += 0.01;
-                        });
 
                         updateMovement(delta);
 
-                        // Render
-                        if (composer) {
-                            composer.render();
-                        } else {
-                            renderer.render(scene, camera);
-                        }
+                        renderer.render(scene, camera);
                         labelRenderer.render(scene, camera);
                     }
 
                     const clock = new THREE.Clock();
                     animate();
 
-                    // --- RESIZE ---
+                    // --- Resize ---
                     window.addEventListener('resize', () => {
                         camera.aspect = window.innerWidth / window.innerHeight;
                         camera.updateProjectionMatrix();
                         renderer.setSize(window.innerWidth, window.innerHeight);
                         labelRenderer.setSize(window.innerWidth, window.innerHeight);
-                        if (composer) composer.setSize(window.innerWidth, window.innerHeight);
                     });
 
-                    // Initialize HUD
-                    updateHUD();
-                    updateQuestLog();
                 } catch (e) {
                     showError("3D init failed: " + e.message);
                 }
