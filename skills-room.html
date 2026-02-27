@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Skills Room</title>
+    <style>
+        .premium-panel {
+            font-family: 'Inter', sans-serif;
+            background: rgba(20,25,35,0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,215,0,0.3);
+            border-radius: 16px;
+            padding: 24px;
+            color: white;
+            width: 280px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,215,0,0.1) inset;
+            transition: transform 0.2s;
+        }
+        .premium-panel:hover {
+            transform: translateY(-4px);
+            border-color: #FFD700;
+            box-shadow: 0 30px 50px rgba(0,0,0,0.8), 0 0 20px rgba(255,215,0,0.2);
+        }
+        .skill-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+        .skill-desc {
+            color: #aaa;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .skill-bar {
+            height: 6px;
+            background: #2a2a3a;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+        .skill-fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+        .skill-stats {
+            display: flex;
+            justify-content: space-between;
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+<!-- ROOM_CONTENT -->
+<div class="premium-panel" style="border-color: #FFD700;">
+    <div class="skill-title" style="color: #FFD700;">PYTHON</div>
+    <div class="skill-desc">Core language for Data Science. Expert in Pandas, NumPy, Scikit‑learn.</div>
+    <div class="skill-bar"><div class="skill-fill" style="width:95%; background:#FFD700;"></div></div>
+    <div class="skill-stats"><span>Proficiency</span><span>95%</span></div>
+</div>
+<div class="premium-panel" style="border-color: #00BFFF;">
+    <div class="skill-title" style="color: #00BFFF;">SQL</div>
+    <div class="skill-desc">Expert in complex queries, schema design, and data extraction.</div>
+    <div class="skill-bar"><div class="skill-fill" style="width:90%; background:#00BFFF;"></div></div>
+    <div class="skill-stats"><span>Proficiency</span><span>90%</span></div>
+</div>
+<div class="premium-panel" style="border-color: #bc13fe;">
+    <div class="skill-title" style="color: #bc13fe;">GEN‑AI</div>
+    <div class="skill-desc">LLM Integration, Prompt Engineering, RAG Systems.</div>
+    <div class="skill-bar"><div class="skill-fill" style="width:85%; background:#bc13fe;"></div></div>
+    <div class="skill-stats"><span>Proficiency</span><span>85%</span></div>
+</div>
+<div class="premium-panel" style="border-color: #FF4500;">
+    <div class="skill-title" style="color: #FF4500;">MACHINE LEARNING</div>
+    <div class="skill-desc">Regression, classification, clustering, model deployment.</div>
+    <div class="skill-bar"><div class="skill-fill" style="width:80%; background:#FF4500;"></div></div>
+    <div class="skill-stats"><span>Proficiency</span><span>80%</span></div>
+</div>
+<div class="premium-panel" style="border-color: #20B2AA;">
+    <div class="skill-title" style="color: #20B2AA;">COMPUTER VISION</div>
+    <div class="skill-desc">OpenCV, YOLO, face recognition, image processing.</div>
+    <div class="skill-bar"><div class="skill-fill" style="width:75%; background:#20B2AA;"></div></div>
+    <div class="skill-stats"><span>Proficiency</span><span>75%</span></div>
+</div>
+<!-- /ROOM_CONTENT -->
+</body>
+</html>
