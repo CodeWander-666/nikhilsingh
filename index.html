@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NIKHIL SINGH · DREAM HUB · HYPER REALITY</title>
+    <title>NIKHIL SINGH · PORTFOLIO</title>
     <style>
         body {
             margin: 0;
@@ -303,187 +303,23 @@
 
             scene.add(platformGroup);
 
-            // --- HYPER‑REALISTIC DATA CORE (no black box) ---
-            const coreGroup = new THREE.Group();
-
-            // Inner glowing sphere (energy core)
-            const coreSphereGeo = new THREE.SphereGeometry(1.2, 32, 32);
-            const coreSphereMat = new THREE.MeshStandardMaterial({ 
-                color: 0x88aaff, 
-                emissive: 0x224488,
-                transparent: true,
-                opacity: 0.9,
-                roughness: 0.2,
-                metalness: 0.1
-            });
-            const coreSphere = new THREE.Mesh(coreSphereGeo, coreSphereMat);
-            coreSphere.position.y = 1.5;
-            coreSphere.castShadow = true;
-            coreSphere.receiveShadow = true;
-            coreGroup.add(coreSphere);
-
-            // Outer wireframe cage
-            const cageGeo = new THREE.IcosahedronGeometry(1.5, 1);
-            const cageMat = new THREE.MeshStandardMaterial({ 
-                color: 0x5a9eff, 
-                emissive: 0x112233,
-                wireframe: true,
-                transparent: true,
-                opacity: 0.4
-            });
-            const cage = new THREE.Mesh(cageGeo, cageMat);
-            cage.position.y = 1.5;
-            coreGroup.add(cage);
-
-            // Floating data particles around core
-            const dataParticlesGeo = new THREE.BufferGeometry();
-            const dataCount = 200;
-            const dataPositions = new Float32Array(dataCount * 3);
-            const dataColors = new Float32Array(dataCount * 3);
-            for (let i = 0; i < dataCount; i++) {
-                const theta = Math.random() * Math.PI * 2;
-                const phi = Math.acos(2 * Math.random() - 1);
-                const r = 1.8 + Math.random() * 0.5;
-                dataPositions[i*3] = r * Math.sin(phi) * Math.cos(theta);
-                dataPositions[i*3+1] = r * Math.sin(phi) * Math.sin(theta) + 1.5;
-                dataPositions[i*3+2] = r * Math.cos(phi);
-                
-                const color = new THREE.Color().setHSL(0.6 + Math.random()*0.2, 1, 0.5);
-                dataColors[i*3] = color.r;
-                dataColors[i*3+1] = color.g;
-                dataColors[i*3+2] = color.b;
-            }
-            dataParticlesGeo.setAttribute('position', new THREE.BufferAttribute(dataPositions, 3));
-            dataParticlesGeo.setAttribute('color', new THREE.BufferAttribute(dataColors, 3));
-            const dataParticlesMat = new THREE.PointsMaterial({ size: 0.1, vertexColors: true, transparent: true, blending: THREE.AdditiveBlending });
-            const dataParticles = new THREE.Points(dataParticlesGeo, dataParticlesMat);
-            coreGroup.add(dataParticles);
-
-            scene.add(coreGroup);
-
-            // --- REALISTIC SCIENTISTS WITH BONES & SKIN (approximated with detailed geometry) ---
-            const scientistPositions = [
-                { x: 2.5, z: 1.5, angle: 0.2, skin: 0xffccaa, clothes: 0x2a4a6a },
-                { x: -2.5, z: 1.5, angle: -0.2, skin: 0xffddaa, clothes: 0x6a4a2a },
-                { x: 2.5, z: -1.5, angle: Math.PI - 0.2, skin: 0xffbb99, clothes: 0x3a5a7a },
-                { x: -2.5, z: -1.5, angle: Math.PI + 0.2, skin: 0xeeccaa, clothes: 0x5a3a2a }
+            // --- NEON HACKING TERMINALS (no scientists) ---
+            const terminalPositions = [
+                { x: 2.5, z: 1.5, angle: 0 },
+                { x: -2.5, z: 1.5, angle: 0 },
+                { x: 2.5, z: -1.5, angle: Math.PI },
+                { x: -2.5, z: -1.5, angle: Math.PI }
             ];
 
-            function createScientist(skinColor, clothesColor) {
-                const group = new THREE.Group();
-
-                // Body (torso) – more anatomical shape
-                const torsoGeo = new THREE.CylinderGeometry(0.28, 0.32, 0.9);
-                const torsoMat = new THREE.MeshStandardMaterial({ color: clothesColor, roughness: 0.6 });
-                const torso = new THREE.Mesh(torsoGeo, torsoMat);
-                torso.position.y = 0.55;
-                torso.castShadow = true;
-                torso.receiveShadow = true;
-                group.add(torso);
-
-                // Neck
-                const neckGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.15);
-                const neckMat = new THREE.MeshStandardMaterial({ color: skinColor, roughness: 0.4 });
-                const neck = new THREE.Mesh(neckGeo, neckMat);
-                neck.position.y = 1.0;
-                neck.castShadow = true;
-                neck.receiveShadow = true;
-                group.add(neck);
-
-                // Head
-                const headGeo = new THREE.SphereGeometry(0.22);
-                const headMat = new THREE.MeshStandardMaterial({ color: skinColor, roughness: 0.3 });
-                const head = new THREE.Mesh(headGeo, headMat);
-                head.position.y = 1.18;
-                head.castShadow = true;
-                head.receiveShadow = true;
-                group.add(head);
-
-                // Hair (simple cap)
-                const hairGeo = new THREE.SphereGeometry(0.23, 8, 4, 0, Math.PI*2, 0, Math.PI/3);
-                const hairMat = new THREE.MeshStandardMaterial({ color: 0x332211 });
-                const hair = new THREE.Mesh(hairGeo, hairMat);
-                hair.position.y = 1.28;
-                hair.scale.set(1, 0.3, 1);
-                hair.castShadow = true;
-                group.add(hair);
-
-                // Left arm (upper)
-                const leftArmUpperGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.4);
-                const armMat = new THREE.MeshStandardMaterial({ color: clothesColor, roughness: 0.6 });
-                const leftArmUpper = new THREE.Mesh(leftArmUpperGeo, armMat);
-                leftArmUpper.position.set(-0.35, 0.7, 0);
-                leftArmUpper.rotation.z = 0.3;
-                leftArmUpper.castShadow = true;
-                leftArmUpper.receiveShadow = true;
-                group.add(leftArmUpper);
-
-                // Left lower arm
-                const leftArmLowerGeo = new THREE.CylinderGeometry(0.09, 0.07, 0.35);
-                const leftArmLower = new THREE.Mesh(leftArmLowerGeo, armMat);
-                leftArmLower.position.set(-0.6, 0.45, 0.05);
-                leftArmLower.rotation.z = 0.8;
-                leftArmLower.castShadow = true;
-                leftArmLower.receiveShadow = true;
-                group.add(leftArmLower);
-
-                // Right arm (upper)
-                const rightArmUpper = new THREE.Mesh(leftArmUpperGeo.clone(), armMat);
-                rightArmUpper.position.set(0.35, 0.7, 0);
-                rightArmUpper.rotation.z = -0.3;
-                rightArmUpper.castShadow = true;
-                rightArmUpper.receiveShadow = true;
-                group.add(rightArmUpper);
-
-                // Right lower arm
-                const rightArmLower = new THREE.Mesh(leftArmLowerGeo.clone(), armMat);
-                rightArmLower.position.set(0.6, 0.45, -0.05);
-                rightArmLower.rotation.z = -0.8;
-                rightArmLower.castShadow = true;
-                rightArmLower.receiveShadow = true;
-                group.add(rightArmLower);
-
-                // Legs (simple cylinders)
-                const legGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.5);
-                const legMat = new THREE.MeshStandardMaterial({ color: 0x223344, roughness: 0.7 });
-                const leftLeg = new THREE.Mesh(legGeo, legMat);
-                leftLeg.position.set(-0.2, 0.15, 0);
-                leftLeg.castShadow = true;
-                leftLeg.receiveShadow = true;
-                group.add(leftLeg);
-                const rightLeg = new THREE.Mesh(legGeo, legMat);
-                rightLeg.position.set(0.2, 0.15, 0);
-                rightLeg.castShadow = true;
-                rightLeg.receiveShadow = true;
-                group.add(rightLeg);
-
-                return group;
-            }
-
-            // Create scientists and place them
-            scientistPositions.forEach((pos, index) => {
-                const scientist = createScientist(pos.skin, pos.clothes);
-                scientist.position.set(pos.x, 0.3, pos.z);
-                scientist.rotation.y = pos.angle;
-                scene.add(scientist);
-                
-                // Store for animation
-                scientist.userData = {
-                    head: scientist.children[2], // head
-                    leftArm: scientist.children[4], // left lower arm
-                    rightArm: scientist.children[6], // right lower arm
-                    timeOffset: Math.random() * 100
-                };
-            });
-
-            // --- WORKSTATIONS (monitors with live code) ---
-            function createCodeTexture() {
+            // Create a scrolling code texture with neon green/cyan
+            function createHackTexture() {
                 const canvas = document.createElement('canvas');
                 canvas.width = 512;
                 canvas.height = 512;
                 const ctx = canvas.getContext('2d');
                 
                 let offset = 0;
+                const colors = ['#0f0', '#0ff', '#5a9eff', '#afa'];
                 
                 const texture = new THREE.CanvasTexture(canvas);
                 
@@ -492,18 +328,22 @@
                     ctx.fillRect(0, 0, 512, 512);
                     
                     ctx.font = '16px monospace';
-                    ctx.fillStyle = '#5a9eff';
                     
+                    // Random code lines
                     const lines = [];
-                    for (let i = 0; i < 20; i++) {
-                        const line = Math.random().toString(36).substring(2, 10) + ' = ' + Math.random().toString(36).substring(2, 8);
+                    for (let i = 0; i < 25; i++) {
+                        const hex = Math.random().toString(16).substring(2, 8);
+                        const num = Math.floor(Math.random() * 1000);
+                        const line = `0x${hex} = ${num} | ${Math.random().toString(36).substring(2, 6)}`;
                         lines.push(line);
                     }
                     
-                    offset = (offset + 1) % 512;
+                    offset = (offset + 2) % 512; // faster scroll
                     
                     for (let i = 0; i < lines.length; i++) {
-                        const y = (i * 30 + offset) % 512 - 30;
+                        const y = (i * 22 + offset) % 512 - 22;
+                        // Random neon color
+                        ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
                         ctx.fillText(lines[i], 20, y);
                     }
                     
@@ -513,43 +353,51 @@
                 return { texture, update };
             }
 
-            const codeScreens = [];
-            const workstationPositions = [
-                { x: 2.5, z: 1.5, angle: 0 },
-                { x: -2.5, z: 1.5, angle: 0 },
-                { x: 2.5, z: -1.5, angle: Math.PI },
-                { x: -2.5, z: -1.5, angle: Math.PI }
-            ];
+            const hackScreens = [];
 
-            workstationPositions.forEach((pos, index) => {
-                // Desk
+            terminalPositions.forEach((pos, index) => {
+                // Desk (sleek black)
                 const deskGeo = new THREE.BoxGeometry(1.5, 0.2, 1.5);
-                const deskMat = new THREE.MeshStandardMaterial({ color: 0x334455, roughness: 0.5, metalness: 0.3 });
+                const deskMat = new THREE.MeshStandardMaterial({ color: 0x111122, roughness: 0.3, metalness: 0.6 });
                 const desk = new THREE.Mesh(deskGeo, deskMat);
                 desk.position.set(pos.x, 0.6, pos.z);
                 desk.castShadow = true;
                 desk.receiveShadow = true;
                 scene.add(desk);
 
-                // Monitor screen with live code
-                const codeSource = createCodeTexture();
-                const screenGeo = new THREE.BoxGeometry(0.8, 0.6, 0.1);
-                const screenMat = new THREE.MeshStandardMaterial({ map: codeSource.texture, emissive: 0x224466 });
+                // Monitor screen with neon code
+                const codeSource = createHackTexture();
+                const screenGeo = new THREE.BoxGeometry(0.9, 0.7, 0.1);
+                const screenMat = new THREE.MeshStandardMaterial({ 
+                    map: codeSource.texture, 
+                    emissive: 0x224466,
+                    emissiveIntensity: 0.8
+                });
                 const screen = new THREE.Mesh(screenGeo, screenMat);
-                screen.position.set(pos.x, 1.0, pos.z + (index < 2 ? 0.3 : -0.3));
+                screen.position.set(pos.x, 1.1, pos.z + (index < 2 ? 0.3 : -0.3));
                 screen.rotation.y = pos.angle;
                 screen.castShadow = true;
                 scene.add(screen);
                 
-                codeScreens.push({ update: codeSource.update });
+                hackScreens.push({ update: codeSource.update });
 
-                // Monitor frame
-                const frameGeo = new THREE.BoxGeometry(0.9, 0.7, 0.05);
-                const frameMat = new THREE.MeshStandardMaterial({ color: 0x222233 });
+                // Monitor frame (thin black border)
+                const frameGeo = new THREE.BoxGeometry(0.95, 0.75, 0.05);
+                const frameMat = new THREE.MeshStandardMaterial({ color: 0x222233, emissive: 0x111122 });
                 const frame = new THREE.Mesh(frameGeo, frameMat);
                 frame.position.copy(screen.position);
                 frame.rotation.copy(screen.rotation);
                 scene.add(frame);
+
+                // Keyboard (simple block)
+                const keyboardGeo = new THREE.BoxGeometry(0.8, 0.1, 0.3);
+                const keyboardMat = new THREE.MeshStandardMaterial({ color: 0x333344 });
+                const keyboard = new THREE.Mesh(keyboardGeo, keyboardMat);
+                keyboard.position.set(pos.x, 0.75, pos.z + (index < 2 ? 0.5 : -0.5));
+                keyboard.rotation.y = pos.angle;
+                keyboard.castShadow = true;
+                keyboard.receiveShadow = true;
+                scene.add(keyboard);
             });
 
             // --- SURROUNDING ISLANDS WITH DOORS (4 doors) ---
@@ -776,6 +624,7 @@
                 if (currentDoor) {
                     const room = currentDoor.userData.room;
                     const url = `${room}-room.html`;
+                    console.log(`Mobile E: attempting to go to ${url}`);
                     fetch(url, { method: 'HEAD' })
                         .then(res => {
                             if (res.ok) {
@@ -786,11 +635,11 @@
                         })
                         .catch(() => alert(`Cannot access ${url}.`));
                 } else {
-                    console.warn('No currentDoor');
+                    console.warn('Mobile E: no currentDoor');
                 }
             });
 
-            // Door interaction (E key on desktop)
+            // Door interaction (E key on desktop) – with extra logging
             let currentDoor = null;
             window.addEventListener('keydown', (e) => {
                 if (e.code === 'KeyE') {
@@ -798,6 +647,7 @@
                     if (currentDoor) {
                         const room = currentDoor.userData.room;
                         const url = `${room}-room.html`;
+                        console.log(`Attempting to go to ${url}`);
                         fetch(url, { method: 'HEAD' })
                             .then(res => {
                                 if (res.ok) {
@@ -807,6 +657,8 @@
                                 }
                             })
                             .catch(() => alert(`Cannot access ${url}.`));
+                    } else {
+                        console.warn('E pressed but no door nearby');
                     }
                 }
             });
@@ -837,6 +689,7 @@
                     }
                     currentDoor = closestDoor;
                     if (currentDoor) {
+                        // Store original emissive if not stored
                         currentDoor.children.forEach(child => {
                             if (child.material && child.material.emissive) {
                                 if (currentDoor.userData.originalEmissive === undefined) {
@@ -846,6 +699,7 @@
                             }
                         });
                         doorPrompt.style.display = 'block';
+                        console.log('Now closest door:', currentDoor.userData.room);
                     } else {
                         doorPrompt.style.display = 'none';
                     }
@@ -930,22 +784,8 @@
                 // Rotate platform
                 platformGroup.rotation.y += 0.001;
 
-                // Rotate core sphere and particles
-                coreSphere.rotation.y += 0.005;
-                dataParticles.rotation.y += 0.001;
-
-                // Update code screens (scrolling effect)
-                codeScreens.forEach(s => s.update());
-
-                // Animate scientists (subtle idle movements)
-                scene.children.forEach(child => {
-                    if (child.userData && child.userData.head) {
-                        const t = time * 0.5 + child.userData.timeOffset;
-                        child.userData.head.rotation.y = Math.sin(t) * 0.1;
-                        child.userData.leftArm.rotation.z = 0.8 + Math.sin(t) * 0.1;
-                        child.userData.rightArm.rotation.z = -0.8 + Math.cos(t) * 0.1;
-                    }
-                });
+                // Update hack screens (scrolling code)
+                hackScreens.forEach(s => s.update());
 
                 // Rotate particles
                 particles.rotation.y += 0.0002;
