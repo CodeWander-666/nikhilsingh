@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NIKHIL SINGH · DREAM HUB · ULTIMATE</title>
+    <title>NIKHIL SINGH · DREAM HUB · SUPERCOMPUTER</title>
     <style>
         body {
             margin: 0;
@@ -244,67 +244,7 @@
             labelRenderer.domElement.style.pointerEvents = 'none';
             document.body.appendChild(labelRenderer.domElement);
 
-            // --- SOUND SETUP (completely internal, no external files) ---
-            const listener = new THREE.AudioListener();
-            camera.add(listener);
-            const audioContext = listener.context;
-
-            // Ambient drone (soft, evolving)
-            let ambientGainNode = audioContext.createGain();
-            ambientGainNode.gain.setValueAtTime(0.0, audioContext.currentTime);
-            ambientGainNode.connect(audioContext.destination);
-
-            // Create two oscillators for a richer sound
-            const osc1 = audioContext.createOscillator();
-            osc1.type = 'sine';
-            osc1.frequency.setValueAtTime(70, audioContext.currentTime);
-            const osc2 = audioContext.createOscillator();
-            osc2.type = 'triangle';
-            osc2.frequency.setValueAtTime(140, audioContext.currentTime);
-
-            // LFO for subtle movement
-            const lfo = audioContext.createOscillator();
-            lfo.frequency.setValueAtTime(0.2, audioContext.currentTime);
-            const lfoGain = audioContext.createGain();
-            lfoGain.gain.setValueAtTime(10, audioContext.currentTime);
-            lfo.connect(lfoGain);
-            lfoGain.connect(osc1.frequency);
-            lfoGain.connect(osc2.frequency);
-
-            osc1.connect(ambientGainNode);
-            osc2.connect(ambientGainNode);
-
-            // Door sound (soft beep)
-            function playDoorSound() {
-                const now = audioContext.currentTime;
-                const osc = audioContext.createOscillator();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(300, now);
-                osc.frequency.exponentialRampToValueAtTime(200, now + 0.2);
-                const gain = audioContext.createGain();
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-                osc.connect(gain);
-                gain.connect(audioContext.destination);
-                osc.start(now);
-                osc.stop(now + 0.3);
-            }
-
-            // Start ambient on first user interaction
-            function startAmbient() {
-                if (ambientGainNode.gain.value > 0.01) return;
-                osc1.start();
-                osc2.start();
-                lfo.start();
-                ambientGainNode.gain.setValueAtTime(0.02, audioContext.currentTime);
-                ambientGainNode.gain.exponentialRampToValueAtTime(0.05, audioContext.currentTime + 1.0);
-                document.removeEventListener('click', startAmbient);
-                document.removeEventListener('touchstart', startAmbient);
-            }
-            document.addEventListener('click', startAmbient);
-            document.addEventListener('touchstart', startAmbient);
-
-            // --- LIGHTING (realistic, dynamic) ---
+            // --- LIGHTING (rich, dynamic) ---
             const ambient = new THREE.AmbientLight(0x404060, 0.5);
             scene.add(ambient);
 
@@ -330,6 +270,7 @@
             backLight.position.set(0, 5, -15);
             scene.add(backLight);
 
+            // Colored point lights
             const pointLight1 = new THREE.PointLight(0x5a9eff, 0.8, 30);
             pointLight1.position.set(4, 3, 4);
             scene.add(pointLight1);
@@ -342,33 +283,158 @@
             const movingLight2 = new THREE.PointLight(0xffaa88, 0.6, 30);
             scene.add(movingLight2);
 
-            // --- CENTRAL PLATFORM (detailed) ---
+            // --- CENTRAL PLATFORM (base) ---
             const platformGroup = new THREE.Group();
 
-            const platformGeo = new THREE.CylinderGeometry(4, 4, 0.5, 64);
-            const platformMat = new THREE.MeshStandardMaterial({ color: 0x3a4a5a, roughness: 0.3, metalness: 0.6 });
+            const platformGeo = new THREE.CylinderGeometry(5, 5, 0.5, 64);
+            const platformMat = new THREE.MeshStandardMaterial({ color: 0x2a3a4a, roughness: 0.3, metalness: 0.5 });
             const platform = new THREE.Mesh(platformGeo, platformMat);
             platform.position.y = -0.25;
             platform.receiveShadow = true;
             platform.castShadow = true;
             platformGroup.add(platform);
 
-            const ringGeo = new THREE.TorusGeometry(4.2, 0.1, 16, 64);
+            const ringGeo = new THREE.TorusGeometry(5.2, 0.1, 16, 64);
             const ringMat = new THREE.MeshStandardMaterial({ color: 0x5a9eff, roughness: 0.2, metalness: 0.8 });
             const ring = new THREE.Mesh(ringGeo, ringMat);
             ring.rotation.x = Math.PI/2;
             ring.position.y = 0.1;
             platformGroup.add(ring);
 
-            const discGeo = new THREE.CylinderGeometry(3.8, 3.8, 0.1, 32);
-            const discMat = new THREE.MeshStandardMaterial({ color: 0x1a2a3a, roughness: 0.5, metalness: 0.4 });
-            const disc = new THREE.Mesh(discGeo, discMat);
-            disc.position.y = 0.2;
-            platformGroup.add(disc);
-
             scene.add(platformGroup);
 
-            // --- SURROUNDING ISLANDS WITH DOORS ---
+            // --- SUPERCOMPUTER WITH SCIENTISTS ---
+            const computerGroup = new THREE.Group();
+
+            // Central mainframe (black box with glowing strips)
+            const mainframeGeo = new THREE.BoxGeometry(2.5, 3, 2);
+            const mainframeMat = new THREE.MeshStandardMaterial({ color: 0x111122, roughness: 0.3, metalness: 0.7 });
+            const mainframe = new THREE.Mesh(mainframeGeo, mainframeMat);
+            mainframe.position.set(0, 1.5, 0);
+            mainframe.castShadow = true;
+            mainframe.receiveShadow = true;
+            computerGroup.add(mainframe);
+
+            // Glowing strips
+            const stripMat = new THREE.MeshStandardMaterial({ color: 0x5a9eff, emissive: 0x224466 });
+            const strip1 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.8, 0.1), stripMat);
+            strip1.position.set(1.1, 1.5, 0.5);
+            computerGroup.add(strip1);
+            const strip2 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.8, 0.1), stripMat);
+            strip2.position.set(-1.1, 1.5, 0.5);
+            computerGroup.add(strip2);
+
+            // Four workstations around the mainframe
+            const positions = [
+                { x: 2.5, z: 1.5, angle: 0 },   // front-right
+                { x: -2.5, z: 1.5, angle: 0 },  // front-left
+                { x: 2.5, z: -1.5, angle: Math.PI }, // back-right
+                { x: -2.5, z: -1.5, angle: Math.PI } // back-left
+            ];
+
+            // Create a scrolling code texture
+            function createCodeTexture() {
+                const canvas = document.createElement('canvas');
+                canvas.width = 512;
+                canvas.height = 512;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#0a0a1a';
+                ctx.fillRect(0, 0, 512, 512);
+                ctx.font = '16px monospace';
+                ctx.fillStyle = '#5a9eff';
+                // Draw some random code lines
+                const lines = [
+                    'def init():',
+                    '    data = load()',
+                    '    model.train(data)',
+                    '    return model',
+                    'if __name__ == "__main__":',
+                    '    print("Hello World")',
+                    'import numpy as np',
+                    'x = np.array([1,2,3])',
+                    'y = model.predict(x)',
+                    '# TODO: optimize',
+                    'for i in range(10):',
+                    '    print(f"Step {i}")'
+                ];
+                ctx.fillStyle = '#aaccff';
+                for (let i = 0; i < lines.length; i++) {
+                    ctx.fillText(lines[i], 20, 40 + i * 30);
+                }
+                // Add a moving highlight (scrolling effect)
+                const texture = new THREE.CanvasTexture(canvas);
+                texture.minFilter = THREE.LinearFilter;
+                texture.magFilter = THREE.LinearFilter;
+                return texture;
+            }
+
+            const codeTexture = createCodeTexture();
+
+            positions.forEach((pos, index) => {
+                // Desk
+                const deskGeo = new THREE.BoxGeometry(1.5, 0.2, 1.5);
+                const deskMat = new THREE.MeshStandardMaterial({ color: 0x334455, roughness: 0.5, metalness: 0.3 });
+                const desk = new THREE.Mesh(deskGeo, deskMat);
+                desk.position.set(pos.x, 0.6, pos.z);
+                desk.castShadow = true;
+                desk.receiveShadow = true;
+                computerGroup.add(desk);
+
+                // Monitor (screen with code)
+                const screenGeo = new THREE.BoxGeometry(0.8, 0.6, 0.1);
+                const screenMat = new THREE.MeshStandardMaterial({ map: codeTexture, emissive: 0x224466 });
+                const screen = new THREE.Mesh(screenGeo, screenMat);
+                screen.position.set(pos.x, 1.0, pos.z + (pos.angle === 0 ? 0.3 : -0.3));
+                screen.rotation.y = pos.angle;
+                screen.castShadow = true;
+                computerGroup.add(screen);
+
+                // Monitor frame
+                const frameGeo = new THREE.BoxGeometry(0.9, 0.7, 0.05);
+                const frameMat = new THREE.MeshStandardMaterial({ color: 0x222233 });
+                const frame = new THREE.Mesh(frameGeo, frameMat);
+                frame.position.copy(screen.position);
+                frame.rotation.copy(screen.rotation);
+                computerGroup.add(frame);
+
+                // Scientist (simple cylinder + sphere)
+                const scientistGroup = new THREE.Group();
+                // Body
+                const bodyGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.8);
+                const bodyMat = new THREE.MeshStandardMaterial({ color: 0x5a6a7a });
+                const body = new THREE.Mesh(bodyGeo, bodyMat);
+                body.position.y = 0.4;
+                body.castShadow = true;
+                body.receiveShadow = true;
+                scientistGroup.add(body);
+                // Head
+                const headGeo = new THREE.SphereGeometry(0.2);
+                const headMat = new THREE.MeshStandardMaterial({ color: 0xffccaa });
+                const head = new THREE.Mesh(headGeo, headMat);
+                head.position.y = 0.9;
+                head.castShadow = true;
+                head.receiveShadow = true;
+                scientistGroup.add(head);
+                // Chair
+                const chairGeo = new THREE.BoxGeometry(0.6, 0.2, 0.6);
+                const chairMat = new THREE.MeshStandardMaterial({ color: 0x445566 });
+                const chair = new THREE.Mesh(chairGeo, chairMat);
+                chair.position.y = 0.1;
+                chair.castShadow = true;
+                chair.receiveShadow = true;
+                scientistGroup.add(chair);
+
+                scientistGroup.position.set(pos.x, 0.2, pos.z);
+                // Rotate to face the screen
+                if (pos.angle === 0) scientistGroup.rotation.y = 0;
+                else scientistGroup.rotation.y = Math.PI;
+                computerGroup.add(scientistGroup);
+            });
+
+            computerGroup.position.y = 0.5;
+            scene.add(computerGroup);
+
+            // --- SURROUNDING ISLANDS WITH DOORS (4 doors) ---
             const islandRadius = 7;
             const doorPositions = [
                 { angle: 0, label: 'SKILLS', room: 'skills', color: 0x4a6fa5 },
@@ -443,10 +509,10 @@
                 doors.push(door);
             });
 
-            // --- REALISTIC PILLARS ---
+            // --- DECORATIVE PILLARS (enhanced) ---
             for (let i = 0; i < 8; i++) {
                 const angle = (i/8)*Math.PI*2;
-                const radius = 3.5;
+                const radius = 4.2; // slightly larger to accommodate computer
                 
                 const baseGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.2, 8);
                 const baseMat = new THREE.MeshStandardMaterial({ color: 0x8a9aad, roughness: 0.4, metalness: 0.6 });
@@ -525,7 +591,7 @@
                 height: 2.0
             };
 
-            const maxDist = 9;
+            const maxDist = 9; // circular bound (allow walking to islands)
             const minY = 1.0;
 
             const keyState = { w: false, a: false, s: false, d: false, space: false };
@@ -595,7 +661,6 @@
                     fetch(url, { method: 'HEAD' })
                         .then(res => {
                             if (res.ok) {
-                                playDoorSound();
                                 window.location.href = url;
                             } else {
                                 alert(`Room "${room}" not found. Please ensure ${url} exists.`);
@@ -614,7 +679,6 @@
                     fetch(url, { method: 'HEAD' })
                         .then(res => {
                             if (res.ok) {
-                                playDoorSound();
                                 window.location.href = url;
                             } else {
                                 alert(`Room "${room}" not found. Please ensure ${url} exists.`);
@@ -739,8 +803,19 @@
                 movingLight2.position.x = Math.sin(time * 0.8 + 2) * 8;
                 movingLight2.position.z = Math.cos(time * 0.6 + 1) * 8;
 
+                // Rotate platform slowly
                 platformGroup.rotation.y += 0.001;
+
+                // Rotate particles
                 particles.rotation.y += 0.0002;
+
+                // Animate code on screens (scrolling effect)
+                // For simplicity, we just rotate the computer group a tiny bit? No, better to update texture offset.
+                // We'll update the texture offset to simulate scrolling
+                if (codeTexture) {
+                    // Not implemented here because we'd need to recreate the texture each frame – too heavy.
+                    // Instead, we could use a shader, but for this demo we'll leave static.
+                }
 
                 updatePlayer(delta);
                 checkDoors();
