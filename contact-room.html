@@ -192,27 +192,42 @@
             labelRenderer.domElement.style.pointerEvents = 'none';
             document.body.appendChild(labelRenderer.domElement);
 
-            // --- SIMPLE LIGHTING ---
-            const ambient = new THREE.AmbientLight(0xffffff, 0.8);
+            // --- REALISTIC LIGHTING ---
+            const ambient = new THREE.AmbientLight(0x404060, 0.6);
             scene.add(ambient);
 
-            const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
-            keyLight.position.set(10, 20, 10);
+            // Main key light (warm)
+            const keyLight = new THREE.DirectionalLight(0xffeedd, 1.0);
+            keyLight.position.set(8, 15, 8);
             keyLight.castShadow = true;
             keyLight.receiveShadow = true;
-            keyLight.shadow.mapSize.width = 2048;
-            keyLight.shadow.mapSize.height = 2048;
+            keyLight.shadow.mapSize.width = 4096;
+            keyLight.shadow.mapSize.height = 4096;
             keyLight.shadow.camera.near = 1;
-            keyLight.shadow.camera.far = 50;
-            keyLight.shadow.camera.left = -30;
-            keyLight.shadow.camera.right = 30;
-            keyLight.shadow.camera.top = 30;
-            keyLight.shadow.camera.bottom = -30;
+            keyLight.shadow.camera.far = 60;
+            keyLight.shadow.camera.left = -25;
+            keyLight.shadow.camera.right = 25;
+            keyLight.shadow.camera.top = 25;
+            keyLight.shadow.camera.bottom = -25;
             scene.add(keyLight);
 
-            const fillLight = new THREE.DirectionalLight(0xffffff, 0.6);
-            fillLight.position.set(-10, 10, -10);
+            // Fill light (cool)
+            const fillLight = new THREE.DirectionalLight(0xaaccff, 0.7);
+            fillLight.position.set(-10, 8, -12);
             scene.add(fillLight);
+
+            // Back light
+            const backLight = new THREE.DirectionalLight(0xffffff, 0.4);
+            backLight.position.set(0, 5, 20);
+            scene.add(backLight);
+
+            // Additional point lights for depth
+            const cornerLight1 = new THREE.PointLight(0x446688, 0.5, 40);
+            cornerLight1.position.set(-25, 5, -25);
+            scene.add(cornerLight1);
+            const cornerLight2 = new THREE.PointLight(0x886644, 0.5, 40);
+            cornerLight2.position.set(25, 5, 25);
+            scene.add(cornerLight2);
 
             // --- ROOM DIMENSIONS ---
             const roomWidth = 60;
@@ -241,18 +256,94 @@
             controls.target.copy(roomCenter);
             controls.update();
 
-            // --- DISTINCT WALL COLORS ---
+            // --- ENHANCED WALL MATERIALS (procedural textures for realism) ---
+            function createWallTexture(baseColor) {
+                const canvas = document.createElement('canvas');
+                canvas.width = 1024;
+                canvas.height = 1024;
+                const ctx = canvas.getContext('2d');
+                
+                // Base color
+                ctx.fillStyle = baseColor;
+                ctx.fillRect(0, 0, 1024, 1024);
+                
+                // Fine noise for concrete/plaster effect
+                const imageData = ctx.getImageData(0, 0, 1024, 1024);
+                const data = imageData.data;
+                for (let i = 0; i < data.length; i += 4) {
+                    // Slight random variation
+                    const noise = Math.random() * 20 - 10;
+                    data[i] = Math.min(255, Math.max(0, data[i] + noise));
+                    data[i+1] = Math.min(255, Math.max(0, data[i+1] + noise));
+                    data[i+2] = Math.min(255, Math.max(0, data[i+2] + noise));
+                }
+                ctx.putImageData(imageData, 0, 0);
+                
+                // Add subtle horizontal lines (like panel seams)
+                ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+                ctx.lineWidth = 2;
+                for (let y = 0; y < 1024; y += 128) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(1024, y);
+                    ctx.stroke();
+                }
+                
+                const texture = new THREE.CanvasTexture(canvas);
+                texture.wrapS = THREE.RepeatWrapping;
+                texture.wrapT = THREE.RepeatWrapping;
+                texture.repeat.set(2, 2); // tile twice across the wall
+                return texture;
+            }
+
+            function createNormalMap() {
+                const canvas = document.createElement('canvas');
+                canvas.width = 512;
+                canvas.height = 512;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#8080ff'; // flat normal (pointing out)
+                ctx.fillRect(0, 0, 512, 512);
+                
+                // Add some random variation
+                const imageData = ctx.getImageData(0, 0, 512, 512);
+                const data = imageData.data;
+                for (let i = 0; i < data.length; i += 4) {
+                    // Slight perturbation
+                    data[i] = 128 + (Math.random() * 20 - 10);   // R
+                    data[i+1] = 128 + (Math.random() * 20 - 10); // G
+                    data[i+2] = 255; // B (height)
+                }
+                ctx.putImageData(imageData, 0, 0);
+                
+                const normalTex = new THREE.CanvasTexture(canvas);
+                normalTex.wrapS = THREE.RepeatWrapping;
+                normalTex.wrapT = THREE.RepeatWrapping;
+                normalTex.repeat.set(2, 2);
+                return normalTex;
+            }
+
+            const wallNormalMap = createNormalMap();
+
+            // Distinct wall colors (subtle variations)
             const wallColors = {
-                back: 0x4a6fa5, // blue
-                front: 0xb24c4c, // red
-                left: 0x4ca64c,  // green
-                right: 0xd4a14a, // gold
-                ceiling: 0xa0a0a0 // gray
+                back: 0x5a7a9a, // muted blue
+                front: 0x9a5a5a, // muted red
+                left: 0x5a9a5a,  // muted green
+                right: 0x9a8a5a, // muted gold
+                ceiling: 0x7a7a8a // gray
             };
 
-            function createWall(name, width, height, pos, rot, color) {
+            function createWall(name, width, height, pos, rot, colorHex) {
                 const geometry = new THREE.PlaneGeometry(width, height);
-                const material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.5, metalness: 0.0 });
+                const color = new THREE.Color(colorHex);
+                const map = createWallTexture('#' + color.getHexString());
+                const material = new THREE.MeshStandardMaterial({
+                    map: map,
+                    normalMap: wallNormalMap,
+                    roughness: 0.7,
+                    metalness: 0.1,
+                    emissive: 0x000000
+                });
                 const mesh = new THREE.Mesh(geometry, material);
                 mesh.position.set(pos.x, pos.y, pos.z);
                 mesh.rotation.set(rot.x, rot.y, rot.z);
@@ -263,33 +354,33 @@
                 return mesh;
             }
 
-            // Floor with grid texture
+            // Floor with refined grid texture
             const gridCanvas = document.createElement('canvas');
-            gridCanvas.width = 1024;
-            gridCanvas.height = 1024;
+            gridCanvas.width = 2048;
+            gridCanvas.height = 2048;
             const ctx = gridCanvas.getContext('2d');
-            ctx.fillStyle = '#2a2a2a';
-            ctx.fillRect(0, 0, 1024, 1024);
+            ctx.fillStyle = '#1a1a2a';
+            ctx.fillRect(0, 0, 2048, 2048);
             ctx.strokeStyle = '#5a9eff';
-            ctx.lineWidth = 4;
-            for (let i = 0; i <= 1024; i += 128) {
+            ctx.lineWidth = 8;
+            for (let i = 0; i <= 2048; i += 256) {
                 ctx.beginPath();
                 ctx.moveTo(i, 0);
-                ctx.lineTo(i, 1024);
-                ctx.strokeStyle = '#888888';
+                ctx.lineTo(i, 2048);
+                ctx.strokeStyle = '#3a4a6a';
                 ctx.stroke();
                 ctx.beginPath();
                 ctx.moveTo(0, i);
-                ctx.lineTo(1024, i);
+                ctx.lineTo(2048, i);
                 ctx.stroke();
             }
             ctx.strokeStyle = '#5a9eff';
-            ctx.lineWidth = 6;
-            ctx.beginPath(); ctx.moveTo(512, 0); ctx.lineTo(512, 1024); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(0, 512); ctx.lineTo(1024, 512); ctx.stroke();
+            ctx.lineWidth = 12;
+            ctx.beginPath(); ctx.moveTo(1024, 0); ctx.lineTo(1024, 2048); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, 1024); ctx.lineTo(2048, 1024); ctx.stroke();
             const gridTexture = new THREE.CanvasTexture(gridCanvas);
 
-            const floorMat = new THREE.MeshStandardMaterial({ map: gridTexture, roughness: 0.7 });
+            const floorMat = new THREE.MeshStandardMaterial({ map: gridTexture, roughness: 0.5, metalness: 0.2 });
             const floor = new THREE.Mesh(new THREE.PlaneGeometry(roomWidth, roomDepth), floorMat);
             floor.rotation.x = -Math.PI/2;
             floor.position.y = 0;
@@ -297,9 +388,14 @@
             floor.userData = { name: 'floor', width: roomWidth, height: roomDepth };
             scene.add(floor);
 
-            // Ceiling
-            createWall('ceiling', roomWidth, roomDepth,
-                { x: 0, y: roomHeight, z: 0 }, { x: Math.PI/2, y: 0, z: 0 }, wallColors.ceiling);
+            // Ceiling (simple)
+            const ceilingMat = new THREE.MeshStandardMaterial({ color: wallColors.ceiling, roughness: 0.8 });
+            const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(roomWidth, roomDepth), ceilingMat);
+            ceiling.rotation.x = Math.PI/2;
+            ceiling.position.y = roomHeight;
+            ceiling.receiveShadow = true;
+            ceiling.userData = { name: 'ceiling', width: roomWidth, height: roomDepth };
+            scene.add(ceiling);
 
             // Walls
             createWall('back', roomWidth, roomHeight,
