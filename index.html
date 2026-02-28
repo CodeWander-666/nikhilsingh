@@ -361,25 +361,130 @@
 
             scene.add(coreGroup);
 
-            // --- SCIENTISTS WITH ANIMATIONS (4 around the core) ---
+            // --- REALISTIC SCIENTISTS WITH BONES & SKIN (approximated with detailed geometry) ---
             const scientistPositions = [
-                { x: 2.5, z: 1.5, angle: 0.2 },
-                { x: -2.5, z: 1.5, angle: -0.2 },
-                { x: 2.5, z: -1.5, angle: Math.PI - 0.2 },
-                { x: -2.5, z: -1.5, angle: Math.PI + 0.2 }
+                { x: 2.5, z: 1.5, angle: 0.2, skin: 0xffccaa, clothes: 0x2a4a6a },
+                { x: -2.5, z: 1.5, angle: -0.2, skin: 0xffddaa, clothes: 0x6a4a2a },
+                { x: 2.5, z: -1.5, angle: Math.PI - 0.2, skin: 0xffbb99, clothes: 0x3a5a7a },
+                { x: -2.5, z: -1.5, angle: Math.PI + 0.2, skin: 0xeeccaa, clothes: 0x5a3a2a }
             ];
 
-            // Create a function to generate a scrolling code texture
+            function createScientist(skinColor, clothesColor) {
+                const group = new THREE.Group();
+
+                // Body (torso) – more anatomical shape
+                const torsoGeo = new THREE.CylinderGeometry(0.28, 0.32, 0.9);
+                const torsoMat = new THREE.MeshStandardMaterial({ color: clothesColor, roughness: 0.6 });
+                const torso = new THREE.Mesh(torsoGeo, torsoMat);
+                torso.position.y = 0.55;
+                torso.castShadow = true;
+                torso.receiveShadow = true;
+                group.add(torso);
+
+                // Neck
+                const neckGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.15);
+                const neckMat = new THREE.MeshStandardMaterial({ color: skinColor, roughness: 0.4 });
+                const neck = new THREE.Mesh(neckGeo, neckMat);
+                neck.position.y = 1.0;
+                neck.castShadow = true;
+                neck.receiveShadow = true;
+                group.add(neck);
+
+                // Head
+                const headGeo = new THREE.SphereGeometry(0.22);
+                const headMat = new THREE.MeshStandardMaterial({ color: skinColor, roughness: 0.3 });
+                const head = new THREE.Mesh(headGeo, headMat);
+                head.position.y = 1.18;
+                head.castShadow = true;
+                head.receiveShadow = true;
+                group.add(head);
+
+                // Hair (simple cap)
+                const hairGeo = new THREE.SphereGeometry(0.23, 8, 4, 0, Math.PI*2, 0, Math.PI/3);
+                const hairMat = new THREE.MeshStandardMaterial({ color: 0x332211 });
+                const hair = new THREE.Mesh(hairGeo, hairMat);
+                hair.position.y = 1.28;
+                hair.scale.set(1, 0.3, 1);
+                hair.castShadow = true;
+                group.add(hair);
+
+                // Left arm (upper)
+                const leftArmUpperGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.4);
+                const armMat = new THREE.MeshStandardMaterial({ color: clothesColor, roughness: 0.6 });
+                const leftArmUpper = new THREE.Mesh(leftArmUpperGeo, armMat);
+                leftArmUpper.position.set(-0.35, 0.7, 0);
+                leftArmUpper.rotation.z = 0.3;
+                leftArmUpper.castShadow = true;
+                leftArmUpper.receiveShadow = true;
+                group.add(leftArmUpper);
+
+                // Left lower arm
+                const leftArmLowerGeo = new THREE.CylinderGeometry(0.09, 0.07, 0.35);
+                const leftArmLower = new THREE.Mesh(leftArmLowerGeo, armMat);
+                leftArmLower.position.set(-0.6, 0.45, 0.05);
+                leftArmLower.rotation.z = 0.8;
+                leftArmLower.castShadow = true;
+                leftArmLower.receiveShadow = true;
+                group.add(leftArmLower);
+
+                // Right arm (upper)
+                const rightArmUpper = new THREE.Mesh(leftArmUpperGeo.clone(), armMat);
+                rightArmUpper.position.set(0.35, 0.7, 0);
+                rightArmUpper.rotation.z = -0.3;
+                rightArmUpper.castShadow = true;
+                rightArmUpper.receiveShadow = true;
+                group.add(rightArmUpper);
+
+                // Right lower arm
+                const rightArmLower = new THREE.Mesh(leftArmLowerGeo.clone(), armMat);
+                rightArmLower.position.set(0.6, 0.45, -0.05);
+                rightArmLower.rotation.z = -0.8;
+                rightArmLower.castShadow = true;
+                rightArmLower.receiveShadow = true;
+                group.add(rightArmLower);
+
+                // Legs (simple cylinders)
+                const legGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.5);
+                const legMat = new THREE.MeshStandardMaterial({ color: 0x223344, roughness: 0.7 });
+                const leftLeg = new THREE.Mesh(legGeo, legMat);
+                leftLeg.position.set(-0.2, 0.15, 0);
+                leftLeg.castShadow = true;
+                leftLeg.receiveShadow = true;
+                group.add(leftLeg);
+                const rightLeg = new THREE.Mesh(legGeo, legMat);
+                rightLeg.position.set(0.2, 0.15, 0);
+                rightLeg.castShadow = true;
+                rightLeg.receiveShadow = true;
+                group.add(rightLeg);
+
+                return group;
+            }
+
+            // Create scientists and place them
+            scientistPositions.forEach((pos, index) => {
+                const scientist = createScientist(pos.skin, pos.clothes);
+                scientist.position.set(pos.x, 0.3, pos.z);
+                scientist.rotation.y = pos.angle;
+                scene.add(scientist);
+                
+                // Store for animation
+                scientist.userData = {
+                    head: scientist.children[2], // head
+                    leftArm: scientist.children[4], // left lower arm
+                    rightArm: scientist.children[6], // right lower arm
+                    timeOffset: Math.random() * 100
+                };
+            });
+
+            // --- WORKSTATIONS (monitors with live code) ---
             function createCodeTexture() {
                 const canvas = document.createElement('canvas');
                 canvas.width = 512;
                 canvas.height = 512;
                 const ctx = canvas.getContext('2d');
                 
-                // Animation state
                 let offset = 0;
                 
-                // Return an object with update and texture
                 const texture = new THREE.CanvasTexture(canvas);
                 
                 function update() {
@@ -389,12 +494,9 @@
                     ctx.font = '16px monospace';
                     ctx.fillStyle = '#5a9eff';
                     
-                    // Generate random code lines that scroll upward
                     const lines = [];
                     for (let i = 0; i < 20; i++) {
-                        const line = Math.random().toString(36).substring(2, 10) + 
-                                    ' = ' + 
-                                    Math.random().toString(36).substring(2, 8);
+                        const line = Math.random().toString(36).substring(2, 10) + ' = ' + Math.random().toString(36).substring(2, 8);
                         lines.push(line);
                     }
                     
@@ -412,7 +514,14 @@
             }
 
             const codeScreens = [];
-            scientistPositions.forEach((pos, index) => {
+            const workstationPositions = [
+                { x: 2.5, z: 1.5, angle: 0 },
+                { x: -2.5, z: 1.5, angle: 0 },
+                { x: 2.5, z: -1.5, angle: Math.PI },
+                { x: -2.5, z: -1.5, angle: Math.PI }
+            ];
+
+            workstationPositions.forEach((pos, index) => {
                 // Desk
                 const deskGeo = new THREE.BoxGeometry(1.5, 0.2, 1.5);
                 const deskMat = new THREE.MeshStandardMaterial({ color: 0x334455, roughness: 0.5, metalness: 0.3 });
@@ -420,20 +529,19 @@
                 desk.position.set(pos.x, 0.6, pos.z);
                 desk.castShadow = true;
                 desk.receiveShadow = true;
-                coreGroup.add(desk);
+                scene.add(desk);
 
-                // Monitor (screen with live code)
+                // Monitor screen with live code
                 const codeSource = createCodeTexture();
                 const screenGeo = new THREE.BoxGeometry(0.8, 0.6, 0.1);
                 const screenMat = new THREE.MeshStandardMaterial({ map: codeSource.texture, emissive: 0x224466 });
                 const screen = new THREE.Mesh(screenGeo, screenMat);
                 screen.position.set(pos.x, 1.0, pos.z + (index < 2 ? 0.3 : -0.3));
-                screen.rotation.y = (index < 2) ? 0 : Math.PI;
+                screen.rotation.y = pos.angle;
                 screen.castShadow = true;
-                coreGroup.add(screen);
+                scene.add(screen);
                 
-                // Store for animation
-                codeScreens.push({ update: codeSource.update, screen });
+                codeScreens.push({ update: codeSource.update });
 
                 // Monitor frame
                 const frameGeo = new THREE.BoxGeometry(0.9, 0.7, 0.05);
@@ -441,75 +549,8 @@
                 const frame = new THREE.Mesh(frameGeo, frameMat);
                 frame.position.copy(screen.position);
                 frame.rotation.copy(screen.rotation);
-                coreGroup.add(frame);
-
-                // Scientist (detailed with articulated limbs)
-                const scientistGroup = new THREE.Group();
-                
-                // Body (torso)
-                const torsoGeo = new THREE.CylinderGeometry(0.25, 0.3, 0.8);
-                const torsoMat = new THREE.MeshStandardMaterial({ color: 0x5a6a7a });
-                const torso = new THREE.Mesh(torsoGeo, torsoMat);
-                torso.position.y = 0.5;
-                torso.castShadow = true;
-                torso.receiveShadow = true;
-                scientistGroup.add(torso);
-
-                // Head
-                const headGeo = new THREE.SphereGeometry(0.2);
-                const headMat = new THREE.MeshStandardMaterial({ color: 0xffccaa });
-                const head = new THREE.Mesh(headGeo, headMat);
-                head.position.y = 0.95;
-                head.castShadow = true;
-                head.receiveShadow = true;
-                scientistGroup.add(head);
-
-                // Left arm (cylinder)
-                const leftArmGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.5);
-                const armMat = new THREE.MeshStandardMaterial({ color: 0x5a6a7a });
-                const leftArm = new THREE.Mesh(leftArmGeo, armMat);
-                leftArm.position.set(-0.3, 0.6, 0);
-                leftArm.rotation.z = 0.2;
-                leftArm.castShadow = true;
-                leftArm.receiveShadow = true;
-                scientistGroup.add(leftArm);
-
-                // Right arm
-                const rightArm = new THREE.Mesh(leftArmGeo.clone(), armMat);
-                rightArm.position.set(0.3, 0.6, 0);
-                rightArm.rotation.z = -0.2;
-                rightArm.castShadow = true;
-                rightArm.receiveShadow = true;
-                scientistGroup.add(rightArm);
-
-                // Chair
-                const chairGeo = new THREE.BoxGeometry(0.6, 0.2, 0.6);
-                const chairMat = new THREE.MeshStandardMaterial({ color: 0x445566 });
-                const chair = new THREE.Mesh(chairGeo, chairMat);
-                chair.position.y = 0.1;
-                chair.castShadow = true;
-                chair.receiveShadow = true;
-                scientistGroup.add(chair);
-
-                scientistGroup.position.set(pos.x, 0.2, pos.z);
-                // Rotate to face screen
-                if (index < 2) scientistGroup.rotation.y = 0;
-                else scientistGroup.rotation.y = Math.PI;
-                
-                // Add slight idle animation (head turn, arm movement) – we'll do in loop
-                scientistGroup.userData = {
-                    baseRotY: scientistGroup.rotation.y,
-                    head: head,
-                    leftArm: leftArm,
-                    rightArm: rightArm,
-                    timeOffset: Math.random() * 100
-                };
-                
-                coreGroup.add(scientistGroup);
+                scene.add(frame);
             });
-
-            coreGroup.position.y = 0.5;
-            scene.add(coreGroup);
 
             // --- SURROUNDING ISLANDS WITH DOORS (4 doors) ---
             const islandRadius = 7;
@@ -586,7 +627,7 @@
                 doors.push(door);
             });
 
-            // --- DECORATIVE PILLARS (enhanced) ---
+            // --- DECORATIVE PILLARS ---
             for (let i = 0; i < 8; i++) {
                 const angle = (i/8)*Math.PI*2;
                 const radius = 4.2;
@@ -744,26 +785,72 @@
                             }
                         })
                         .catch(() => alert(`Cannot access ${url}.`));
+                } else {
+                    console.warn('No currentDoor');
                 }
             });
 
             // Door interaction (E key on desktop)
             let currentDoor = null;
             window.addEventListener('keydown', (e) => {
-                if (e.code === 'KeyE' && currentDoor) {
-                    const room = currentDoor.userData.room;
-                    const url = `${room}-room.html`;
-                    fetch(url, { method: 'HEAD' })
-                        .then(res => {
-                            if (res.ok) {
-                                window.location.href = url;
-                            } else {
-                                alert(`Room "${room}" not found. Please ensure ${url} exists.`);
-                            }
-                        })
-                        .catch(() => alert(`Cannot access ${url}.`));
+                if (e.code === 'KeyE') {
+                    console.log('E pressed, currentDoor:', currentDoor);
+                    if (currentDoor) {
+                        const room = currentDoor.userData.room;
+                        const url = `${room}-room.html`;
+                        fetch(url, { method: 'HEAD' })
+                            .then(res => {
+                                if (res.ok) {
+                                    window.location.href = url;
+                                } else {
+                                    alert(`Room "${room}" not found. Please ensure ${url} exists.`);
+                                }
+                            })
+                            .catch(() => alert(`Cannot access ${url}.`));
+                    }
                 }
             });
+
+            // --- PROXIMITY DETECTION (door glow) ---
+            function checkDoors() {
+                if (!controls.isLocked && !joystickActive) return;
+
+                const playerPos = controls.getObject().position;
+                let closestDoor = null;
+                let minDist = 3.0;
+
+                doors.forEach(door => {
+                    const dist = playerPos.distanceTo(door.position);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        closestDoor = door;
+                    }
+                });
+
+                if (closestDoor !== currentDoor) {
+                    if (currentDoor) {
+                        currentDoor.children.forEach(child => {
+                            if (child.material && child.material.emissive) {
+                                child.material.emissive.setHex(currentDoor.userData.originalEmissive || 0x000000);
+                            }
+                        });
+                    }
+                    currentDoor = closestDoor;
+                    if (currentDoor) {
+                        currentDoor.children.forEach(child => {
+                            if (child.material && child.material.emissive) {
+                                if (currentDoor.userData.originalEmissive === undefined) {
+                                    currentDoor.userData.originalEmissive = child.material.emissive.getHex();
+                                }
+                                child.material.emissive.setHex(0x333333);
+                            }
+                        });
+                        doorPrompt.style.display = 'block';
+                    } else {
+                        doorPrompt.style.display = 'none';
+                    }
+                }
+            }
 
             // --- PHYSICS UPDATE ---
             function updatePlayer(delta) {
@@ -826,47 +913,6 @@
                 if (playerPos.y < 1.0) playerPos.y = 1.0;
             }
 
-            // --- PROXIMITY DETECTION (door glow) ---
-            function checkDoors() {
-                if (!controls.isLocked && !joystickActive) return;
-
-                const playerPos = controls.getObject().position;
-                let closestDoor = null;
-                let minDist = 3.0;
-
-                doors.forEach(door => {
-                    const dist = playerPos.distanceTo(door.position);
-                    if (dist < minDist) {
-                        minDist = dist;
-                        closestDoor = door;
-                    }
-                });
-
-                if (closestDoor !== currentDoor) {
-                    if (currentDoor) {
-                        currentDoor.children.forEach(child => {
-                            if (child.material && child.material.emissive) {
-                                child.material.emissive.setHex(currentDoor.userData.originalEmissive || 0x000000);
-                            }
-                        });
-                    }
-                    currentDoor = closestDoor;
-                    if (currentDoor) {
-                        currentDoor.children.forEach(child => {
-                            if (child.material && child.material.emissive) {
-                                if (currentDoor.userData.originalEmissive === undefined) {
-                                    currentDoor.userData.originalEmissive = child.material.emissive.getHex();
-                                }
-                                child.material.emissive.setHex(0x333333);
-                            }
-                        });
-                        doorPrompt.style.display = 'block';
-                    } else {
-                        doorPrompt.style.display = 'none';
-                    }
-                }
-            }
-
             // --- ANIMATION LOOP ---
             const clock = new THREE.Clock();
 
@@ -891,13 +937,13 @@
                 // Update code screens (scrolling effect)
                 codeScreens.forEach(s => s.update());
 
-                // Animate scientists (subtle head turn and arm movement)
-                coreGroup.children.forEach(child => {
+                // Animate scientists (subtle idle movements)
+                scene.children.forEach(child => {
                     if (child.userData && child.userData.head) {
                         const t = time * 0.5 + child.userData.timeOffset;
-                        child.userData.head.rotation.y = Math.sin(t) * 0.2;
-                        child.userData.leftArm.rotation.z = 0.2 + Math.sin(t) * 0.1;
-                        child.userData.rightArm.rotation.z = -0.2 + Math.cos(t) * 0.1;
+                        child.userData.head.rotation.y = Math.sin(t) * 0.1;
+                        child.userData.leftArm.rotation.z = 0.8 + Math.sin(t) * 0.1;
+                        child.userData.rightArm.rotation.z = -0.8 + Math.cos(t) * 0.1;
                     }
                 });
 
