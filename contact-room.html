@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Social</title>
+    <title>Contact Room · High‑End</title>
     <style>
         body {
             margin: 0;
@@ -81,11 +81,11 @@
 </head>
 <body>
     <div id="loading">
-        <div style="font-size:28px; margin-bottom:16px;">🚪 LOADING ROOM</div>
+        <div style="font-size:28px; margin-bottom:16px;">🚪 LOADING CONTACT ROOM</div>
         <div id="progress-bar" style="width:0%; height:6px; background:#5a9eff; margin-top:20px; border-radius:3px;"></div>
     </div>
     <div id="error"></div>
-    <div id="info">📍 SKILLS ROOM · Free camera · Zoom & orbit · Double‑click surface to upload · Press E to return</div>
+    <div id="info">📍 CONTACT ROOM · Free camera · Zoom & orbit · Double‑click surface to upload · Press E to return</div>
     <div id="crosshair"></div>
     <input type="file" id="file-input" accept="image/*">
 
@@ -120,10 +120,10 @@
             if (loadingDiv) loadingDiv.style.display = 'none';
         }
 
-        // --- IndexedDB for persistent storage ---
-        let db;
-        const DB_NAME = 'WallImagesDB';
+        // --- IndexedDB for persistent storage (unique per room) ---
+        const DB_NAME = 'WallImagesDB_contact';  // unique for contact room
         const STORE_NAME = 'images';
+        let db;
 
         function openDB() {
             return new Promise((resolve, reject) => {
@@ -324,12 +324,12 @@
 
             const wallNormalMap = createNormalMap();
 
-            // Distinct wall colors (subtle variations)
+            // Distinct wall colors (subtle variations) – gold theme for contact
             const wallColors = {
-                back: 0x5a7a9a, // muted blue
-                front: 0x9a5a5a, // muted red
-                left: 0x5a9a5a,  // muted green
-                right: 0x9a8a5a, // muted gold
+                back: 0x9a8a5a, // muted gold
+                front: 0x9a8a5a,
+                left: 0x9a8a5a,
+                right: 0x9a8a5a,
                 ceiling: 0x7a7a8a // gray
             };
 
@@ -421,7 +421,7 @@
                 topBeam.position.set(0, 2.2, 0);
                 doorGroup.add(topBeam);
 
-                const doorMat = new THREE.MeshStandardMaterial({ color: 0x5a9eff, roughness: 0.5, metalness: 0.1 });
+                const doorMat = new THREE.MeshStandardMaterial({ color: 0xd4a14a, roughness: 0.5, metalness: 0.1 }); // gold
                 const doorLeaf = new THREE.Mesh(new THREE.BoxGeometry(1.8, 2.0, 0.1), doorMat);
                 doorLeaf.position.set(0, 1.0, 0.05);
                 doorLeaf.castShadow = true;
@@ -442,7 +442,7 @@
                 labelDiv.style.background = 'rgba(0,0,0,0.8)';
                 labelDiv.style.padding = '6px 16px';
                 labelDiv.style.borderRadius = '20px';
-                labelDiv.style.border = '1px solid #5a9eff';
+                labelDiv.style.border = '1px solid #d4a14a';
                 labelDiv.style.fontSize = '16px';
                 labelDiv.style.fontWeight = 'bold';
                 labelDiv.style.backdropFilter = 'blur(4px)';
@@ -640,10 +640,11 @@
                 }
             }, 1000);
 
-            // --- UNIVERSAL E KEY TO RETURN TO HUB (no proximity check) ---
+            // --- UNIVERSAL E KEY TO RETURN TO HUB with door parameter ---
             window.addEventListener('keydown', (e) => {
                 if (e.code === 'KeyE') {
-                    window.location.href = 'index.html';
+                    // Pass the room name so hub knows which door to place us at
+                    window.location.href = 'index.html?door=contact';
                 }
             });
 
