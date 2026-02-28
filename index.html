@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NIKHIL SINGH · Portfolio </title>
+    <title>NIKHIL SINGH · DREAM HUB · ULTIMATE</title>
     <style>
         body {
             margin: 0;
@@ -103,7 +103,6 @@
             pointer-events: none;
             transition: opacity 0.5s;
         }
-        /* Mobile joystick and E button */
         #joystick {
             position: absolute;
             bottom: 40px;
@@ -245,11 +244,70 @@
             labelRenderer.domElement.style.pointerEvents = 'none';
             document.body.appendChild(labelRenderer.domElement);
 
+            // --- SOUND SETUP (completely internal, no external files) ---
+            const listener = new THREE.AudioListener();
+            camera.add(listener);
+            const audioContext = listener.context;
+
+            // Ambient drone (soft, evolving)
+            let ambientGainNode = audioContext.createGain();
+            ambientGainNode.gain.setValueAtTime(0.0, audioContext.currentTime);
+            ambientGainNode.connect(audioContext.destination);
+
+            // Create two oscillators for a richer sound
+            const osc1 = audioContext.createOscillator();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(70, audioContext.currentTime);
+            const osc2 = audioContext.createOscillator();
+            osc2.type = 'triangle';
+            osc2.frequency.setValueAtTime(140, audioContext.currentTime);
+
+            // LFO for subtle movement
+            const lfo = audioContext.createOscillator();
+            lfo.frequency.setValueAtTime(0.2, audioContext.currentTime);
+            const lfoGain = audioContext.createGain();
+            lfoGain.gain.setValueAtTime(10, audioContext.currentTime);
+            lfo.connect(lfoGain);
+            lfoGain.connect(osc1.frequency);
+            lfoGain.connect(osc2.frequency);
+
+            osc1.connect(ambientGainNode);
+            osc2.connect(ambientGainNode);
+
+            // Door sound (soft beep)
+            function playDoorSound() {
+                const now = audioContext.currentTime;
+                const osc = audioContext.createOscillator();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(200, now + 0.2);
+                const gain = audioContext.createGain();
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+
+            // Start ambient on first user interaction
+            function startAmbient() {
+                if (ambientGainNode.gain.value > 0.01) return;
+                osc1.start();
+                osc2.start();
+                lfo.start();
+                ambientGainNode.gain.setValueAtTime(0.02, audioContext.currentTime);
+                ambientGainNode.gain.exponentialRampToValueAtTime(0.05, audioContext.currentTime + 1.0);
+                document.removeEventListener('click', startAmbient);
+                document.removeEventListener('touchstart', startAmbient);
+            }
+            document.addEventListener('click', startAmbient);
+            document.addEventListener('touchstart', startAmbient);
+
             // --- LIGHTING (realistic, dynamic) ---
             const ambient = new THREE.AmbientLight(0x404060, 0.5);
             scene.add(ambient);
 
-            // Main directional light (warm)
             const keyLight = new THREE.DirectionalLight(0xffeedd, 1.2);
             keyLight.position.set(5, 15, 10);
             keyLight.castShadow = true;
@@ -264,17 +322,14 @@
             keyLight.shadow.camera.bottom = -20;
             scene.add(keyLight);
 
-            // Fill light (cool)
             const fillLight = new THREE.DirectionalLight(0xaaccff, 0.8);
             fillLight.position.set(-8, 8, -8);
             scene.add(fillLight);
 
-            // Back light
             const backLight = new THREE.DirectionalLight(0xffffff, 0.5);
             backLight.position.set(0, 5, -15);
             scene.add(backLight);
 
-            // Colored point lights for atmosphere
             const pointLight1 = new THREE.PointLight(0x5a9eff, 0.8, 30);
             pointLight1.position.set(4, 3, 4);
             scene.add(pointLight1);
@@ -282,7 +337,6 @@
             pointLight2.position.set(-4, 3, -4);
             scene.add(pointLight2);
 
-            // Moving lights
             const movingLight1 = new THREE.PointLight(0x5a9eff, 0.6, 30);
             scene.add(movingLight1);
             const movingLight2 = new THREE.PointLight(0xffaa88, 0.6, 30);
@@ -291,7 +345,6 @@
             // --- CENTRAL PLATFORM (detailed) ---
             const platformGroup = new THREE.Group();
 
-            // Base
             const platformGeo = new THREE.CylinderGeometry(4, 4, 0.5, 64);
             const platformMat = new THREE.MeshStandardMaterial({ color: 0x3a4a5a, roughness: 0.3, metalness: 0.6 });
             const platform = new THREE.Mesh(platformGeo, platformMat);
@@ -300,7 +353,6 @@
             platform.castShadow = true;
             platformGroup.add(platform);
 
-            // Ring
             const ringGeo = new THREE.TorusGeometry(4.2, 0.1, 16, 64);
             const ringMat = new THREE.MeshStandardMaterial({ color: 0x5a9eff, roughness: 0.2, metalness: 0.8 });
             const ring = new THREE.Mesh(ringGeo, ringMat);
@@ -308,7 +360,6 @@
             ring.position.y = 0.1;
             platformGroup.add(ring);
 
-            // Inner disc
             const discGeo = new THREE.CylinderGeometry(3.8, 3.8, 0.1, 32);
             const discMat = new THREE.MeshStandardMaterial({ color: 0x1a2a3a, roughness: 0.5, metalness: 0.4 });
             const disc = new THREE.Mesh(discGeo, discMat);
@@ -331,7 +382,6 @@
             function createDoor(color, label, roomName) {
                 const doorGroup = new THREE.Group();
 
-                // Frame (dark metal)
                 const frameMat = new THREE.MeshStandardMaterial({ color: 0x5a5a6a, roughness: 0.4, metalness: 0.7 });
                 const leftPost = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.2, 0.2), frameMat);
                 leftPost.position.set(-1, 1.1, 0);
@@ -343,7 +393,6 @@
                 topBeam.position.set(0, 2.2, 0);
                 doorGroup.add(topBeam);
 
-                // Door leaf
                 const doorMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.3, metalness: 0.3 });
                 const doorLeaf = new THREE.Mesh(new THREE.BoxGeometry(1.8, 2.0, 0.1), doorMat);
                 doorLeaf.position.set(0, 1.0, 0.05);
@@ -351,7 +400,6 @@
                 doorLeaf.receiveShadow = true;
                 doorGroup.add(doorLeaf);
 
-                // Handle
                 const handleMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.3, metalness: 0.8 });
                 const handleBar = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.4, 8), handleMat);
                 handleBar.rotation.z = Math.PI/2;
@@ -361,7 +409,6 @@
                 handleKnob.position.set(0.8, 1.0, 0.15);
                 doorGroup.add(handleKnob);
 
-                // CSS2 label above door
                 const labelDiv = document.createElement('div');
                 labelDiv.style.color = 'white';
                 labelDiv.style.background = 'rgba(0,0,0,0.7)';
@@ -381,7 +428,6 @@
             }
 
             doorPositions.forEach(pos => {
-                // Island base
                 const islandGeo = new THREE.CylinderGeometry(2.5, 3, 0.8, 32);
                 const islandMat = new THREE.MeshStandardMaterial({ color: 0x3a4a5a, roughness: 0.6, metalness: 0.2 });
                 const island = new THREE.Mesh(islandGeo, islandMat);
@@ -390,7 +436,6 @@
                 island.castShadow = true;
                 scene.add(island);
 
-                // Door
                 const door = createDoor(pos.color, pos.label, pos.room);
                 door.position.set(Math.cos(pos.angle)*islandRadius, 0.5, Math.sin(pos.angle)*islandRadius);
                 door.rotation.y = -pos.angle;
@@ -398,12 +443,11 @@
                 doors.push(door);
             });
 
-            // --- REALISTIC PILLARS (detailed) ---
+            // --- REALISTIC PILLARS ---
             for (let i = 0; i < 8; i++) {
                 const angle = (i/8)*Math.PI*2;
                 const radius = 3.5;
                 
-                // Pillar base
                 const baseGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.2, 8);
                 const baseMat = new THREE.MeshStandardMaterial({ color: 0x8a9aad, roughness: 0.4, metalness: 0.6 });
                 const base = new THREE.Mesh(baseGeo, baseMat);
@@ -412,7 +456,6 @@
                 base.castShadow = true;
                 scene.add(base);
 
-                // Pillar shaft
                 const shaftGeo = new THREE.CylinderGeometry(0.3, 0.3, 2.0, 8);
                 const shaftMat = new THREE.MeshStandardMaterial({ color: 0x5a6a7a, roughness: 0.3, metalness: 0.5 });
                 const shaft = new THREE.Mesh(shaftGeo, shaftMat);
@@ -421,7 +464,6 @@
                 shaft.castShadow = true;
                 scene.add(shaft);
 
-                // Pillar capital
                 const capitalGeo = new THREE.CylinderGeometry(0.5, 0.4, 0.3, 8);
                 const capitalMat = new THREE.MeshStandardMaterial({ color: 0x9aabba, roughness: 0.3, metalness: 0.7 });
                 const capital = new THREE.Mesh(capitalGeo, capitalMat);
@@ -430,7 +472,6 @@
                 capital.castShadow = true;
                 scene.add(capital);
 
-                // Glowing orb on top
                 const orbGeo = new THREE.SphereGeometry(0.15, 8);
                 const orbMat = new THREE.MeshStandardMaterial({ color: 0x5a9eff, emissive: 0x224466 });
                 const orb = new THREE.Mesh(orbGeo, orbMat);
@@ -439,7 +480,7 @@
                 scene.add(orb);
             }
 
-            // --- FLOATING PARTICLES (for ambiance) ---
+            // --- FLOATING PARTICLES ---
             const particleCount = 2000;
             const particlesGeo = new THREE.BufferGeometry();
             const particlesPos = new Float32Array(particleCount * 3);
@@ -450,44 +491,15 @@
                 particlesPos[i*3+2] = (Math.random() - 0.5) * 60;
 
                 const r = Math.random();
-                if (r < 0.33) { particlesColor[i*3]=0.0; particlesColor[i*3+1]=1.0; particlesColor[i*3+2]=1.0; } // cyan
-                else if (r < 0.66) { particlesColor[i*3]=1.0; particlesColor[i*3+1]=0.0; particlesColor[i*3+2]=1.0; } // magenta
-                else { particlesColor[i*3]=1.0; particlesColor[i*3+1]=0.8; particlesColor[i*3+2]=0.0; } // gold
+                if (r < 0.33) { particlesColor[i*3]=0.0; particlesColor[i*3+1]=1.0; particlesColor[i*3+2]=1.0; }
+                else if (r < 0.66) { particlesColor[i*3]=1.0; particlesColor[i*3+1]=0.0; particlesColor[i*3+2]=1.0; }
+                else { particlesColor[i*3]=1.0; particlesColor[i*3+1]=0.8; particlesColor[i*3+2]=0.0; }
             }
             particlesGeo.setAttribute('position', new THREE.BufferAttribute(particlesPos, 3));
             particlesGeo.setAttribute('color', new THREE.BufferAttribute(particlesColor, 3));
             const particlesMat = new THREE.PointsMaterial({ size: 0.1, vertexColors: true, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending });
             const particles = new THREE.Points(particlesGeo, particlesMat);
             scene.add(particles);
-
-            // --- AMBIENT SOUND (high quality, looping) ---
-            let audioListener = null;
-            let sound = null;
-            try {
-                audioListener = new THREE.AudioListener();
-                camera.add(audioListener);
-                sound = new THREE.Audio(audioListener);
-                // Load a gentle ambient loop from a free source (e.g., Pixabay)
-                const audioLoader = new THREE.AudioLoader();
-                audioLoader.load('https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8b1b5d2a0.mp3?filename=ambient-piano-amp-strings-10711.mp3', (buffer) => {
-                    sound.setBuffer(buffer);
-                    sound.setLoop(true);
-                    sound.setVolume(0.3);
-                    // Start sound on first user interaction to comply with autoplay policies
-                    const startSound = () => {
-                        if (sound.isPlaying) return;
-                        sound.play().catch(e => console.warn('Sound play failed:', e));
-                        document.removeEventListener('click', startSound);
-                        document.removeEventListener('touchstart', startSound);
-                    };
-                    document.addEventListener('click', startSound);
-                    document.addEventListener('touchstart', startSound);
-                }, undefined, (err) => {
-                    console.warn('Audio load failed, continuing without sound.', err);
-                });
-            } catch (e) {
-                console.warn('Web Audio not supported:', e);
-            }
 
             // --- CONTROLS (desktop) ---
             const controls = new PointerLockControls(camera, document.body);
@@ -518,7 +530,6 @@
 
             const keyState = { w: false, a: false, s: false, d: false, space: false };
 
-            // Keyboard for desktop
             window.addEventListener('keydown', (e) => {
                 switch(e.code) {
                     case 'KeyW': keyState.w = true; e.preventDefault(); break;
@@ -538,7 +549,7 @@
                 }
             });
 
-            // Mobile joystick logic
+            // Mobile joystick
             let joystickActive = false;
             let joystickVec = { x: 0, y: 0 };
             if (window.innerWidth <= 768) {
@@ -580,7 +591,17 @@
                 e.preventDefault();
                 if (currentDoor) {
                     const room = currentDoor.userData.room;
-                    window.location.href = `${room}-room.html`;
+                    const url = `${room}-room.html`;
+                    fetch(url, { method: 'HEAD' })
+                        .then(res => {
+                            if (res.ok) {
+                                playDoorSound();
+                                window.location.href = url;
+                            } else {
+                                alert(`Room "${room}" not found. Please ensure ${url} exists.`);
+                            }
+                        })
+                        .catch(() => alert(`Cannot access ${url}.`));
                 }
             });
 
@@ -589,18 +610,26 @@
             window.addEventListener('keydown', (e) => {
                 if (e.code === 'KeyE' && currentDoor) {
                     const room = currentDoor.userData.room;
-                    window.location.href = `${room}-room.html`;
+                    const url = `${room}-room.html`;
+                    fetch(url, { method: 'HEAD' })
+                        .then(res => {
+                            if (res.ok) {
+                                playDoorSound();
+                                window.location.href = url;
+                            } else {
+                                alert(`Room "${room}" not found. Please ensure ${url} exists.`);
+                            }
+                        })
+                        .catch(() => alert(`Cannot access ${url}.`));
                 }
             });
 
             // --- PHYSICS UPDATE ---
             function updatePlayer(delta) {
-                // For desktop, require lock; for mobile, joystick works without lock
                 if (!controls.isLocked && !joystickActive) return;
 
                 const playerPos = controls.getObject().position;
 
-                // Get camera direction (horizontal)
                 const cameraDir = new THREE.Vector3();
                 camera.getWorldDirection(cameraDir);
                 cameraDir.y = 0;
@@ -613,7 +642,6 @@
                 if (keyState.a) moveDir.add(cameraRight);
                 if (keyState.d) moveDir.sub(cameraRight);
 
-                // Joystick contribution (overrides keyboard on mobile)
                 if (joystickActive) {
                     const joyX = joystickVec.x;
                     const joyY = joystickVec.y;
@@ -630,10 +658,8 @@
                     player.velocity.z *= player.damp;
                 }
 
-                // Gravity
                 player.velocity.y -= player.gravity * delta;
 
-                // Ground check
                 if (playerPos.y <= 1.0 && player.velocity.y < 0) {
                     player.velocity.y = 0;
                     playerPos.y = 1.0;
@@ -650,7 +676,6 @@
                 playerPos.y += player.velocity.y * delta;
                 playerPos.z += player.velocity.z * delta;
 
-                // Circular bounds
                 const dist = Math.sqrt(playerPos.x*playerPos.x + playerPos.z*playerPos.z);
                 if (dist > maxDist) {
                     const angle = Math.atan2(playerPos.z, playerPos.x);
@@ -677,7 +702,6 @@
                 });
 
                 if (closestDoor !== currentDoor) {
-                    // Reset previous door's emissive
                     if (currentDoor) {
                         currentDoor.children.forEach(child => {
                             if (child.material && child.material.emissive) {
@@ -687,13 +711,12 @@
                     }
                     currentDoor = closestDoor;
                     if (currentDoor) {
-                        // Store original emissive and increase it
                         currentDoor.children.forEach(child => {
                             if (child.material && child.material.emissive) {
                                 if (currentDoor.userData.originalEmissive === undefined) {
                                     currentDoor.userData.originalEmissive = child.material.emissive.getHex();
                                 }
-                                child.material.emissive.setHex(0x333333); // subtle glow
+                                child.material.emissive.setHex(0x333333);
                             }
                         });
                         doorPrompt.style.display = 'block';
@@ -710,17 +733,13 @@
                 requestAnimationFrame(animate);
                 const delta = Math.min(clock.getDelta(), 0.1);
 
-                // Animate moving lights
                 const time = performance.now() / 1000;
                 movingLight1.position.x = Math.sin(time * 0.5) * 8;
                 movingLight1.position.z = Math.cos(time * 0.7) * 8;
                 movingLight2.position.x = Math.sin(time * 0.8 + 2) * 8;
                 movingLight2.position.z = Math.cos(time * 0.6 + 1) * 8;
 
-                // Rotate central platform
                 platformGroup.rotation.y += 0.001;
-
-                // Rotate particles
                 particles.rotation.y += 0.0002;
 
                 updatePlayer(delta);
