@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NIKHIL SINGH · PORTFOLIO</title>
+    <title>NIKHIL SINGH · Portfolio </title>
     <style>
         body {
             margin: 0;
@@ -87,9 +87,78 @@
             pointer-events: none;
             backdrop-filter: blur(5px);
         }
+        #click-hint {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: #5a9eff;
+            padding: 8px 20px;
+            border-radius: 40px;
+            border: 1px solid #5a9eff;
+            font-size: 16px;
+            z-index: 250;
+            backdrop-filter: blur(5px);
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+        /* Mobile joystick and E button */
+        #joystick {
+            position: absolute;
+            bottom: 40px;
+            left: 40px;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(30,30,40,0.8);
+            border: 2px solid #5a9eff;
+            box-shadow: 0 0 20px #5a9eff;
+            display: none;
+            z-index: 300;
+            backdrop-filter: blur(8px);
+            touch-action: none;
+        }
+        #joystick-thumb {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #5a9eff;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            box-shadow: 0 0 15px #5a9eff;
+        }
+        #mobile-e {
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(90,158,255,0.9);
+            border: 3px solid white;
+            color: white;
+            font-size: 36px;
+            font-weight: bold;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 300;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 0 30px #5a9eff;
+            cursor: pointer;
+            user-select: none;
+            touch-action: manipulation;
+        }
         @media (max-width: 768px) {
             #crosshair { width: 16px; height: 16px; }
-            #door-prompt { font-size: 16px; bottom: 80px; }
+            #door-prompt { font-size: 16px; bottom: 140px; }
+            #click-hint { display: none; }
+            #joystick { display: block; }
+            #mobile-e { display: flex; }
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -100,9 +169,12 @@
         <div id="progress-bar" style="width:0%; height:6px; background:#5a9eff; margin-top:20px; border-radius:3px;"></div>
     </div>
     <div id="error"></div>
-    <div id="info">📍 DREAM HUB · WASD move · Space jump · Approach door & press E to enter</div>
+    <div id="click-hint">👆 CLICK TO LOCK · WASD MOVE · SPACE JUMP</div>
+    <div id="info">📍 DREAM HUB · Approach door & press E to enter</div>
     <div id="crosshair"></div>
     <div id="door-prompt">PRESS E TO ENTER</div>
+    <div id="joystick"><div id="joystick-thumb"></div></div>
+    <div id="mobile-e">E</div>
 
     <!-- Three.js and dependencies -->
     <script type="importmap">
@@ -118,16 +190,17 @@
         import * as THREE from 'three';
         import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
         import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
-        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 
         // --- UI Elements ---
         const loadingDiv = document.getElementById('loading');
         const errorDiv = document.getElementById('error');
         const infoDiv = document.getElementById('info');
         const doorPrompt = document.getElementById('door-prompt');
+        const clickHint = document.getElementById('click-hint');
         const progressBar = document.getElementById('progress-bar');
+        const joystickDiv = document.getElementById('joystick');
+        const joystickThumb = document.getElementById('joystick-thumb');
+        const mobileE = document.getElementById('mobile-e');
 
         function showError(msg) {
             console.error(msg);
@@ -139,6 +212,11 @@
         }
 
         try {
+            // --- Check for PointerLock support ---
+            if (!('pointerLockElement' in document) && !('mozPointerLockElement' in document)) {
+                throw new Error('Your browser does not support Pointer Lock. Please use a modern browser.');
+            }
+
             // --- SCENE ---
             const scene = new THREE.Scene();
             scene.background = new THREE.Color(0x0a0a1a);
@@ -146,7 +224,7 @@
 
             // --- CAMERA ---
             const camera = new THREE.PerspectiveCamera(80, window.innerWidth / window.innerHeight, 0.1, 200);
-            camera.position.set(0, 2, 5); // start on central platform
+            camera.position.set(0, 2, 5);
 
             // --- RENDERER ---
             const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
@@ -158,17 +236,6 @@
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             document.body.appendChild(renderer.domElement);
 
-            // --- POST-PROCESSING (Bloom) ---
-            const renderScene = new RenderPass(scene, camera);
-            const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0, 0, 0);
-            bloomPass.threshold = 0.0;
-            bloomPass.strength = 0.0;
-            bloomPass.radius = 0.0;
-
-            const composer = new EffectComposer(renderer);
-            composer.addPass(renderScene);
-            composer.addPass(bloomPass);
-
             // --- CSS2 RENDERER (for door labels) ---
             const labelRenderer = new CSS2DRenderer();
             labelRenderer.setSize(window.innerWidth, window.innerHeight);
@@ -178,11 +245,11 @@
             labelRenderer.domElement.style.pointerEvents = 'none';
             document.body.appendChild(labelRenderer.domElement);
 
-            // --- LIGHTING (rich, dynamic) ---
-            const ambient = new THREE.AmbientLight(0x404060, 0.8);
+            // --- LIGHTING (realistic, dynamic) ---
+            const ambient = new THREE.AmbientLight(0x404060, 0.5);
             scene.add(ambient);
 
-            // Key light (warm)
+            // Main directional light (warm)
             const keyLight = new THREE.DirectionalLight(0xffeedd, 1.2);
             keyLight.position.set(5, 15, 10);
             keyLight.castShadow = true;
@@ -207,35 +274,43 @@
             backLight.position.set(0, 5, -15);
             scene.add(backLight);
 
-            // Moving point lights for atmosphere
+            // Colored point lights for atmosphere
+            const pointLight1 = new THREE.PointLight(0x5a9eff, 0.8, 30);
+            pointLight1.position.set(4, 3, 4);
+            scene.add(pointLight1);
+            const pointLight2 = new THREE.PointLight(0xffaa88, 0.6, 30);
+            pointLight2.position.set(-4, 3, -4);
+            scene.add(pointLight2);
+
+            // Moving lights
             const movingLight1 = new THREE.PointLight(0x5a9eff, 0.6, 30);
             scene.add(movingLight1);
             const movingLight2 = new THREE.PointLight(0xffaa88, 0.6, 30);
             scene.add(movingLight2);
 
-            // --- CENTRAL PLATFORM (with glowing edges) ---
+            // --- CENTRAL PLATFORM (detailed) ---
             const platformGroup = new THREE.Group();
 
             // Base
             const platformGeo = new THREE.CylinderGeometry(4, 4, 0.5, 64);
-            const platformMat = new THREE.MeshStandardMaterial({ color: 0x2a2a3a, roughness: 0.4, metalness: 0.3, emissive: 0x111122 });
+            const platformMat = new THREE.MeshStandardMaterial({ color: 0x3a4a5a, roughness: 0.3, metalness: 0.6 });
             const platform = new THREE.Mesh(platformGeo, platformMat);
             platform.position.y = -0.25;
             platform.receiveShadow = true;
             platform.castShadow = true;
             platformGroup.add(platform);
 
-            // Glowing ring
+            // Ring
             const ringGeo = new THREE.TorusGeometry(4.2, 0.1, 16, 64);
-            const ringMat = new THREE.MeshStandardMaterial({ color: 0x5a9eff, emissive: 0x5a9eff });
+            const ringMat = new THREE.MeshStandardMaterial({ color: 0x5a9eff, roughness: 0.2, metalness: 0.8 });
             const ring = new THREE.Mesh(ringGeo, ringMat);
             ring.rotation.x = Math.PI/2;
             ring.position.y = 0.1;
             platformGroup.add(ring);
 
-            // Inner glow discs
+            // Inner disc
             const discGeo = new THREE.CylinderGeometry(3.8, 3.8, 0.1, 32);
-            const discMat = new THREE.MeshStandardMaterial({ color: 0x111122, emissive: 0x224466 });
+            const discMat = new THREE.MeshStandardMaterial({ color: 0x1a2a3a, roughness: 0.5, metalness: 0.4 });
             const disc = new THREE.Mesh(discGeo, discMat);
             disc.position.y = 0.2;
             platformGroup.add(disc);
@@ -251,9 +326,8 @@
                 { angle: 3*Math.PI/2, label: 'CONTACT', room: 'contact', color: 0xd4a14a }
             ];
 
-            const doors = []; // for proximity detection
+            const doors = [];
 
-            // Create a fancy door with frame, leaf, handle, and CSS2D label
             function createDoor(color, label, roomName) {
                 const doorGroup = new THREE.Group();
 
@@ -269,8 +343,8 @@
                 topBeam.position.set(0, 2.2, 0);
                 doorGroup.add(topBeam);
 
-                // Door leaf (colored, emissive)
-                const doorMat = new THREE.MeshStandardMaterial({ color: color, emissive: color, emissiveIntensity: 0.3 });
+                // Door leaf
+                const doorMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.3, metalness: 0.3 });
                 const doorLeaf = new THREE.Mesh(new THREE.BoxGeometry(1.8, 2.0, 0.1), doorMat);
                 doorLeaf.position.set(0, 1.0, 0.05);
                 doorLeaf.castShadow = true;
@@ -302,14 +376,14 @@
                 labelObj.position.set(0, 3.0, 0);
                 doorGroup.add(labelObj);
 
-                doorGroup.userData = { type: 'door', room: roomName };
+                doorGroup.userData = { type: 'door', room: roomName, originalEmissive: null };
                 return doorGroup;
             }
 
             doorPositions.forEach(pos => {
                 // Island base
                 const islandGeo = new THREE.CylinderGeometry(2.5, 3, 0.8, 32);
-                const islandMat = new THREE.MeshStandardMaterial({ color: 0x3a4a5a, roughness: 0.6, emissive: 0x112233 });
+                const islandMat = new THREE.MeshStandardMaterial({ color: 0x3a4a5a, roughness: 0.6, metalness: 0.2 });
                 const island = new THREE.Mesh(islandGeo, islandMat);
                 island.position.set(Math.cos(pos.angle)*islandRadius, -0.4, Math.sin(pos.angle)*islandRadius);
                 island.receiveShadow = true;
@@ -319,49 +393,115 @@
                 // Door
                 const door = createDoor(pos.color, pos.label, pos.room);
                 door.position.set(Math.cos(pos.angle)*islandRadius, 0.5, Math.sin(pos.angle)*islandRadius);
-                door.rotation.y = -pos.angle; // face inward
+                door.rotation.y = -pos.angle;
                 scene.add(door);
                 doors.push(door);
             });
 
-            // --- DECORATIVE PILLARS (on central platform) ---
+            // --- REALISTIC PILLARS (detailed) ---
             for (let i = 0; i < 8; i++) {
                 const angle = (i/8)*Math.PI*2;
                 const radius = 3.5;
-                const pillarGeo = new THREE.CylinderGeometry(0.3, 0.4, 2, 8);
-                const pillarMat = new THREE.MeshStandardMaterial({ color: 0x6a7a8a, emissive: 0x112233 });
-                const pillar = new THREE.Mesh(pillarGeo, pillarMat);
-                pillar.position.set(Math.cos(angle)*radius, 1, Math.sin(angle)*radius);
-                pillar.castShadow = true;
-                pillar.receiveShadow = true;
-                scene.add(pillar);
+                
+                // Pillar base
+                const baseGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.2, 8);
+                const baseMat = new THREE.MeshStandardMaterial({ color: 0x8a9aad, roughness: 0.4, metalness: 0.6 });
+                const base = new THREE.Mesh(baseGeo, baseMat);
+                base.position.set(Math.cos(angle)*radius, 0.1, Math.sin(angle)*radius);
+                base.receiveShadow = true;
+                base.castShadow = true;
+                scene.add(base);
+
+                // Pillar shaft
+                const shaftGeo = new THREE.CylinderGeometry(0.3, 0.3, 2.0, 8);
+                const shaftMat = new THREE.MeshStandardMaterial({ color: 0x5a6a7a, roughness: 0.3, metalness: 0.5 });
+                const shaft = new THREE.Mesh(shaftGeo, shaftMat);
+                shaft.position.set(Math.cos(angle)*radius, 1.1, Math.sin(angle)*radius);
+                shaft.receiveShadow = true;
+                shaft.castShadow = true;
+                scene.add(shaft);
+
+                // Pillar capital
+                const capitalGeo = new THREE.CylinderGeometry(0.5, 0.4, 0.3, 8);
+                const capitalMat = new THREE.MeshStandardMaterial({ color: 0x9aabba, roughness: 0.3, metalness: 0.7 });
+                const capital = new THREE.Mesh(capitalGeo, capitalMat);
+                capital.position.set(Math.cos(angle)*radius, 2.3, Math.sin(angle)*radius);
+                capital.receiveShadow = true;
+                capital.castShadow = true;
+                scene.add(capital);
+
+                // Glowing orb on top
+                const orbGeo = new THREE.SphereGeometry(0.15, 8);
+                const orbMat = new THREE.MeshStandardMaterial({ color: 0x5a9eff, emissive: 0x224466 });
+                const orb = new THREE.Mesh(orbGeo, orbMat);
+                orb.position.set(Math.cos(angle)*radius, 2.6, Math.sin(angle)*radius);
+                orb.castShadow = true;
+                scene.add(orb);
             }
 
-            // --- FLOATING PARTICLES (ambient) ---
-            const particleCount = 1500;
+            // --- FLOATING PARTICLES (for ambiance) ---
+            const particleCount = 2000;
             const particlesGeo = new THREE.BufferGeometry();
             const particlesPos = new Float32Array(particleCount * 3);
+            const particlesColor = new Float32Array(particleCount * 3);
             for (let i = 0; i < particleCount; i++) {
-                particlesPos[i*3] = (Math.random() - 0.5) * 50;
-                particlesPos[i*3+1] = (Math.random() - 0.5) * 20;
-                particlesPos[i*3+2] = (Math.random() - 0.5) * 50;
+                particlesPos[i*3] = (Math.random() - 0.5) * 60;
+                particlesPos[i*3+1] = (Math.random() - 0.5) * 30;
+                particlesPos[i*3+2] = (Math.random() - 0.5) * 60;
+
+                const r = Math.random();
+                if (r < 0.33) { particlesColor[i*3]=0.0; particlesColor[i*3+1]=1.0; particlesColor[i*3+2]=1.0; } // cyan
+                else if (r < 0.66) { particlesColor[i*3]=1.0; particlesColor[i*3+1]=0.0; particlesColor[i*3+2]=1.0; } // magenta
+                else { particlesColor[i*3]=1.0; particlesColor[i*3+1]=0.8; particlesColor[i*3+2]=0.0; } // gold
             }
             particlesGeo.setAttribute('position', new THREE.BufferAttribute(particlesPos, 3));
-            const particlesMat = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.1, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending });
+            particlesGeo.setAttribute('color', new THREE.BufferAttribute(particlesColor, 3));
+            const particlesMat = new THREE.PointsMaterial({ size: 0.1, vertexColors: true, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending });
             const particles = new THREE.Points(particlesGeo, particlesMat);
             scene.add(particles);
 
-            // --- SKY DOME (simple gradient via fog, but we can add a starfield) ---
-            // (already have fog)
+            // --- AMBIENT SOUND (high quality, looping) ---
+            let audioListener = null;
+            let sound = null;
+            try {
+                audioListener = new THREE.AudioListener();
+                camera.add(audioListener);
+                sound = new THREE.Audio(audioListener);
+                // Load a gentle ambient loop from a free source (e.g., Pixabay)
+                const audioLoader = new THREE.AudioLoader();
+                audioLoader.load('https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8b1b5d2a0.mp3?filename=ambient-piano-amp-strings-10711.mp3', (buffer) => {
+                    sound.setBuffer(buffer);
+                    sound.setLoop(true);
+                    sound.setVolume(0.3);
+                    // Start sound on first user interaction to comply with autoplay policies
+                    const startSound = () => {
+                        if (sound.isPlaying) return;
+                        sound.play().catch(e => console.warn('Sound play failed:', e));
+                        document.removeEventListener('click', startSound);
+                        document.removeEventListener('touchstart', startSound);
+                    };
+                    document.addEventListener('click', startSound);
+                    document.addEventListener('touchstart', startSound);
+                }, undefined, (err) => {
+                    console.warn('Audio load failed, continuing without sound.', err);
+                });
+            } catch (e) {
+                console.warn('Web Audio not supported:', e);
+            }
 
-            // --- PLAYER PHYSICS (first-person) ---
+            // --- CONTROLS (desktop) ---
             const controls = new PointerLockControls(camera, document.body);
             scene.add(controls.getObject());
 
             renderer.domElement.addEventListener('click', () => {
-                if (!controls.isLocked) controls.lock();
+                if (!controls.isLocked) {
+                    controls.lock();
+                    clickHint.style.opacity = '0';
+                    setTimeout(() => clickHint.style.display = 'none', 500);
+                }
             });
 
+            // --- PLAYER PHYSICS ---
             const player = {
                 velocity: new THREE.Vector3(),
                 onGround: false,
@@ -373,13 +513,12 @@
                 height: 2.0
             };
 
-            // Bounds: stay on central platform and islands (simple cylindrical bounds)
-            // We'll approximate by allowing movement within a circle of radius ~8
-            const maxDist = 9; // can go to islands
-            const minY = 1.0;  // platform height
+            const maxDist = 9;
+            const minY = 1.0;
 
-            // --- KEYBOARD INPUT ---
             const keyState = { w: false, a: false, s: false, d: false, space: false };
+
+            // Keyboard for desktop
             window.addEventListener('keydown', (e) => {
                 switch(e.code) {
                     case 'KeyW': keyState.w = true; e.preventDefault(); break;
@@ -399,18 +538,65 @@
                 }
             });
 
-            // --- DOOR INTERACTION (E key) ---
+            // Mobile joystick logic
+            let joystickActive = false;
+            let joystickVec = { x: 0, y: 0 };
+            if (window.innerWidth <= 768) {
+                joystickDiv.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    joystickActive = true;
+                    updateJoystick(e.touches[0]);
+                });
+                joystickDiv.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    if (joystickActive) updateJoystick(e.touches[0]);
+                });
+                joystickDiv.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    joystickActive = false;
+                    joystickVec.x = 0;
+                    joystickVec.y = 0;
+                    joystickThumb.style.transform = 'translate(-50%, -50%)';
+                });
+
+                function updateJoystick(touch) {
+                    const rect = joystickDiv.getBoundingClientRect();
+                    const centerX = rect.left + rect.width/2;
+                    const centerY = rect.top + rect.height/2;
+                    const dx = touch.clientX - centerX;
+                    const dy = touch.clientY - centerY;
+                    const distance = Math.min(Math.sqrt(dx*dx + dy*dy), rect.width/2);
+                    const angle = Math.atan2(dy, dx);
+                    const limitedX = Math.cos(angle) * distance;
+                    const limitedY = Math.sin(angle) * distance;
+                    joystickVec.x = limitedX / (rect.width/2);
+                    joystickVec.y = limitedY / (rect.height/2);
+                    joystickThumb.style.transform = `translate(calc(-50% + ${limitedX}px), calc(-50% + ${limitedY}px))`;
+                }
+            }
+
+            // Mobile E button
+            mobileE.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (currentDoor) {
+                    const room = currentDoor.userData.room;
+                    window.location.href = `${room}-room.html`;
+                }
+            });
+
+            // Door interaction (E key on desktop)
             let currentDoor = null;
             window.addEventListener('keydown', (e) => {
                 if (e.code === 'KeyE' && currentDoor) {
                     const room = currentDoor.userData.room;
-                    window.location.href = `${room}-room.html`; // e.g., skills-room.html
+                    window.location.href = `${room}-room.html`;
                 }
             });
 
             // --- PHYSICS UPDATE ---
             function updatePlayer(delta) {
-                if (!controls.isLocked) return;
+                // For desktop, require lock; for mobile, joystick works without lock
+                if (!controls.isLocked && !joystickActive) return;
 
                 const playerPos = controls.getObject().position;
 
@@ -427,6 +613,14 @@
                 if (keyState.a) moveDir.add(cameraRight);
                 if (keyState.d) moveDir.sub(cameraRight);
 
+                // Joystick contribution (overrides keyboard on mobile)
+                if (joystickActive) {
+                    const joyX = joystickVec.x;
+                    const joyY = joystickVec.y;
+                    moveDir.x += cameraDir.x * -joyY + cameraRight.x * joyX;
+                    moveDir.z += cameraDir.z * -joyY + cameraRight.z * joyX;
+                }
+
                 if (moveDir.lengthSq() > 0) {
                     moveDir.normalize();
                     player.velocity.x = moveDir.x * player.speed;
@@ -439,7 +633,7 @@
                 // Gravity
                 player.velocity.y -= player.gravity * delta;
 
-                // Ground check (platform at y=1)
+                // Ground check
                 if (playerPos.y <= 1.0 && player.velocity.y < 0) {
                     player.velocity.y = 0;
                     playerPos.y = 1.0;
@@ -452,25 +646,23 @@
                     player.onGround = false;
                 }
 
-                // Apply velocity
                 playerPos.x += player.velocity.x * delta;
                 playerPos.y += player.velocity.y * delta;
                 playerPos.z += player.velocity.z * delta;
 
-                // Constrain to circular area (hub)
+                // Circular bounds
                 const dist = Math.sqrt(playerPos.x*playerPos.x + playerPos.z*playerPos.z);
                 if (dist > maxDist) {
                     const angle = Math.atan2(playerPos.z, playerPos.x);
                     playerPos.x = Math.cos(angle) * maxDist;
                     playerPos.z = Math.sin(angle) * maxDist;
                 }
-
                 if (playerPos.y < 1.0) playerPos.y = 1.0;
             }
 
-            // --- PROXIMITY DETECTION (for doors) ---
+            // --- PROXIMITY DETECTION (door glow) ---
             function checkDoors() {
-                if (!controls.isLocked) return;
+                if (!controls.isLocked && !joystickActive) return;
 
                 const playerPos = controls.getObject().position;
                 let closestDoor = null;
@@ -485,23 +677,23 @@
                 });
 
                 if (closestDoor !== currentDoor) {
-                    // Reset previous door glow
+                    // Reset previous door's emissive
                     if (currentDoor) {
                         currentDoor.children.forEach(child => {
                             if (child.material && child.material.emissive) {
-                                child.material.emissive.setHex(currentDoor.userData.originalEmissive || 0);
+                                child.material.emissive.setHex(currentDoor.userData.originalEmissive || 0x000000);
                             }
                         });
                     }
                     currentDoor = closestDoor;
                     if (currentDoor) {
-                        // Store original emissive
+                        // Store original emissive and increase it
                         currentDoor.children.forEach(child => {
                             if (child.material && child.material.emissive) {
                                 if (currentDoor.userData.originalEmissive === undefined) {
                                     currentDoor.userData.originalEmissive = child.material.emissive.getHex();
                                 }
-                                child.material.emissive.setHex(0x5a9eff);
+                                child.material.emissive.setHex(0x333333); // subtle glow
                             }
                         });
                         doorPrompt.style.display = 'block';
@@ -525,8 +717,8 @@
                 movingLight2.position.x = Math.sin(time * 0.8 + 2) * 8;
                 movingLight2.position.z = Math.cos(time * 0.6 + 1) * 8;
 
-                // Rotate central platform slowly
-                platformGroup.rotation.y += 0.002;
+                // Rotate central platform
+                platformGroup.rotation.y += 0.001;
 
                 // Rotate particles
                 particles.rotation.y += 0.0002;
@@ -534,7 +726,7 @@
                 updatePlayer(delta);
                 checkDoors();
 
-                composer.render();
+                renderer.render(scene, camera);
                 labelRenderer.render(scene, camera);
             }
             animate();
@@ -544,7 +736,6 @@
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
                 renderer.setSize(window.innerWidth, window.innerHeight);
-                composer.setSize(window.innerWidth, window.innerHeight);
                 labelRenderer.setSize(window.innerWidth, window.innerHeight);
             });
 
